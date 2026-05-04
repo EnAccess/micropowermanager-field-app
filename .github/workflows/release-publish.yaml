@@ -1,0 +1,61 @@
+name: Publish Release
+
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+
+jobs:
+  github-releases:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: temurin
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Expo prebuild (Android)
+        run: npx expo prebuild --platform android --no-install --non-interactive
+
+      - name: Build Release APK
+        working-directory: android
+        run: ./gradlew assembleRelease
+
+      - name: Resolve APK name
+        id: version
+        run: |
+          VERSION="${{ github.event.release.tag_name }}"
+          if [ -z "$VERSION" ]; then
+            VERSION="v$(node -p "require('./package.json').version")"
+          fi
+          APK_NAME="micropowermanager-field-app-$VERSION-release.apk"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "apk_name=$APK_NAME" >> $GITHUB_OUTPUT
+
+      - name: Rename APK
+        run: mv android/app/build/outputs/apk/release/app-release.apk "${{ steps.version.outputs.apk_name }}"
+
+      - name: Add APK to Github Release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ${{ steps.version.outputs.apk_name }}

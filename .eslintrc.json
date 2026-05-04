@@ -1,0 +1,37 @@
+{
+  "root": true,
+  "extends": ["expo", "prettier"],
+  "plugins": ["prettier"],
+  "ignorePatterns": [
+    "node_modules/",
+    "android/",
+    "ios/",
+    ".expo/",
+    "dist/",
+    "build/"
+  ],
+  "rules": {
+    "prettier/prettier": "warn",
+    "no-unused-vars": "off",
+    "@typescript-eslint/no-unused-vars": [
+      "warn",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_"
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": [
+        "*.config.js",
+        "*.config.cjs",
+        "metro.config.js",
+        "babel.config.js"
+      ],
+      "env": {
+        "node": true
+      }
+    }
+  ]
+}
