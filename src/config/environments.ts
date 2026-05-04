@@ -4,19 +4,16 @@ export type Environment = {
   kind: EnvironmentKind;
   label: string;
   baseUrl: string;
-  slug?: string;
 };
 
-const CLOUD_DOMAIN = 'micropowermanager.cloud';
-const DEMO_SLUG = 'democompany';
+const CLOUD_URL = 'https://api.cloud.micropowermanager.io';
+const DEMO_URL = 'https://api.demo.micropowermanager.io';
 
-export function cloudEnvironment(slug: string): Environment {
-  const normalized = slug.trim().toLowerCase();
+export function cloudEnvironment(): Environment {
   return {
     kind: 'cloud',
-    label: normalized,
-    baseUrl: `https://${normalized}.${CLOUD_DOMAIN}`,
-    slug: normalized,
+    label: 'Cloud',
+    baseUrl: CLOUD_URL,
   };
 }
 
@@ -24,8 +21,7 @@ export function demoEnvironment(): Environment {
   return {
     kind: 'demo',
     label: 'Demo',
-    baseUrl: `https://${DEMO_SLUG}.${CLOUD_DOMAIN}`,
-    slug: DEMO_SLUG,
+    baseUrl: DEMO_URL,
   };
 }
 

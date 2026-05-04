@@ -57,6 +57,7 @@ export type SoldAppliance = {
   first_payment_date?: string | null;
   total_paid?: number | null;
   total_cost?: number | null;
+  minimum_payable_amount?: number | null;
   device_serial?: string | null;
   created_at?: string;
   appliance?: {

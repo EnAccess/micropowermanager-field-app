@@ -38,7 +38,7 @@ const OPTIONS: Option[] = [
   {
     kind: 'cloud',
     title: 'Cloud',
-    description: 'Sign in to your company on micropowermanager.cloud.',
+    description: 'Sign in to the MicroPowerManager cloud.',
     icon: 'cloud',
   },
   {
@@ -53,7 +53,6 @@ export default function EnvironmentPicker() {
   const { setEnvironment } = useSession();
   const insets = useSafeAreaInsets();
   const [selected, setSelected] = useState<EnvironmentKind>('cloud');
-  const [slug, setSlug] = useState('');
   const [customUrl, setCustomUrl] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -64,11 +63,7 @@ export default function EnvironmentPicker() {
       if (selected === 'demo') {
         await setEnvironment(demoEnvironment());
       } else if (selected === 'cloud') {
-        if (!slug.trim()) {
-          setError('Enter your company identifier.');
-          return;
-        }
-        await setEnvironment(cloudEnvironment(slug));
+        await setEnvironment(cloudEnvironment());
       } else {
         if (!/^https?:\/\//i.test(customUrl.trim())) {
           setError('Enter a full URL starting with http:// or https://');
@@ -163,19 +158,6 @@ export default function EnvironmentPicker() {
               );
             })}
           </View>
-
-          {selected === 'cloud' ? (
-            <TextField
-              label="Company identifier"
-              placeholder="yourcompany"
-              autoCapitalize="none"
-              autoCorrect={false}
-              value={slug}
-              onChangeText={setSlug}
-              helper="We'll connect to yourcompany.micropowermanager.cloud"
-              containerStyle={styles.field}
-            />
-          ) : null}
 
           {selected === 'custom' ? (
             <TextField

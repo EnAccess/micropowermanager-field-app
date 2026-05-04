@@ -1,17 +1,27 @@
 import { Feather } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import { StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { fonts, semantic } from '@/theme';
 
 export default function TabsLayout() {
+  const insets = useSafeAreaInsets();
+  const bottomInset = Math.max(insets.bottom, 8);
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: semantic.blue,
         tabBarInactiveTintColor: semantic.ink3,
-        tabBarStyle: styles.bar,
+        tabBarStyle: [
+          styles.bar,
+          {
+            height: 64 + bottomInset,
+            paddingBottom: bottomInset,
+          },
+        ],
         tabBarLabelStyle: styles.label,
         tabBarItemStyle: styles.item,
       }}
@@ -61,9 +71,7 @@ const styles = StyleSheet.create({
     backgroundColor: semantic.paper,
     borderTopColor: semantic.line,
     borderTopWidth: 1,
-    height: 64,
     paddingTop: 6,
-    paddingBottom: 8,
   },
   label: {
     fontFamily: fonts.ptBold,

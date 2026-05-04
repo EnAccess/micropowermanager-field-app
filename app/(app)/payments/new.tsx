@@ -1,5 +1,5 @@
 import { Feather } from '@expo/vector-icons';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosInstance } from 'axios';
 import * as Clipboard from 'expo-clipboard';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -17,6 +17,10 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import {
+  SoldAppliance,
+  fetchCustomerSoldAppliances,
+} from '@/api/appliances';
 import {
   DeviceLookup,
   findDeviceLookup,
@@ -75,6 +79,26 @@ export default function CollectPaymentScreen() {
       return findDeviceLookup(customers, s);
     },
   });
+
+  const matchedSaleQuery = useQuery({
+    queryKey: [
+      'matched-sold-appliance',
+      lookup?.customer.id ?? null,
+      lookup?.device.device_serial ?? null,
+    ],
+    queryFn: async () => {
+      const sales = await fetchCustomerSoldAppliances(api!, lookup!.customer.id);
+      return (
+        sales.find((s) => s.device_serial === lookup!.device.device_serial) ??
+        null
+      );
+    },
+    enabled: !!api && !!lookup,
+    staleTime: 60_000,
+  });
+
+  const matchedSale = matchedSaleQuery.data ?? null;
+  const minimumPayment = computeMinimumPayment(matchedSale);
 
   const submitMutation = useMutation({
     mutationFn: async () => {
@@ -189,18 +213,22 @@ export default function CollectPaymentScreen() {
   }
 
   if (step === 'amount' && lookup) {
+    const belowMinimum =
+      minimumPayment > 0 && amountValue > 0 && amountValue < minimumPayment;
     return (
       <AmountStep
         lookup={lookup}
         amount={amountValue}
         amountFormatted={formatAmount(amountStr)}
         currency={currency}
+        minimumPayment={minimumPayment}
+        belowMinimum={belowMinimum}
         onKeyPress={handleKeypress}
         onDelete={handleDelete}
         onQuickAdd={handleQuickAdd}
         onChangeCustomer={() => setStep('find')}
         onContinue={() => {
-          if (amountValue <= 0) return;
+          if (amountValue <= 0 || belowMinimum) return;
           setSubmitError(null);
           setStep('confirm');
         }}
@@ -305,6 +333,8 @@ function AmountStep({
   amount,
   amountFormatted,
   currency,
+  minimumPayment,
+  belowMinimum,
   onKeyPress,
   onDelete,
   onQuickAdd,
@@ -316,6 +346,8 @@ function AmountStep({
   amount: number;
   amountFormatted: string;
   currency: string | null;
+  minimumPayment: number;
+  belowMinimum: boolean;
   onKeyPress: (k: string) => void;
   onDelete: () => void;
   onQuickAdd: (v: number) => void;
@@ -364,6 +396,17 @@ function AmountStep({
               {currency}
             </Text>
           ) : null}
+          {minimumPayment > 0 ? (
+            <Text
+              variant="meta"
+              tone={belowMinimum ? 'danger' : 'muted'}
+              style={styles.amountMinimum}
+            >
+              {belowMinimum ? 'Below minimum: ' : 'Minimum: '}
+              {currency ? `${currency} ` : ''}
+              {formatAmount(String(minimumPayment))}
+            </Text>
+          ) : null}
         </View>
 
         <QuickAddChips
@@ -386,7 +429,7 @@ function AmountStep({
           tone="accent"
           label="Review & confirm"
           onPress={onContinue}
-          disabled={amount <= 0}
+          disabled={amount <= 0 || belowMinimum}
         />
       </View>
     </View>
@@ -847,6 +890,19 @@ function truncateUuid(value: string): string {
   return `${value.slice(0, 6)}…${value.slice(-5)}`;
 }
 
+function toPositiveAmount(value: unknown): number {
+  const n = Number(value ?? 0);
+  return Number.isFinite(n) && n > 0 ? n : 0;
+}
+
+function computeMinimumPayment(sale: SoldAppliance | null): number {
+  if (!sale) return 0;
+  if (sale.payment_type === 'energy_service') {
+    return toPositiveAmount(sale.minimum_payable_amount);
+  }
+  return toPositiveAmount(sale.rates?.[1]?.rate_cost);
+}
+
 function formatAmount(raw: string): string {
   if (!raw) return '0';
   const n = Number(raw);
@@ -969,6 +1025,9 @@ const styles = StyleSheet.create({
   },
   amountNumber: {
     fontFamily: fonts.ptBold,
+  },
+  amountMinimum: {
+    marginTop: 4,
   },
   quickAdd: {
     marginTop: spacing.lg,
