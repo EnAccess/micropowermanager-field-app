@@ -21,6 +21,7 @@ import {
 } from '@/api/auth';
 import { createApiClient } from '@/api/client';
 import { Environment } from '@/config/environments';
+import { clearAllCachedCities } from '@/storage/citiesCache';
 import { getOrCreateDeviceId } from '@/storage/deviceId';
 import {
   readJson,
@@ -142,6 +143,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       remove('accessToken'),
       remove('agent'),
       remove('appSettings'),
+      clearAllCachedCities(),
     ]);
     setStatus('unauthenticated');
   }

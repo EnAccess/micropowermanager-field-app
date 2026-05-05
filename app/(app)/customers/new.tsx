@@ -16,7 +16,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { isValidPhoneNumber } from 'libphonenumber-js';
 
 import { Customer, registerCustomer } from '@/api/customer';
-import { fetchCities } from '@/api/referenceData';
+import { City, fetchCities } from '@/api/referenceData';
+import { readCachedCities, writeCachedCities } from '@/storage/citiesCache';
 import { useSession } from '@/auth/SessionContext';
 import { fetchOnline, useNetworkStatus } from '@/auth/useNetworkStatus';
 import {
@@ -89,19 +90,15 @@ export default function RegisterCustomerScreen() {
     };
   }, []);
 
-  const citiesQuery = useQuery({
-    queryKey: ['cities'],
-    queryFn: () => fetchCities(api!),
-    enabled: !!api,
-  });
+  const cities = useCachedCities(api, agent?.id ?? null);
 
   const scopedCities = useMemo(
     () =>
-      (citiesQuery.data ?? []).filter(
+      cities.data.filter(
         (city) =>
           !agent?.mini_grid_id || city.mini_grid_id === agent.mini_grid_id,
       ),
-    [citiesQuery.data, agent?.mini_grid_id],
+    [cities.data, agent?.mini_grid_id],
   );
 
   const {
@@ -209,7 +206,9 @@ export default function RegisterCustomerScreen() {
       control={control}
       errors={errors}
       cities={scopedCities}
-      citiesLoading={citiesQuery.isLoading}
+      citiesLoading={cities.loading}
+      citiesUnavailable={cities.unavailable}
+      onRetryCities={() => void cities.refetch()}
       gridLabel={agent?.mini_grid_id ? `#${agent.mini_grid_id}` : '—'}
       busy={registerMutation.isPending}
       retryHint={retryEntry?.last_error?.message ?? null}
@@ -225,6 +224,62 @@ export default function RegisterCustomerScreen() {
   );
 }
 
+type CachedCities = {
+  data: City[];
+  loading: boolean;
+  unavailable: boolean;
+  refetch: () => void;
+};
+
+function useCachedCities(
+  api: ReturnType<typeof useSession>['api'],
+  agentId: number | null,
+): CachedCities {
+  const [diskCities, setDiskCities] = useState<City[] | null>(null);
+  const [diskReady, setDiskReady] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (agentId == null) {
+      setDiskReady(true);
+      return;
+    }
+    void readCachedCities(agentId).then((cached) => {
+      if (cancelled) return;
+      setDiskCities(cached);
+      setDiskReady(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [agentId]);
+
+  const networkQuery = useQuery({
+    queryKey: ['cities', agentId],
+    queryFn: async () => {
+      const fresh = await fetchCities(api!);
+      if (agentId != null) {
+        await writeCachedCities(agentId, fresh);
+      }
+      return fresh;
+    },
+    enabled: !!api && agentId != null,
+    staleTime: 24 * 60 * 60_000,
+  });
+
+  const data = networkQuery.data ?? diskCities ?? [];
+  const hasUsable = data.length > 0;
+  const loading = !diskReady || (!hasUsable && networkQuery.isFetching);
+  const unavailable = diskReady && !hasUsable && !networkQuery.isFetching;
+
+  return {
+    data,
+    loading,
+    unavailable,
+    refetch: () => void networkQuery.refetch(),
+  };
+}
+
 type ControlType = ReturnType<typeof useForm<RegisterForm>>['control'];
 type ErrorsType = ReturnType<
   typeof useForm<RegisterForm>
@@ -235,6 +290,8 @@ function FormStep({
   errors,
   cities,
   citiesLoading,
+  citiesUnavailable,
+  onRetryCities,
   gridLabel,
   busy,
   retryHint,
@@ -247,6 +304,8 @@ function FormStep({
   errors: ErrorsType;
   cities: { id: number; name: string }[];
   citiesLoading: boolean;
+  citiesUnavailable: boolean;
+  onRetryCities: () => void;
   gridLabel: string;
   busy: boolean;
   retryHint: string | null;
@@ -282,6 +341,22 @@ function FormStep({
                 Last sync attempt failed: {retryHint}. Edit the details and save
                 to try again.
               </Text>
+            </Callout>
+          ) : null}
+          {citiesUnavailable ? (
+            <Callout tone="warning" style={styles.retryCallout}>
+              <View style={styles.citiesUnavailable}>
+                <Text variant="meta" tone="secondary" style={styles.flex}>
+                  Villages aren&apos;t loaded yet. Connect once to enable
+                  registration.
+                </Text>
+                <Button
+                  label="Retry"
+                  tone="ghost"
+                  onPress={onRetryCities}
+                  style={styles.citiesRetryBtn}
+                />
+              </View>
             </Callout>
           ) : null}
           <Text variant="sectionLabel" tone="muted">
@@ -407,6 +482,7 @@ function FormStep({
             tone="ghost"
             onPress={onSaveLinkLater}
             loading={busy && !errors.city_id}
+            disabled={citiesUnavailable}
             style={styles.footerSecondary}
           />
           <Button
@@ -414,6 +490,7 @@ function FormStep({
             label="Continue"
             onPress={onContinue}
             loading={busy}
+            disabled={citiesUnavailable}
             style={styles.footerPrimary}
           />
         </View>
@@ -678,5 +755,13 @@ const styles = StyleSheet.create({
   },
   retryCallout: {
     marginBottom: spacing.md,
+  },
+  citiesUnavailable: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  citiesRetryBtn: {
+    flexGrow: 0,
   },
 });
