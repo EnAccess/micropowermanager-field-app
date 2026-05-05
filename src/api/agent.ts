@@ -9,17 +9,13 @@ export type AgentTransaction = {
   created_at: string;
   original_transaction_type?: string | null;
   original_transaction_id?: number | null;
-  /** Backend may attach a person reference for sales/down-payments. */
   person?: {
     id: number;
     name?: string | null;
     surname?: string | null;
   } | null;
-  /** "meter" / "appliance" / "shs" — present on richer endpoints. */
   device_type?: string | null;
-  /** "down_payment" / "installment" — appears for SHS sales. */
   payment_type?: string | null;
-  /** Free-text label like "Energy" / "Down payment" if surfaced. */
   paid_for?: string | null;
 };
 
@@ -40,11 +36,6 @@ export async function fetchBalance(client: AxiosInstance): Promise<number> {
   return parseBalance(data);
 }
 
-/**
- * Backends in this codebase have shipped the agent balance in three shapes:
- *   `123` (raw number), `"123"` (string), or wrapped as `{ data: 123 }` /
- *   `{ balance: 123 }`. Be defensive — return 0 only when nothing parses.
- */
 function parseBalance(payload: unknown): number {
   if (typeof payload === 'number')
     return Number.isFinite(payload) ? payload : 0;

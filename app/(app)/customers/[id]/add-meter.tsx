@@ -5,6 +5,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Pressable, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { z } from 'zod';
 
 import { assignMeterToCustomer } from '@/api/customer';
@@ -44,6 +45,8 @@ export default function AddMeterScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const customerId = Number(id);
   const { api } = useSession();
+  const insets = useSafeAreaInsets();
+  const bottomInset = Math.max(insets.bottom, 8);
   const [geoPoints, setGeoPoints] = useState<string | null>(null);
   const [locationStatus, setLocationStatus] = useState<
     'pending' | 'captured' | 'denied'
@@ -303,7 +306,7 @@ export default function AddMeterScreen() {
           label="Assign meter"
           onPress={onSubmit}
           loading={isSubmitting || assignMutation.isPending}
-          style={styles.cta}
+          style={[styles.cta, { marginBottom: bottomInset }]}
         />
       </Screen>
     </View>

@@ -2,12 +2,25 @@ import { AxiosInstance } from 'axios';
 
 export type Agent = {
   id: number;
-  name: string;
+  name?: string;
   email: string;
   balance: number;
   mini_grid_id: number | null;
   mobile_device_id?: string | null;
+  person?: {
+    id: number;
+    name?: string | null;
+    surname?: string | null;
+  } | null;
 };
+
+export function agentFullName(agent: Agent | null | undefined): string | null {
+  if (!agent) return null;
+  const first = agent.person?.name?.trim() ?? '';
+  const last = agent.person?.surname?.trim() ?? '';
+  const full = `${first} ${last}`.trim();
+  return full !== '' ? full : null;
+}
 
 export type LoginPayload = {
   email: string;

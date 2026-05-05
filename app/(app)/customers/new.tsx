@@ -13,6 +13,8 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { isValidPhoneNumber } from 'libphonenumber-js';
+
 import { Customer, registerCustomer } from '@/api/customer';
 import { fetchCities } from '@/api/referenceData';
 import { useSession } from '@/auth/SessionContext';
@@ -20,6 +22,8 @@ import { fetchOnline, useNetworkStatus } from '@/auth/useNetworkStatus';
 import {
   Button,
   Callout,
+  PhoneField,
+  Pill,
   ProgressSteps,
   SecondaryHeader,
   Select,
@@ -43,7 +47,7 @@ const schema = z.object({
   phone: z
     .string()
     .trim()
-    .regex(/^\+[0-9]{8,}$/, 'Use international format: +255…'),
+    .refine((v) => isValidPhoneNumber(v), 'Enter a valid phone number.'),
   city_id: z.number({ error: 'Choose a village.' }),
 });
 
@@ -110,7 +114,7 @@ export default function RegisterCustomerScreen() {
     defaultValues: {
       name: '',
       surname: '',
-      phone: '+',
+      phone: '',
       city_id: undefined as unknown as number,
     },
   });
@@ -319,14 +323,10 @@ function FormStep({
               control={control}
               name="phone"
               render={({ field: { value, onChange, onBlur } }) => (
-                <TextField
+                <PhoneField
                   label="Phone"
-                  placeholder="+255712345678"
-                  keyboardType="phone-pad"
-                  autoCapitalize="none"
-                  mono
                   value={value}
-                  onChangeText={onChange}
+                  onChange={onChange}
                   onBlur={onBlur}
                   error={errors.phone?.message}
                 />
@@ -430,15 +430,15 @@ function PhotoTile({
   label: string;
 }) {
   return (
-    <View style={styles.photoTile}>
-      <Feather name={icon} size={22} color={semantic.ink2} />
-      <Text
-        variant="bodyEmphasis"
-        tone="secondary"
-        style={styles.photoTileLabel}
-      >
+    <View
+      style={[styles.photoTile, styles.photoTileDisabled]}
+      accessibilityState={{ disabled: true }}
+    >
+      <Feather name={icon} size={22} color={semantic.ink3} />
+      <Text variant="bodyEmphasis" tone="muted" style={styles.photoTileLabel}>
         {label}
       </Text>
+      <Pill label="Coming soon" tone="neutral" style={styles.photoTilePill} />
     </View>
   );
 }
@@ -617,8 +617,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
   },
+  photoTileDisabled: {
+    opacity: 0.55,
+  },
   photoTileLabel: {
     color: semantic.ink2,
+  },
+  photoTilePill: {
+    marginTop: 4,
   },
   callout: {
     marginTop: spacing.xs,

@@ -17,10 +17,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import {
-  SoldAppliance,
-  fetchCustomerSoldAppliances,
-} from '@/api/appliances';
+import { SoldAppliance, fetchCustomerSoldAppliances } from '@/api/appliances';
 import {
   DeviceLookup,
   findDeviceLookup,
@@ -87,7 +84,10 @@ export default function CollectPaymentScreen() {
       lookup?.device.device_serial ?? null,
     ],
     queryFn: async () => {
-      const sales = await fetchCustomerSoldAppliances(api!, lookup!.customer.id);
+      const sales = await fetchCustomerSoldAppliances(
+        api!,
+        lookup!.customer.id,
+      );
       return (
         sales.find((s) => s.device_serial === lookup!.device.device_serial) ??
         null

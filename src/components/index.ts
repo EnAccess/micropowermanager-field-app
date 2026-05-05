@@ -15,6 +15,7 @@ export { GradientHero } from './GradientHero';
 export { Logo } from './Logo';
 export { MonoChip } from './MonoChip';
 export { NumericKeypad } from './NumericKeypad';
+export { PhoneField } from './PhoneField';
 export { Pill } from './Pill';
 export { ProgressSteps } from './ProgressSteps';
 export { QuickAddChips } from './QuickAddChips';

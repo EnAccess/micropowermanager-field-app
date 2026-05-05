@@ -73,6 +73,7 @@ export default function SaleDetailScreen() {
     );
   }
 
+  const customerId = sale.person_id ?? sale.person?.id ?? null;
   const customerName = saleCustomerName(sale) ?? 'Customer';
   const phone = saleCustomerPhone(sale);
   const cost = saleCost(sale);
@@ -306,7 +307,12 @@ export default function SaleDetailScreen() {
         <Button
           label="Customer"
           tone="ghost"
-          onPress={() => router.push(`/(app)/customers/${sale.person_id}`)}
+          disabled={!customerId}
+          onPress={() => {
+            if (customerId) {
+              router.push(`/(app)/customers/${customerId}`);
+            }
+          }}
           style={styles.footerSecondary}
         />
         <Button

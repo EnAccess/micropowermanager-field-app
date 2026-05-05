@@ -79,6 +79,7 @@ const styles = StyleSheet.create({
   scrim: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(15,42,63,0.35)',
+    zIndex: 1,
   },
   sheet: {
     backgroundColor: semantic.paper,
@@ -86,6 +87,8 @@ const styles = StyleSheet.create({
     borderTopRightRadius: radii.sheetTop,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
+    zIndex: 2,
+    elevation: 24,
     ...shadows.sheet,
   },
   handle: {

@@ -16,6 +16,7 @@ import {
   fetchBalance,
   fetchTodaysTransactions,
 } from '@/api/agent';
+import { agentFullName } from '@/api/auth';
 import { findDeviceLookup, searchCustomers } from '@/api/customer';
 import {
   humanizeTransactionType,
@@ -124,8 +125,9 @@ export default function Home() {
 
   const isRefreshing = balanceQuery.isFetching || todayQuery.isFetching;
 
-  const greeting = `Hello, ${firstName(agent?.name ?? 'there')}`;
-  const initial = initials(agent?.name ?? agent?.email ?? 'A').slice(0, 1);
+  const fullName = agentFullName(agent);
+  const greeting = `Welcome, ${fullName ?? agent?.email}`;
+  const initial = initials(fullName ?? agent?.email ?? 'A').slice(0, 1);
 
   function confirmSignOut() {
     Alert.alert('Sign out?', 'You will need to sign in again to continue.', [
@@ -315,10 +317,6 @@ function useTodaysTransactions() {
     enabled: !!api,
     staleTime: 30_000,
   });
-}
-
-function firstName(value: string): string {
-  return value.trim().split(/\s+/)[0] ?? value;
 }
 
 function timelineTone(type: string): TimelineDotTone {
