@@ -163,13 +163,19 @@ export default function CustomerDetailScreen() {
 
         {deviceCount > 0 ? (
           <View style={styles.section}>
-            <Text
-              variant="sectionLabel"
-              tone="muted"
-              style={styles.sectionLabel}
-            >
-              DEVICES
-            </Text>
+            <View style={styles.sectionHeader}>
+              <Text variant="sectionLabel" tone="muted">
+                DEVICES
+              </Text>
+              <Pressable
+                onPress={() => router.push(`/(app)/customers/${id}/add-meter`)}
+                hitSlop={8}
+              >
+                <Text variant="label" tone="brand">
+                  + Assign meter
+                </Text>
+              </Pressable>
+            </View>
             <View style={styles.deviceList}>
               {meters.map((d) => (
                 <MeterCard key={`meter-${d.id}`} device={d} />
@@ -183,7 +189,25 @@ export default function CustomerDetailScreen() {
               ))}
             </View>
           </View>
-        ) : null}
+        ) : (
+          <View style={styles.section}>
+            <Card elevated style={styles.emptyDevicesCard}>
+              <Feather name="zap" size={28} color={semantic.blue} />
+              <Text variant="bodyEmphasis" style={styles.emptyDevicesTitle}>
+                No devices yet
+              </Text>
+              <Text variant="meta" tone="muted" style={styles.emptyDevicesBody}>
+                Assign a meter to start collecting payments.
+              </Text>
+              <Button
+                tone="accent"
+                label="Assign meter"
+                onPress={() => router.push(`/(app)/customers/${id}/add-meter`)}
+                style={styles.emptyDevicesCta}
+              />
+            </Card>
+          </View>
+        )}
       </ScrollView>
 
       <View
@@ -500,6 +524,27 @@ const styles = StyleSheet.create({
     alignItems: 'baseline',
     justifyContent: 'space-between',
     paddingHorizontal: spacing.xs,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.xs,
+  },
+  emptyDevicesCard: {
+    alignItems: 'center',
+    paddingVertical: spacing.lg,
+    gap: spacing.xs,
+  },
+  emptyDevicesTitle: {
+    marginTop: spacing.sm,
+  },
+  emptyDevicesBody: {
+    textAlign: 'center',
+    marginBottom: spacing.md,
+  },
+  emptyDevicesCta: {
+    alignSelf: 'stretch',
   },
 
   /* device cards (meters + appliances) */
