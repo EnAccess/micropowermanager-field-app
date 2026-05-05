@@ -222,6 +222,18 @@ export default function CustomersTab() {
           keyExtractor={(c) => String(c.id)}
           contentContainerStyle={styles.listContent}
           ItemSeparatorComponent={() => <View style={styles.separator} />}
+          onRefresh={() => {
+            if (isSearching) {
+              void searchQuery.refetch();
+            } else {
+              void listQuery.refetch();
+            }
+          }}
+          refreshing={
+            isSearching
+              ? searchQuery.isFetching
+              : listQuery.isFetching && !listQuery.isFetchingNextPage
+          }
           onEndReachedThreshold={0.5}
           onEndReached={() => {
             if (

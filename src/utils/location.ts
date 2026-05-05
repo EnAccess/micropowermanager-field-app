@@ -27,3 +27,14 @@ export function formatGeoPoint(point: GeoPoint | null): string | null {
   if (!point) return null;
   return `${point.latitude.toFixed(6)},${point.longitude.toFixed(6)}`;
 }
+
+export function parseGeoPoint(
+  value: string | null | undefined,
+): GeoPoint | null {
+  if (!value) return null;
+  const [latStr, lngStr] = value.split(',').map((s) => s.trim());
+  const latitude = Number(latStr);
+  const longitude = Number(lngStr);
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
+  return { latitude, longitude };
+}

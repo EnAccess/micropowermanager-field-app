@@ -12,6 +12,7 @@ export { CustomerChip } from './CustomerChip';
 export { DateField, toIsoDate } from './DateField';
 export { Fab } from './Fab';
 export { GradientHero } from './GradientHero';
+export { LocationPickerSheet } from './LocationPickerSheet';
 export { Logo } from './Logo';
 export { MonoChip } from './MonoChip';
 export { NumericKeypad } from './NumericKeypad';

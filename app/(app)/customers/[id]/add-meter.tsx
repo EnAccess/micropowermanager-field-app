@@ -21,13 +21,19 @@ import {
   AppBar,
   Button,
   Card,
+  LocationPickerSheet,
   Screen,
   Select,
   Text,
   TextField,
 } from '@/components';
 import { colors, radius, spacing } from '@/theme';
-import { captureGeoPoint, formatGeoPoint } from '@/utils/location';
+import {
+  GeoPoint,
+  captureGeoPoint,
+  formatGeoPoint,
+  parseGeoPoint,
+} from '@/utils/location';
 import { formatCurrency } from '@/utils/format';
 
 const schema = z.object({
@@ -51,8 +57,17 @@ export default function AddMeterScreen() {
   const [locationStatus, setLocationStatus] = useState<
     'pending' | 'captured' | 'denied'
   >('pending');
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [done, setDone] = useState(false);
   const hasCaptured = useRef(false);
+
+  const currentPoint = parseGeoPoint(geoPoints);
+
+  function applyPoint(point: GeoPoint) {
+    const formatted = formatGeoPoint(point);
+    setGeoPoints(formatted);
+    setLocationStatus(formatted ? 'captured' : 'denied');
+  }
 
   const manufacturers = useQuery({
     queryKey: ['manufacturers'],
@@ -118,9 +133,11 @@ export default function AddMeterScreen() {
   async function retryLocation() {
     setLocationStatus('pending');
     const point = await captureGeoPoint();
-    const formatted = formatGeoPoint(point);
-    setGeoPoints(formatted);
-    setLocationStatus(formatted ? 'captured' : 'denied');
+    if (point) {
+      applyPoint(point);
+    } else {
+      setLocationStatus('denied');
+    }
   }
 
   const onSubmit = handleSubmit((values) => assignMutation.mutate(values));
@@ -285,16 +302,33 @@ export default function AddMeterScreen() {
                   geoPoints &&
                   `Captured: ${geoPoints}`}
                 {locationStatus === 'denied' &&
-                  'Skipped. Retry if the meter is elsewhere.'}
+                  'Skipped. Pick on map or retry if the meter is elsewhere.'}
               </Text>
             </View>
-            <Pressable onPress={retryLocation} hitSlop={8}>
-              <Text variant="label" tone="brand">
-                Retry
-              </Text>
-            </Pressable>
+            <View style={styles.locationActions}>
+              <Pressable onPress={() => setPickerOpen(true)} hitSlop={8}>
+                <Text variant="label" tone="brand">
+                  Pick on map
+                </Text>
+              </Pressable>
+              <Pressable onPress={retryLocation} hitSlop={8}>
+                <Text variant="label" tone="brand">
+                  Retry
+                </Text>
+              </Pressable>
+            </View>
           </View>
         </Card>
+
+        <LocationPickerSheet
+          visible={pickerOpen}
+          initial={currentPoint}
+          onClose={() => setPickerOpen(false)}
+          onConfirm={(point) => {
+            applyPoint(point);
+            setPickerOpen(false);
+          }}
+        />
 
         {assignMutation.isError ? (
           <Text variant="caption" tone="danger" style={styles.error}>
@@ -360,6 +394,10 @@ const styles = StyleSheet.create({
   locationBody: {
     flex: 1,
     gap: spacing.xs,
+  },
+  locationActions: {
+    alignItems: 'flex-end',
+    gap: spacing.sm,
   },
   error: {
     marginTop: spacing.md,

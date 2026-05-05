@@ -126,7 +126,7 @@ export default function Home() {
   const isRefreshing = balanceQuery.isFetching || todayQuery.isFetching;
 
   const fullName = agentFullName(agent);
-  const greeting = `Welcome, ${fullName ?? agent?.email}`;
+  const greeting = `Welcome, ${fullName ?? 'Agent'}`;
   const initial = initials(fullName ?? agent?.email ?? 'A').slice(0, 1);
 
   function confirmSignOut() {
