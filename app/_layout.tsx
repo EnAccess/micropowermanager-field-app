@@ -2,6 +2,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AppProviders } from '@/providers/AppProviders';
@@ -24,10 +25,12 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <AppProviders>
-        <StatusBar style="light" />
-        <Stack screenOptions={{ headerShown: false }} />
-      </AppProviders>
+      <KeyboardProvider>
+        <AppProviders>
+          <StatusBar style="light" />
+          <Stack screenOptions={{ headerShown: false }} />
+        </AppProviders>
+      </KeyboardProvider>
     </SafeAreaProvider>
   );
 }
