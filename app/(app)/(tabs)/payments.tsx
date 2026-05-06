@@ -332,7 +332,12 @@ function formatTime(value: string): string {
       minute: '2-digit',
     });
   }
-  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  const sameYear = d.getFullYear() === start.getFullYear();
+  return d.toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    ...(sameYear ? {} : { year: 'numeric' }),
+  });
 }
 
 const styles = StyleSheet.create({
