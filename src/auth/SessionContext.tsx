@@ -164,20 +164,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       tokenRef.current = response.access_token;
       await writeString('accessToken', response.access_token);
 
-      let nextAgent = response.agent ?? null;
-      let nextSettings = response.settings ?? null;
+      const me = await fetchMe(api);
 
-      if (!nextAgent || !nextSettings) {
-        const me = await fetchMe(api);
-        nextAgent = nextAgent ?? me.agent;
-        nextSettings = nextSettings ?? me.settings;
-      }
-
-      setAgent(nextAgent);
-      setAppSettings(nextSettings);
-      await writeJson('agent', nextAgent);
-      if (nextSettings) {
-        await writeJson('appSettings', nextSettings);
+      setAgent(me.agent);
+      setAppSettings(me.settings);
+      await writeJson('agent', me.agent);
+      if (me.settings) {
+        await writeJson('appSettings', me.settings);
       } else {
         await remove('appSettings');
       }
