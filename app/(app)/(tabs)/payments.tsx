@@ -70,10 +70,7 @@ export default function PaymentsTab() {
     () => items.filter((tx) => matches(tx, category, scope)),
     [items, category, scope],
   );
-  const filteredCash = filtered.reduce(
-    (sum, tx) => sum + Number(tx.amount || 0),
-    0,
-  );
+  const filteredCash = filtered.reduce((sum, tx) => sum + (tx.amount || 0), 0);
   const scopeLabel =
     scope === 'today' ? 'today' : scope === 'week' ? 'this week' : 'all time';
 
@@ -252,7 +249,7 @@ function TransactionRow({
             {primary}
           </Text>
           <Text variant="bodyEmphasis" style={styles.rowAmount}>
-            {formatCurrency(Number(transaction.amount || 0))}
+            {formatCurrency(transaction.amount || 0)}
           </Text>
         </View>
         <View style={styles.rowMetaLine}>

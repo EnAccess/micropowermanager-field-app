@@ -76,7 +76,7 @@ export default function Home() {
   const todayQuery = useTodaysTransactions();
 
   const todays: AgentTransaction[] = todayQuery.data ?? [];
-  const cashToday = todays.reduce((sum, tx) => sum + Number(tx.amount || 0), 0);
+  const cashToday = todays.reduce((sum, tx) => sum + (tx.amount || 0), 0);
 
   // Per-serial customer lookup for the timeline. Caches via React Query.
   // Skip transactions whose `message` is empty or "-" (SHS down payments etc.).
@@ -379,7 +379,7 @@ function buildTimeline(
             tone="primary"
             style={styles.timelineAmount}
           >
-            {formatCurrency(Number(tx.amount || 0))}
+            {formatCurrency(tx.amount || 0)}
           </Text>
         </Pressable>
       ),

@@ -52,10 +52,7 @@ export default function SaleDetailScreen() {
   });
 
   const sale = cached ?? fallbackQuery.data?.find((s) => s.id === id) ?? null;
-  const sortedRates = useSortedRates(
-    sale?.rates,
-    Number(sale?.down_payment ?? 0),
-  );
+  const sortedRates = useSortedRates(sale?.rates, sale?.down_payment ?? 0);
 
   if (!sale) {
     return (
@@ -84,8 +81,8 @@ export default function SaleDetailScreen() {
   const progress = hasCost ? Math.min(1, paid / cost) : 0;
   const done = hasCost && progress >= 1;
   const isEnergyService = sale.payment_type === 'energy_service';
-  const tenure = Number(sale.tenure ?? 0);
-  const downPayment = Number(sale.down_payment ?? 0);
+  const tenure = sale.tenure ?? 0;
+  const downPayment = sale.down_payment ?? 0;
   const monthlyEstimate =
     !isEnergyService && tenure > 1
       ? Math.round(Math.max(0, cost - downPayment) / tenure)
@@ -389,8 +386,8 @@ function RateRow({
   formatCurrency: (n: number) => string;
   last: boolean;
 }) {
-  const cost = Number(rate.rate_cost);
-  const remaining = Number(rate.remaining);
+  const cost = rate.rate_cost;
+  const remaining = rate.remaining;
   const paid = Math.max(0, cost - remaining);
   const fullyPaid = remaining <= 0;
   const dueDate = rate.due_date ? formatDate(rate.due_date) : '—';
@@ -475,8 +472,7 @@ function useSortedRates(
       const downPaymentRounded = Math.round(downPayment);
       const skipIdx = sorted.findIndex(
         (r) =>
-          Number(r.remaining) === 0 &&
-          Math.round(Number(r.rate_cost)) === downPaymentRounded,
+          r.remaining === 0 && Math.round(r.rate_cost) === downPaymentRounded,
       );
       if (skipIdx !== -1) sorted.splice(skipIdx, 1);
     }

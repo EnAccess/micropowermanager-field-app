@@ -319,7 +319,7 @@ function ApplianceCard({
   onPress?: () => void;
 }) {
   const name = sale.appliance?.name ?? 'SHS unit';
-  const cost = Number(sale.total_cost ?? sale.appliance?.cost ?? 0);
+  const cost = sale.total_cost ?? sale.appliance?.cost ?? 0;
   const paid = salePaid(sale);
   const hasCost = cost > 0;
   const done = hasCost && paid >= cost;

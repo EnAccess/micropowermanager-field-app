@@ -137,6 +137,8 @@ export type SellAppliancePayload = {
   tenure?: number;
   first_payment_date?: string;
   device_serial?: string | null;
+  price_per_day?: number;
+  minimum_payable_amount?: number;
 };
 
 export async function sellAppliance(
@@ -147,7 +149,7 @@ export async function sellAppliance(
 }
 
 export function saleCost(sale: SoldAppliance): number {
-  return Number(sale.total_cost ?? sale.appliance?.cost ?? 0);
+  return sale.total_cost ?? sale.appliance?.cost ?? 0;
 }
 
 export function nextDueDate(sale: SoldAppliance): string | null {
@@ -155,7 +157,7 @@ export function nextDueDate(sale: SoldAppliance): string | null {
   let earliest: SaleRate | null = null;
   let earliestTime = Number.POSITIVE_INFINITY;
   for (const rate of sale.rates) {
-    if (Number(rate.remaining) <= 0) continue;
+    if (rate.remaining <= 0) continue;
     const t = new Date(rate.due_date).getTime();
     if (Number.isNaN(t)) continue;
     if (t < earliestTime) {
@@ -167,8 +169,8 @@ export function nextDueDate(sale: SoldAppliance): string | null {
 }
 
 export function salePaid(sale: SoldAppliance): number {
-  if (sale.total_paid != null) return Number(sale.total_paid);
-  const downPayment = Number(sale.down_payment ?? 0);
+  if (sale.total_paid != null) return sale.total_paid;
+  const downPayment = sale.down_payment ?? 0;
   if (!sale.rates) return downPayment;
 
   // The backend records the down payment as its own paid rate
@@ -179,8 +181,8 @@ export function salePaid(sale: SoldAppliance): number {
   let downPaymentSkipped = false;
   let installmentsPaid = 0;
   for (const rate of sale.rates) {
-    const cost = Number(rate.rate_cost);
-    const remaining = Number(rate.remaining);
+    const cost = rate.rate_cost;
+    const remaining = rate.remaining;
     if (
       !downPaymentSkipped &&
       downPayment > 0 &&

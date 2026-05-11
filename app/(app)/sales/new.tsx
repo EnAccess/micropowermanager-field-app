@@ -54,7 +54,7 @@ import { useCurrency } from '@/utils/useCurrency';
 
 type Step = 'customer' | 'unit' | 'plan' | 'confirm' | 'success';
 
-type PlanId = 'cash' | 'twelve' | 'twentyfour' | 'custom';
+type PlanId = 'cash' | 'twelve' | 'twentyfour' | 'custom' | 'energy';
 
 type Plan = {
   id: PlanId;
@@ -93,6 +93,13 @@ const PLANS: Plan[] = [
     tenure: 6,
     downPaymentRatio: 0.1,
   },
+  {
+    id: 'energy',
+    label: 'Energy service',
+    description: 'Pay-as-you-go top-ups. No fixed tenure.',
+    tenure: 0,
+    downPaymentRatio: 0,
+  },
 ];
 
 const HINT_BY_INDEX: Record<number, string> = {
@@ -114,20 +121,29 @@ export default function SellShsScreen() {
   const [planId, setPlanId] = useState<PlanId>('twelve');
   const [customTenure, setCustomTenure] = useState('6');
   const [customDeposit, setCustomDeposit] = useState('');
+  const [eaasPricePerDay, setEaasPricePerDay] = useState('');
+  const [eaasMinTopUp, setEaasMinTopUp] = useState('');
+  const [eaasDownPayment, setEaasDownPayment] = useState('');
   const [deviceSerial, setDeviceSerial] = useState('');
   const [transactionRef, setTransactionRef] = useState<string | null>(null);
 
   const plan = useMemo(() => PLANS.find((p) => p.id === planId)!, [planId]);
   const cost = assignment?.cost ?? 0;
   const isCustom = planId === 'custom';
-  const customTenureNum = Math.max(1, Number(customTenure) || 0);
-  const customDepositNum = Math.max(0, Number(customDeposit) || 0);
-  const downPayment = isCustom
-    ? Math.min(customDepositNum, cost)
-    : Math.round(cost * plan.downPaymentRatio);
-  const tenure = isCustom ? customTenureNum : plan.tenure;
+  const isEaas = planId === 'energy';
+  const customTenureNum = Math.max(1, parseAmount(customTenure));
+  const customDepositNum = parseAmount(customDeposit);
+  const eaasPricePerDayNum = parseAmount(eaasPricePerDay, { round: true });
+  const eaasMinTopUpNum = parseAmount(eaasMinTopUp, { round: true });
+  const eaasDownPaymentNum = parseAmount(eaasDownPayment);
+  const downPayment = isEaas
+    ? Math.min(eaasDownPaymentNum, cost)
+    : isCustom
+      ? Math.min(customDepositNum, cost)
+      : Math.round(cost * plan.downPaymentRatio);
+  const tenure = isEaas ? 0 : isCustom ? customTenureNum : plan.tenure;
   const remaining = Math.max(0, cost - downPayment);
-  const monthly = tenure > 1 ? Math.round(remaining / tenure) : 0;
+  const monthly = !isEaas && tenure > 1 ? Math.round(remaining / tenure) : 0;
   const firstPaymentDate = useMemo(() => {
     const d = new Date();
     d.setMonth(d.getMonth() + 1);
@@ -139,10 +155,21 @@ export default function SellShsScreen() {
       sellAppliance(api!, {
         person_id: customer!.id,
         agent_assigned_appliance_id: assignment!.id,
-        payment_type: 'installment' as AppliancePaymentType,
+        payment_type: (isEaas
+          ? 'energy_service'
+          : 'installment') as AppliancePaymentType,
         down_payment: downPayment,
-        tenure,
-        first_payment_date: toIsoDate(firstPaymentDate),
+        ...(isEaas
+          ? {
+              price_per_day: eaasPricePerDayNum,
+              ...(eaasMinTopUpNum > 0
+                ? { minimum_payable_amount: eaasMinTopUpNum }
+                : {}),
+            }
+          : {
+              tenure,
+              first_payment_date: toIsoDate(firstPaymentDate),
+            }),
         ...(deviceSerial.trim() ? { device_serial: deviceSerial.trim() } : {}),
       }),
     onSuccess: async () => {
@@ -167,6 +194,9 @@ export default function SellShsScreen() {
     setPlanId('twelve');
     setCustomTenure('6');
     setCustomDeposit('');
+    setEaasPricePerDay('');
+    setEaasMinTopUp('');
+    setEaasDownPayment('');
     setDeviceSerial('');
     setTransactionRef(null);
     sellMutation.reset();
@@ -209,14 +239,22 @@ export default function SellShsScreen() {
         onChangeCustomTenure={setCustomTenure}
         customDeposit={customDeposit}
         onChangeCustomDeposit={setCustomDeposit}
+        eaasPricePerDay={eaasPricePerDay}
+        onChangeEaasPricePerDay={setEaasPricePerDay}
+        eaasMinTopUp={eaasMinTopUp}
+        onChangeEaasMinTopUp={setEaasMinTopUp}
+        eaasDownPayment={eaasDownPayment}
+        onChangeEaasDownPayment={setEaasDownPayment}
         deviceSerial={deviceSerial}
         onChangeSerial={setDeviceSerial}
         downPayment={downPayment}
         tenure={tenure}
         monthly={monthly}
+        isEaas={isEaas}
         canContinue={
-          tenure >= 1 &&
-          (!isCustom || downPayment >= 0) &&
+          (isEaas
+            ? eaasPricePerDayNum > 0
+            : tenure >= 1 && (!isCustom || downPayment >= 0)) &&
           deviceSerial.trim().length > 0
         }
         formatCurrency={formatCurrency}
@@ -237,6 +275,9 @@ export default function SellShsScreen() {
         monthly={monthly}
         firstPaymentDate={firstPaymentDate}
         deviceSerial={deviceSerial}
+        isEaas={isEaas}
+        eaasPricePerDay={eaasPricePerDayNum}
+        eaasMinTopUp={eaasMinTopUpNum}
         formatCurrency={formatCurrency}
         currency={currency}
         loading={sellMutation.isPending}
@@ -253,6 +294,7 @@ export default function SellShsScreen() {
         customer={customer}
         assignment={assignment}
         downPayment={downPayment}
+        isEaas={isEaas}
         reference={transactionRef ?? '—'}
         formatCurrency={formatCurrency}
         onClose={() => router.replace('/(app)/(tabs)')}
@@ -559,11 +601,18 @@ function PlanStep({
   onChangeCustomTenure,
   customDeposit,
   onChangeCustomDeposit,
+  eaasPricePerDay,
+  onChangeEaasPricePerDay,
+  eaasMinTopUp,
+  onChangeEaasMinTopUp,
+  eaasDownPayment,
+  onChangeEaasDownPayment,
   deviceSerial,
   onChangeSerial,
   downPayment,
   tenure,
   monthly,
+  isEaas,
   canContinue,
   formatCurrency,
   onBack,
@@ -577,11 +626,18 @@ function PlanStep({
   onChangeCustomTenure: (v: string) => void;
   customDeposit: string;
   onChangeCustomDeposit: (v: string) => void;
+  eaasPricePerDay: string;
+  onChangeEaasPricePerDay: (v: string) => void;
+  eaasMinTopUp: string;
+  onChangeEaasMinTopUp: (v: string) => void;
+  eaasDownPayment: string;
+  onChangeEaasDownPayment: (v: string) => void;
   deviceSerial: string;
   onChangeSerial: (v: string) => void;
   downPayment: number;
   tenure: number;
   monthly: number;
+  isEaas: boolean;
   canContinue: boolean;
   formatCurrency: (n: number) => string;
   onBack: () => void;
@@ -591,7 +647,6 @@ function PlanStep({
   const customerName = `${customer.name} ${customer.surname}`.trim();
   const unitName =
     assignment.appliance?.name ?? assignment.appliance_type?.name ?? 'SHS unit';
-  const isCustomSelected = planId === 'custom';
 
   return (
     <View style={styles.root}>
@@ -623,7 +678,7 @@ function PlanStep({
             </View>
             <View style={styles.summaryRow}>
               <Text variant="body" tone="muted">
-                Deposit today
+                {isEaas ? 'Cash today' : 'Deposit today'}
               </Text>
               <Text
                 variant="screenTitle"
@@ -729,6 +784,45 @@ function PlanStep({
                       </View>
                     </View>
                   ) : null}
+
+                  {p.id === 'energy' && selected ? (
+                    <View style={styles.customPanel}>
+                      <View style={styles.customRow}>
+                        <View style={styles.customField}>
+                          <TextField
+                            label="Price / day"
+                            placeholder="0"
+                            keyboardType="decimal-pad"
+                            mono
+                            value={eaasPricePerDay}
+                            onChangeText={onChangeEaasPricePerDay}
+                          />
+                        </View>
+                        <View style={styles.customField}>
+                          <TextField
+                            label="Min. top-up"
+                            placeholder="0"
+                            keyboardType="decimal-pad"
+                            mono
+                            value={eaasMinTopUp}
+                            onChangeText={onChangeEaasMinTopUp}
+                          />
+                        </View>
+                      </View>
+                      <View style={styles.customRow}>
+                        <View style={styles.customField}>
+                          <TextField
+                            label="Down payment (optional)"
+                            placeholder="0"
+                            keyboardType="decimal-pad"
+                            mono
+                            value={eaasDownPayment}
+                            onChangeText={onChangeEaasDownPayment}
+                          />
+                        </View>
+                      </View>
+                    </View>
+                  ) : null}
                 </View>
               );
             })}
@@ -736,8 +830,9 @@ function PlanStep({
 
           <Callout tone="info" style={styles.planCallout}>
             <Text variant="meta" tone="secondary">
-              PAYG unlocks after each monthly payment. Customer receives SMS
-              reminders before each due date.
+              {isEaas
+                ? 'Customer pays per day of usage. Service pauses when the balance runs out.'
+                : 'PAYG unlocks after each monthly payment. Customer receives SMS reminders before each due date.'}
             </Text>
           </Callout>
 
@@ -768,7 +863,13 @@ function PlanStep({
           />
           <Button
             tone="accent"
-            label={`Collect ${formatCurrency(downPayment)} deposit`}
+            label={
+              isEaas
+                ? downPayment > 0
+                  ? `Collect ${formatCurrency(downPayment)} cash`
+                  : 'Continue'
+                : `Collect ${formatCurrency(downPayment)} deposit`
+            }
             onPress={onContinue}
             disabled={!canContinue}
             style={styles.footerPrimary}
@@ -788,6 +889,9 @@ function ConfirmStep({
   monthly,
   firstPaymentDate,
   deviceSerial,
+  isEaas,
+  eaasPricePerDay,
+  eaasMinTopUp,
   formatCurrency,
   currency,
   loading,
@@ -803,6 +907,9 @@ function ConfirmStep({
   monthly: number;
   firstPaymentDate: Date;
   deviceSerial: string;
+  isEaas: boolean;
+  eaasPricePerDay: number;
+  eaasMinTopUp: number;
   formatCurrency: (n: number) => string;
   currency: string | null;
   loading: boolean;
@@ -830,7 +937,7 @@ function ConfirmStep({
       <ScrollView contentContainerStyle={styles.confirmContent}>
         <View style={styles.confirmHero}>
           <Text variant="sectionLabel" tone="muted">
-            DEPOSIT TODAY
+            {isEaas ? 'CASH TODAY' : 'DEPOSIT TODAY'}
           </Text>
           <Text
             variant="heroNumber"
@@ -841,7 +948,11 @@ function ConfirmStep({
             {formatCurrency(downPayment)}
           </Text>
           <Text variant="body" tone="secondary">
-            {currency ? `${currency} · in cash` : 'In cash'}
+            {isEaas && downPayment === 0
+              ? 'Activation only — no cash collected'
+              : currency
+                ? `${currency} · in cash`
+                : 'In cash'}
           </Text>
         </View>
 
@@ -875,7 +986,22 @@ function ConfirmStep({
             }
           />
           <DataRow label="Total" value={formatCurrency(assignment.cost)} />
-          {tenure > 1 ? (
+          {isEaas ? (
+            <>
+              <DataRow
+                label="Price / day"
+                value={formatCurrency(eaasPricePerDay)}
+                mono
+              />
+              {eaasMinTopUp > 0 ? (
+                <DataRow
+                  label="Min. top-up"
+                  value={formatCurrency(eaasMinTopUp)}
+                  mono
+                />
+              ) : null}
+            </>
+          ) : tenure > 1 ? (
             <>
               <DataRow
                 label={`${tenure} monthly payments`}
@@ -903,8 +1029,18 @@ function ConfirmStep({
 
         <Callout tone="warning" style={styles.confirmCallout}>
           <Text variant="meta" tone="secondary">
-            Confirm only <Text variant="bodyStrong">after</Text> you&apos;ve
-            received the deposit. This action is final.
+            {isEaas && downPayment === 0 ? (
+              <>
+                Activating starts the energy service contract. This action is
+                final.
+              </>
+            ) : (
+              <>
+                Confirm only <Text variant="bodyStrong">after</Text> you&apos;ve
+                received the {isEaas ? 'cash' : 'deposit'}. This action is
+                final.
+              </>
+            )}
           </Text>
         </Callout>
 
@@ -930,7 +1066,11 @@ function ConfirmStep({
         />
         <Button
           tone="success"
-          label="Cash received — confirm"
+          label={
+            isEaas && downPayment === 0
+              ? 'Activate energy service'
+              : 'Cash received — confirm'
+          }
           onPress={onConfirm}
           loading={loading}
           style={styles.footerPrimary}
@@ -944,6 +1084,7 @@ function SuccessStep({
   customer,
   assignment,
   downPayment,
+  isEaas,
   reference,
   formatCurrency,
   onClose,
@@ -952,6 +1093,7 @@ function SuccessStep({
   customer: Customer;
   assignment: AgentAssignedAppliance;
   downPayment: number;
+  isEaas: boolean;
   reference: string;
   formatCurrency: (n: number) => string;
   onClose: () => void;
@@ -988,7 +1130,7 @@ function SuccessStep({
         <View style={styles.successHero}>
           <SuccessCheckmark />
           <Text variant="pageTitle" tone="success" style={styles.successTitle}>
-            SHS sold
+            {isEaas && downPayment === 0 ? 'Service activated' : 'SHS sold'}
           </Text>
           <Text variant="body" tone="muted" style={styles.successSubtitle}>
             {customerName} · {unitName}
@@ -997,7 +1139,7 @@ function SuccessStep({
 
         <ReceiptCard
           amount={formatCurrency(downPayment)}
-          currency="Deposit"
+          currency={isEaas ? 'Cash' : 'Deposit'}
           customerName={customerName}
           reference={`Ref #${reference}`}
           style={styles.receipt}
@@ -1070,6 +1212,11 @@ function DataRow({
       </View>
     </View>
   );
+}
+
+function parseAmount(input: string, { round = false } = {}): number {
+  const n = Number(input) || 0;
+  return Math.max(0, round ? Math.round(n) : n);
 }
 
 function customerPhone(customer: Customer): string | null {

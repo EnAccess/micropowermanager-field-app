@@ -791,8 +791,7 @@ function TokenCard({
 function describeTokenAmount(token: PaymentToken): string | null {
   if (token.token_amount == null) return null;
   const unit = token.token_unit ?? '';
-  const amount = Number(token.token_amount);
-  if (Number.isNaN(amount)) return null;
+  const amount = token.token_amount;
   if (unit === 'kWh') return `${amount.toFixed(3)} ${unit}`;
   if (unit === 'days' || unit === 'weeks' || unit === 'months') {
     return `${amount.toFixed(1)} ${unit}`;
