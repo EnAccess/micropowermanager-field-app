@@ -33,6 +33,24 @@ export type RegisterCustomerPayload = {
   geo_points?: string | null;
 };
 
+export type AvailableMeter = {
+  id: number;
+  serial_number: string;
+  manufacturer_id: number;
+  meter_type_id: number;
+};
+
+export async function fetchAvailableMeters(
+  client: AxiosInstance,
+  params: { manufacturer_id?: number; meter_type_id?: number } = {},
+): Promise<AvailableMeter[]> {
+  const { data } = await client.get<{ data: AvailableMeter[] }>(
+    '/app/agents/meters',
+    { params },
+  );
+  return data.data ?? [];
+}
+
 export type AssignMeterPayload = {
   serial_number: string;
   manufacturer_id: number;

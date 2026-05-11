@@ -17,7 +17,7 @@ import {
   fetchTransactionsPage,
 } from '@/api/agent';
 import { useSession } from '@/auth/SessionContext';
-import { Button, Pill, Text } from '@/components';
+import { Button, Pill, Select, Text } from '@/components';
 import { fonts, radii, semantic, spacing } from '@/theme';
 import {
   humanizeTransactionType,
@@ -28,19 +28,27 @@ import {
 import { buildTransactionDetailHref } from '@/utils/transactionRoutes';
 import { useCurrency } from '@/utils/useCurrency';
 
-type FilterId = 'today' | 'week' | 'energy';
+type Category = 'all' | 'meter' | 'installment';
+type Scope = 'today' | 'week' | 'all';
 
-const FILTERS: { id: FilterId; label: string }[] = [
-  { id: 'today', label: 'Today' },
-  { id: 'week', label: 'This week' },
-  { id: 'energy', label: 'Energy' },
+const CATEGORIES: { id: Category; label: string }[] = [
+  { id: 'all', label: 'All' },
+  { id: 'meter', label: 'Meter' },
+  { id: 'installment', label: 'Installment' },
+];
+
+const SCOPE_OPTIONS: { value: Scope; label: string }[] = [
+  { value: 'today', label: 'Today' },
+  { value: 'week', label: 'This week' },
+  { value: 'all', label: 'All time' },
 ];
 
 export default function PaymentsTab() {
   const { api } = useSession();
   const insets = useSafeAreaInsets();
   const { format: formatCurrency } = useCurrency();
-  const [filter, setFilter] = useState<FilterId>('today');
+  const [category, setCategory] = useState<Category>('all');
+  const [scope, setScope] = useState<Scope>('today');
 
   const transactions = useInfiniteQuery({
     queryKey: ['agent-transactions-list'],
@@ -59,14 +67,15 @@ export default function PaymentsTab() {
   );
 
   const filtered = useMemo(
-    () => items.filter((tx) => matches(tx, filter)),
-    [items, filter],
+    () => items.filter((tx) => matches(tx, category, scope)),
+    [items, category, scope],
   );
   const filteredCash = filtered.reduce(
     (sum, tx) => sum + Number(tx.amount || 0),
     0,
   );
-  const scopeLabel = filterScopeLabel(filter);
+  const scopeLabel =
+    scope === 'today' ? 'today' : scope === 'week' ? 'this week' : 'all time';
 
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
@@ -80,15 +89,24 @@ export default function PaymentsTab() {
       </View>
 
       <View style={styles.chipsRow}>
-        {FILTERS.map((f) => (
+        {CATEGORIES.map((c) => (
           <Pill
-            key={f.id}
-            label={f.label}
+            key={c.id}
+            label={c.label}
             tone="neutral"
-            selected={filter === f.id}
-            onPress={() => setFilter(f.id)}
+            selected={category === c.id}
+            onPress={() => setCategory(c.id)}
           />
         ))}
+      </View>
+      <View style={styles.scopeRow}>
+        <Select<Scope>
+          value={scope}
+          onChange={setScope}
+          options={SCOPE_OPTIONS}
+          compact
+          containerStyle={styles.scopeSelect}
+        />
       </View>
 
       <View style={styles.summary}>
@@ -288,21 +306,23 @@ function EmptyState({
   );
 }
 
-function matches(tx: AgentTransaction, filter: FilterId): boolean {
-  if (filter === 'today') return isToday(tx.created_at);
-  if (filter === 'week') return isThisWeek(tx.created_at);
-  if (filter === 'energy') {
-    const t = (tx.type ?? '').toLowerCase();
-    return t.includes('energy') || t.includes('meter');
-  }
+function matches(
+  tx: AgentTransaction,
+  category: Category,
+  scope: Scope,
+): boolean {
+  const inScope =
+    scope === 'all'
+      ? true
+      : scope === 'today'
+        ? isToday(tx.created_at)
+        : isThisWeek(tx.created_at);
+  if (!inScope) return false;
+  if (category === 'all') return true;
+  const isInstallment = isShsTransaction(tx);
+  if (category === 'installment') return isInstallment;
+  if (category === 'meter') return !isInstallment;
   return true;
-}
-
-function filterScopeLabel(filter: FilterId): string {
-  if (filter === 'today') return 'today';
-  if (filter === 'week') return 'this week';
-  if (filter === 'energy') return 'energy';
-  return '';
 }
 
 function isToday(value: string): boolean {
@@ -366,11 +386,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.xs,
     gap: spacing.sm,
+    backgroundColor: semantic.paper,
+  },
+  scopeRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.sm,
     backgroundColor: semantic.paper,
     borderBottomWidth: 1,
     borderBottomColor: semantic.line,
+  },
+  scopeSelect: {
+    width: 130,
   },
   summary: {
     flexDirection: 'row',

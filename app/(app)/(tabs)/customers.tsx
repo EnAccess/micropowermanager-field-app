@@ -120,6 +120,16 @@ export default function CustomersTab() {
     return set;
   }, [soldAppliancesQuery.data]);
 
+  const shsNameByPerson = useMemo(() => {
+    const map = new Map<number, string>();
+    for (const sale of soldAppliancesQuery.data ?? []) {
+      if (!sale.person_id) continue;
+      const name = sale.appliance?.name?.trim();
+      if (name && !map.has(sale.person_id)) map.set(sale.person_id, name);
+    }
+    return map;
+  }, [soldAppliancesQuery.data]);
+
   const filtered = useMemo(
     () => baseItems.filter((c) => matchesFilter(c, filter, personIdsWithSold)),
     [baseItems, filter, personIdsWithSold],
@@ -141,7 +151,7 @@ export default function CustomersTab() {
         <View style={styles.headerTitle}>
           <Text variant="screenTitle">Customers</Text>
           <Text variant="meta" tone="muted">
-            {counts.all} total
+            {counts[filter]} total
           </Text>
         </View>
         <Pressable
@@ -174,7 +184,7 @@ export default function CustomersTab() {
       <View style={styles.chipsRow}>
         {FILTERS.map((f) => {
           const active = filter === f.id;
-          const label = f.id === 'all' ? `All ${counts.all}` : f.label;
+          const label = f.label;
           return (
             <Pill
               key={f.id}
@@ -258,6 +268,12 @@ export default function CustomersTab() {
               hasShs={
                 isPendingCustomer(item) ? false : personIdsWithSold.has(item.id)
               }
+              shsName={
+                isPendingCustomer(item)
+                  ? null
+                  : (shsNameByPerson.get(item.id) ?? null)
+              }
+              preferShs={filter === 'shs'}
             />
           )}
         />
@@ -269,13 +285,17 @@ export default function CustomersTab() {
 function CustomerRow({
   customer,
   hasShs,
+  shsName,
+  preferShs,
 }: {
   customer: Customer | PendingCustomer;
   hasShs: boolean;
+  shsName: string | null;
+  preferShs: boolean;
 }) {
   const phone = primaryPhone(customer);
   const pending = isPendingCustomer(customer);
-  const meta = pending ? null : describeMeta(customer, hasShs);
+  const meta = pending ? null : describeMeta(customer, hasShs, shsName, preferShs);
   const registeredToday = isToday(customer.created_at);
   const failed = pending && customer._outbox_status === 'failed';
 
@@ -387,15 +407,26 @@ function isShs(deviceType: string): boolean {
 function describeMeta(
   customer: Customer | PendingCustomer,
   hasShs: boolean,
+  shsName: string | null,
+  preferShs: boolean,
 ): string {
+  const shsDevice = customer.devices?.find((d) => isShs(d.device_type));
+  const ownsShs = hasShs || !!shsDevice;
+  const shsLabel = shsName ?? shsDevice?.device_type ?? 'SHS';
+
+  if (preferShs && ownsShs) {
+    return shsLabel;
+  }
   const device = customer.devices?.[0];
   const labels: string[] = [];
   if (device) {
     if (isMeter(device.device_type)) labels.push('Meter');
-    else if (isShs(device.device_type)) labels.push('SHS');
+    else if (isShs(device.device_type)) labels.push(shsLabel);
     else labels.push(device.device_type);
   }
-  if (hasShs && !labels.includes('SHS')) labels.push('SHS');
+  if (ownsShs && !labels.includes(shsLabel)) {
+    labels.push(shsLabel);
+  }
   return labels.join(' · ');
 }
 

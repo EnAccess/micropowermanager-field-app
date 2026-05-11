@@ -5,6 +5,7 @@ import {
   Pressable,
   StyleProp,
   StyleSheet,
+  TextInput,
   View,
   ViewStyle,
 } from 'react-native';
@@ -28,6 +29,9 @@ type SelectProps<TValue> = {
   error?: string;
   disabled?: boolean;
   loading?: boolean;
+  searchable?: boolean;
+  searchPlaceholder?: string;
+  compact?: boolean;
   containerStyle?: StyleProp<ViewStyle>;
 };
 
@@ -40,16 +44,36 @@ export function Select<TValue>({
   error,
   disabled,
   loading,
+  searchable,
+  searchPlaceholder = 'Search…',
+  compact,
   containerStyle,
 }: SelectProps<TValue>) {
   const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
 
   const selected = useMemo(
     () => options.find((option) => option.value === value),
     [options, value],
   );
 
+  const visibleOptions = useMemo(() => {
+    if (!searchable) return options;
+    const term = query.trim().toLowerCase();
+    if (!term) return options;
+    return options.filter(
+      (o) =>
+        o.label.toLowerCase().includes(term) ||
+        o.description?.toLowerCase().includes(term),
+    );
+  }, [options, query, searchable]);
+
   const canOpen = !disabled && !loading;
+
+  function close() {
+    setOpen(false);
+    setQuery('');
+  }
 
   return (
     <View style={[styles.container, containerStyle]}>
@@ -64,6 +88,7 @@ export function Select<TValue>({
         onPress={() => setOpen(true)}
         style={({ pressed }) => [
           styles.trigger,
+          compact ? styles.triggerCompact : null,
           error ? styles.triggerError : null,
           pressed && canOpen ? styles.triggerPressed : null,
           !canOpen ? styles.triggerDisabled : null,
@@ -90,25 +115,39 @@ export function Select<TValue>({
         visible={open}
         transparent
         animationType="slide"
-        onRequestClose={() => setOpen(false)}
+        onRequestClose={close}
       >
-        <Pressable style={styles.backdrop} onPress={() => setOpen(false)} />
+        <Pressable style={styles.backdrop} onPress={close} />
         <SafeAreaView style={styles.sheet} edges={['bottom']}>
           <View style={styles.sheetHeader}>
             <Text variant="screenTitle">{label ?? 'Select'}</Text>
-            <Pressable onPress={() => setOpen(false)}>
+            <Pressable onPress={close}>
               <Text variant="bodyEmphasis" tone="brand">
                 Close
               </Text>
             </Pressable>
           </View>
+          {searchable ? (
+            <TextInput
+              value={query}
+              onChangeText={setQuery}
+              placeholder={searchPlaceholder}
+              placeholderTextColor={semantic.ink3}
+              autoCapitalize="none"
+              autoCorrect={false}
+              style={styles.search}
+            />
+          ) : null}
           <FlatList
-            data={options}
+            data={visibleOptions}
             keyExtractor={(option) => String(option.value)}
+            keyboardShouldPersistTaps="handled"
             ItemSeparatorComponent={() => <View style={styles.separator} />}
             ListEmptyComponent={
               <Text variant="meta" tone="muted" style={styles.empty}>
-                No options available.
+                {searchable && query.trim()
+                  ? 'No matches.'
+                  : 'No options available.'}
               </Text>
             }
             renderItem={({ item }) => {
@@ -117,7 +156,7 @@ export function Select<TValue>({
                 <Pressable
                   onPress={() => {
                     onChange(item.value);
-                    setOpen(false);
+                    close();
                   }}
                   style={({ pressed }) => [
                     styles.option,
@@ -176,6 +215,12 @@ const styles = StyleSheet.create({
     color: semantic.ink3,
     fontSize: 16,
   },
+  triggerCompact: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    minHeight: 34,
+    borderWidth: 1,
+  },
   triggerError: {
     borderColor: semantic.red,
   },
@@ -205,6 +250,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: spacing.md,
+  },
+  search: {
+    backgroundColor: semantic.paper,
+    borderRadius: radii.input,
+    borderWidth: 1.5,
+    borderColor: semantic.line2,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    fontFamily: fonts.sansRegular,
+    fontSize: 15,
+    color: semantic.ink,
+    marginBottom: spacing.sm,
   },
   option: {
     flexDirection: 'row',

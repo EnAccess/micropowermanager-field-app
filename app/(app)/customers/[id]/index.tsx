@@ -2,6 +2,7 @@ import { Feather } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import * as Clipboard from 'expo-clipboard';
 import { router, useLocalSearchParams } from 'expo-router';
+import type { ComponentProps } from 'react';
 import {
   ActivityIndicator,
   Linking,
@@ -178,13 +179,31 @@ export default function CustomerDetailScreen() {
             </View>
             <View style={styles.deviceList}>
               {meters.map((d) => (
-                <MeterCard key={`meter-${d.id}`} device={d} />
+                <MeterCard
+                  key={`meter-${d.id}`}
+                  device={d}
+                  onPress={() =>
+                    router.push({
+                      pathname: '/(app)/payments/new',
+                      params: { serial: d.device_serial },
+                    })
+                  }
+                />
               ))}
               {sales.map((s) => (
                 <ApplianceCard
                   key={`sale-${s.id}`}
                   sale={s}
                   formatCurrency={formatCurrency}
+                  onPress={
+                    s.device_serial
+                      ? () =>
+                          router.push({
+                            pathname: '/(app)/payments/new',
+                            params: { serial: s.device_serial! },
+                          })
+                      : undefined
+                  }
                 />
               ))}
             </View>
@@ -246,42 +265,58 @@ async function copyToClipboard(value: string, toast: string) {
   }
 }
 
-function MeterCard({ device }: { device: CustomerDevice }) {
-  const isMeter = device.device_type.toLowerCase().includes('meter');
+function MeterCard({
+  device,
+  onPress,
+}: {
+  device: CustomerDevice;
+  onPress?: () => void;
+}) {
   return (
-    <Card elevated>
-      <View style={styles.deviceRow}>
-        <View style={styles.deviceIcon}>
-          <Feather
-            name={isMeter ? 'zap' : 'sun'}
-            size={20}
-            color={semantic.blue}
-          />
-        </View>
-        <View style={styles.deviceBody}>
-          <Text variant="bodyEmphasis" numberOfLines={1}>
-            {humanizeDeviceType(device.device_type)}
-          </Text>
-          <View style={styles.deviceSerialRow}>
-            <MonoChip
-              value={device.device_serial}
-              onCopy={() =>
-                copyToClipboard(device.device_serial, 'Serial copied')
-              }
+    <Pressable
+      onPress={onPress}
+      disabled={!onPress}
+      style={({ pressed }) => [pressed && onPress && { opacity: 0.7 }]}
+    >
+      <Card elevated>
+        <View style={styles.deviceRow}>
+          <View style={styles.deviceIcon}>
+            <Feather
+              name={deviceIcon(device.device_type)}
+              size={20}
+              color={semantic.blue}
             />
           </View>
+          <View style={styles.deviceBody}>
+            <Text variant="bodyEmphasis" numberOfLines={1}>
+              {humanizeDeviceType(device.device_type)}
+            </Text>
+            <View style={styles.deviceSerialRow}>
+              <MonoChip
+                value={device.device_serial}
+                onCopy={() =>
+                  copyToClipboard(device.device_serial, 'Serial copied')
+                }
+              />
+            </View>
+          </View>
+          {onPress ? (
+            <Feather name="chevron-right" size={18} color={semantic.ink3} />
+          ) : null}
         </View>
-      </View>
-    </Card>
+      </Card>
+    </Pressable>
   );
 }
 
 function ApplianceCard({
   sale,
   formatCurrency,
+  onPress,
 }: {
   sale: SoldAppliance;
   formatCurrency: (n: number) => string;
+  onPress?: () => void;
 }) {
   const name = sale.appliance?.name ?? 'SHS unit';
   const cost = Number(sale.total_cost ?? sale.appliance?.cost ?? 0);
@@ -299,70 +334,83 @@ function ApplianceCard({
         : null;
 
   return (
-    <Card elevated>
-      <View style={styles.deviceRow}>
-        <View style={[styles.deviceIcon, styles.applianceIcon]}>
-          <Feather name="shopping-bag" size={20} color={semantic.orange} />
-        </View>
-        <View style={styles.deviceBody}>
-          <View style={styles.applianceTitleRow}>
-            <Text
-              variant="bodyEmphasis"
-              numberOfLines={1}
-              style={styles.applianceName}
-            >
-              {name}
-            </Text>
-            {done ? <Pill label="PAID" tone="green" /> : null}
-          </View>
-          {planLabel ? (
-            <Text variant="meta" tone="muted">
-              {planLabel}
-            </Text>
-          ) : null}
-          <View style={styles.deviceSerialRow}>
-            {sale.device_serial ? (
-              <MonoChip
-                value={sale.device_serial}
-                onCopy={() =>
-                  copyToClipboard(sale.device_serial!, 'Serial copied')
-                }
-              />
-            ) : (
-              <MonoChip
-                value={`Sale #${sale.id}`}
-                onCopy={() =>
-                  copyToClipboard(String(sale.id), 'Sale ID copied')
-                }
-              />
-            )}
-          </View>
-        </View>
-      </View>
-      {hasCost ? (
-        <>
-          <View style={styles.applianceProgress}>
-            <View
-              style={[
-                styles.applianceProgressFill,
-                {
-                  width: `${progress * 100}%`,
-                  backgroundColor: done ? semantic.green : semantic.blue,
-                },
-              ]}
+    <Pressable
+      onPress={onPress}
+      disabled={!onPress}
+      style={({ pressed }) => [pressed && onPress && { opacity: 0.7 }]}
+    >
+      <Card elevated>
+        <View style={styles.deviceRow}>
+          <View style={[styles.deviceIcon, styles.applianceIcon]}>
+            <Feather
+              name={applianceIcon(sale.appliance?.name)}
+              size={20}
+              color={semantic.orange}
             />
           </View>
-          <View style={styles.applianceFoot}>
-            <Text variant="meta" tone="muted">
-              Paid <Text style={styles.mono}>{formatCurrency(paid)}</Text>
-            </Text>
-            <Text variant="meta" tone="muted">
-              Total <Text style={styles.mono}>{formatCurrency(cost)}</Text>
-            </Text>
+          <View style={styles.deviceBody}>
+            <View style={styles.applianceTitleRow}>
+              <Text
+                variant="bodyEmphasis"
+                numberOfLines={1}
+                style={styles.applianceName}
+              >
+                {name}
+              </Text>
+              {done ? <Pill label="PAID" tone="green" /> : null}
+            </View>
+            {planLabel ? (
+              <Text variant="meta" tone="muted">
+                {planLabel}
+              </Text>
+            ) : null}
+            <View style={styles.deviceSerialRow}>
+              {sale.device_serial ? (
+                <MonoChip
+                  value={sale.device_serial}
+                  onCopy={() =>
+                    copyToClipboard(sale.device_serial!, 'Serial copied')
+                  }
+                />
+              ) : (
+                <MonoChip
+                  value={`Sale #${sale.id}`}
+                  onCopy={() =>
+                    copyToClipboard(String(sale.id), 'Sale ID copied')
+                  }
+                />
+              )}
+            </View>
           </View>
-        </>
-      ) : null}
-    </Card>
+          {onPress ? (
+            <Feather name="chevron-right" size={18} color={semantic.ink3} />
+          ) : null}
+        </View>
+        {hasCost ? (
+          <>
+            <View style={styles.applianceProgress}>
+              <View
+                style={[
+                  styles.applianceProgressFill,
+                  {
+                    width: `${progress * 100}%`,
+                    backgroundColor: done ? semantic.green : semantic.blue,
+                  },
+                ]}
+              />
+            </View>
+            <View style={styles.applianceFoot}>
+              <Text variant="meta" tone="muted">
+                Paid <Text style={styles.mono}>{formatCurrency(paid)}</Text>
+              </Text>
+              <Text variant="meta" tone="muted">
+                Total <Text style={styles.mono}>{formatCurrency(cost)}</Text>
+              </Text>
+            </View>
+          </>
+        ) : null}
+      </Card>
+    </Pressable>
   );
 }
 
@@ -415,7 +463,24 @@ function humanizeDeviceType(type: string): string {
   const t = type.toLowerCase();
   if (t.includes('meter')) return 'Meter';
   if (t.includes('solar') || t.includes('shs')) return 'SHS unit';
+  if (t.includes('bike') || t.includes('bms')) return 'E-bike';
   return type;
+}
+
+function deviceIcon(type: string): ComponentProps<typeof Feather>['name'] {
+  const t = type.toLowerCase();
+  if (t.includes('meter')) return 'zap';
+  if (t.includes('solar') || t.includes('shs')) return 'sun';
+  if (t.includes('bike') || t.includes('bms')) return 'battery-charging';
+  return 'cpu';
+}
+
+function applianceIcon(name?: string): ComponentProps<typeof Feather>['name'] {
+  const n = (name ?? '').toLowerCase();
+  if (n.includes('solar') || n.includes('shs') || n.includes('sun'))
+    return 'sun';
+  if (n.includes('bike') || n.includes('bms')) return 'battery-charging';
+  return 'shopping-bag';
 }
 
 const styles = StyleSheet.create({

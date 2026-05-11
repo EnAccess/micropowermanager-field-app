@@ -1,14 +1,14 @@
 import { Feather } from '@expo/vector-icons';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { z } from 'zod';
 
-import { assignMeterToCustomer } from '@/api/customer';
+import { assignMeterToCustomer, fetchAvailableMeters } from '@/api/customer';
 import {
   fetchConnectionGroups,
   fetchConnectionTypes,
@@ -25,7 +25,6 @@ import {
   Screen,
   Select,
   Text,
-  TextField,
 } from '@/components';
 import { colors, radius, spacing } from '@/theme';
 import {
@@ -37,9 +36,9 @@ import {
 import { formatCurrency } from '@/utils/format';
 
 const schema = z.object({
-  serial_number: z.string().trim().min(1, 'Serial number required.'),
   manufacturer_id: z.number({ error: 'Choose a manufacturer.' }),
   meter_type_id: z.number({ error: 'Choose a meter type.' }),
+  meter_id: z.number({ error: 'Choose a meter.' }),
   tariff_id: z.number({ error: 'Choose a tariff.' }),
   connection_group_id: z.number({ error: 'Choose a connection group.' }),
   connection_type_id: z.number({ error: 'Choose a connection type.' }),
@@ -70,8 +69,8 @@ export default function AddMeterScreen() {
   }
 
   const manufacturers = useQuery({
-    queryKey: ['manufacturers'],
-    queryFn: () => fetchManufacturers(api!),
+    queryKey: ['manufacturers', 'meter'],
+    queryFn: () => fetchManufacturers(api!, { type: 'meter' }),
     enabled: !!api,
   });
   const meterTypes = useQuery({
@@ -98,26 +97,51 @@ export default function AddMeterScreen() {
   const {
     control,
     handleSubmit,
+    resetField,
     formState: { errors, isSubmitting },
   } = useForm<AssignMeterForm>({
     resolver: zodResolver(schema),
     defaultValues: {
-      serial_number: '',
       manufacturer_id: undefined as unknown as number,
       meter_type_id: undefined as unknown as number,
+      meter_id: undefined as unknown as number,
       tariff_id: undefined as unknown as number,
       connection_group_id: undefined as unknown as number,
       connection_type_id: undefined as unknown as number,
     },
   });
 
-  const assignMutation = useMutation({
-    mutationFn: (payload: AssignMeterForm) =>
-      assignMeterToCustomer(api!, customerId, {
-        ...payload,
-        geo_points: geoPoints,
+  const manufacturerId = useWatch({ control, name: 'manufacturer_id' });
+  const meterTypeId = useWatch({ control, name: 'meter_type_id' });
+
+  const availableMeters = useQuery({
+    queryKey: ['available-meters', manufacturerId, meterTypeId],
+    queryFn: () =>
+      fetchAvailableMeters(api!, {
+        manufacturer_id: manufacturerId,
+        meter_type_id: meterTypeId,
       }),
-    onSuccess: () => setDone(true),
+    enabled: !!api && !!manufacturerId && !!meterTypeId,
+  });
+
+  const queryClient = useQueryClient();
+  const assignMutation = useMutation({
+    mutationFn: (payload: AssignMeterForm) => {
+      const meter = availableMeters.data?.find(
+        (m) => m.id === payload.meter_id,
+      );
+      if (!meter) throw new Error('Pick a meter from the list.');
+      const { meter_id: _meterId, ...rest } = payload;
+      return assignMeterToCustomer(api!, customerId, {
+        ...rest,
+        serial_number: meter.serial_number,
+        geo_points: geoPoints,
+      });
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['available-meters'] });
+      setDone(true);
+    },
   });
 
   useEffect(() => {
@@ -190,28 +214,17 @@ export default function AddMeterScreen() {
         <View style={styles.fields}>
           <Controller
             control={control}
-            name="serial_number"
-            render={({ field: { value, onChange, onBlur } }) => (
-              <TextField
-                label="Serial number"
-                placeholder="e.g. MTR-000123"
-                autoCapitalize="characters"
-                autoCorrect={false}
-                value={value}
-                onChangeText={onChange}
-                onBlur={onBlur}
-                error={errors.serial_number?.message}
-              />
-            )}
-          />
-          <Controller
-            control={control}
             name="manufacturer_id"
             render={({ field: { value, onChange } }) => (
               <Select
                 label="Manufacturer"
                 value={value ?? null}
-                onChange={onChange}
+                onChange={(next) => {
+                  onChange(next);
+                  resetField('meter_id', {
+                    defaultValue: undefined as unknown as number,
+                  });
+                }}
                 loading={manufacturers.isLoading}
                 options={(manufacturers.data ?? []).map((m) => ({
                   value: m.id,
@@ -228,7 +241,12 @@ export default function AddMeterScreen() {
               <Select
                 label="Meter type"
                 value={value ?? null}
-                onChange={onChange}
+                onChange={(next) => {
+                  onChange(next);
+                  resetField('meter_id', {
+                    defaultValue: undefined as unknown as number,
+                  });
+                }}
                 loading={meterTypes.isLoading}
                 options={(meterTypes.data ?? []).map((m) => ({
                   value: m.id,
@@ -237,6 +255,40 @@ export default function AddMeterScreen() {
                 error={errors.meter_type_id?.message}
               />
             )}
+          />
+          <Controller
+            control={control}
+            name="meter_id"
+            render={({ field: { value, onChange } }) => {
+              const ready = !!manufacturerId && !!meterTypeId;
+              const meters = availableMeters.data ?? [];
+              return (
+                <Select
+                  label="Serial number"
+                  placeholder={
+                    ready
+                      ? meters.length === 0 && !availableMeters.isLoading
+                        ? 'No un-assigned meters match'
+                        : 'Select a meter…'
+                      : 'Choose manufacturer and meter type first'
+                  }
+                  value={value ?? null}
+                  onChange={onChange}
+                  disabled={
+                    !ready ||
+                    (meters.length === 0 && !availableMeters.isLoading)
+                  }
+                  loading={availableMeters.isLoading}
+                  searchable
+                  searchPlaceholder="Search serial number"
+                  options={meters.map((m) => ({
+                    value: m.id,
+                    label: m.serial_number,
+                  }))}
+                  error={errors.meter_id?.message}
+                />
+              );
+            }}
           />
           <Controller
             control={control}

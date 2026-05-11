@@ -38,7 +38,6 @@ import {
   NumericKeypad,
   Pill,
   ProgressSteps,
-  QuickAddChips,
   ReceiptCard,
   Screen,
   SecondaryHeader,
@@ -50,8 +49,6 @@ import { fonts, radii, semantic, spacing } from '@/theme';
 import { useCurrency } from '@/utils/useCurrency';
 
 type Step = 'find' | 'amount' | 'confirm' | 'success';
-
-const QUICK_ADD = [5000, 10000, 20000, 50000];
 
 export default function CollectPaymentScreen() {
   const { api } = useSession();
@@ -195,10 +192,6 @@ export default function CollectPaymentScreen() {
     setAmountStr((prev) => prev.slice(0, -1));
   }
 
-  function handleQuickAdd(value: number) {
-    setAmountStr((prev) => String((Number(prev) || 0) + value));
-  }
-
   if (step === 'find') {
     return (
       <FindStep
@@ -225,7 +218,6 @@ export default function CollectPaymentScreen() {
         belowMinimum={belowMinimum}
         onKeyPress={handleKeypress}
         onDelete={handleDelete}
-        onQuickAdd={handleQuickAdd}
         onChangeCustomer={() => setStep('find')}
         onContinue={() => {
           if (amountValue <= 0 || belowMinimum) return;
@@ -337,7 +329,6 @@ function AmountStep({
   belowMinimum,
   onKeyPress,
   onDelete,
-  onQuickAdd,
   onChangeCustomer,
   onContinue,
   onBack,
@@ -350,7 +341,6 @@ function AmountStep({
   belowMinimum: boolean;
   onKeyPress: (k: string) => void;
   onDelete: () => void;
-  onQuickAdd: (v: number) => void;
   onChangeCustomer: () => void;
   onContinue: () => void;
   onBack: () => void;
@@ -408,12 +398,6 @@ function AmountStep({
             </Text>
           ) : null}
         </View>
-
-        <QuickAddChips
-          values={QUICK_ADD}
-          onAdd={onQuickAdd}
-          style={styles.quickAdd}
-        />
       </View>
 
       <NumericKeypad
@@ -1028,10 +1012,6 @@ const styles = StyleSheet.create({
   },
   amountMinimum: {
     marginTop: 4,
-  },
-  quickAdd: {
-    marginTop: spacing.lg,
-    justifyContent: 'center',
   },
   keypad: {
     marginHorizontal: spacing.md,

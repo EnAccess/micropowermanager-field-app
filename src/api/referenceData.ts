@@ -1,7 +1,7 @@
 import { AxiosInstance } from 'axios';
 
 export type City = { id: number; name: string; mini_grid_id: number | null };
-export type Manufacturer = { id: number; name: string };
+export type Manufacturer = { id: number; name: string; type?: string };
 export type MeterType = {
   id: number;
   online: boolean;
@@ -26,8 +26,16 @@ const BASE = '/customer-registration-app';
 
 export const fetchCities = (client: AxiosInstance) =>
   fetchList<City>(client, `${BASE}/cities`);
-export const fetchManufacturers = (client: AxiosInstance) =>
-  fetchList<Manufacturer>(client, `${BASE}/manufacturers`);
+export const fetchManufacturers = (
+  client: AxiosInstance,
+  params: { type?: string } = {},
+) =>
+  fetchList<Manufacturer>(
+    client,
+    params.type
+      ? `${BASE}/manufacturers?type=${encodeURIComponent(params.type)}`
+      : `${BASE}/manufacturers`,
+  );
 export const fetchMeterTypes = (client: AxiosInstance) =>
   fetchList<MeterType>(client, `${BASE}/meter-types`);
 export const fetchTariffs = (client: AxiosInstance) =>
