@@ -19,6 +19,7 @@ import {
   SaleRate,
   SoldAppliance,
   fetchAllSoldAppliances,
+  nextDueDate,
   saleCost,
   saleCustomerName,
   saleCustomerPhone,
@@ -91,7 +92,7 @@ export default function SaleDetailScreen() {
       : 0;
   const planLabel = describePlan(sale);
   const applianceName = sale.appliance?.name ?? 'SHS unit';
-  const nextRate = sortedRates.find((r) => Number(r.remaining) > 0) ?? null;
+  const nextDue = nextDueDate(sale);
 
   return (
     <View style={styles.root}>
@@ -223,10 +224,10 @@ export default function SaleDetailScreen() {
                 mono
               />
             ) : null}
-            {nextRate && !done ? (
+            {nextDue && !done ? (
               <DetailRow
                 label="Next due"
-                value={formatDate(nextRate.due_date)}
+                value={formatDate(nextDue)}
                 mono
                 last={!sale.created_at}
               />

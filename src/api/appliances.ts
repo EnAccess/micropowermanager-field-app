@@ -150,6 +150,22 @@ export function saleCost(sale: SoldAppliance): number {
   return Number(sale.total_cost ?? sale.appliance?.cost ?? 0);
 }
 
+export function nextDueDate(sale: SoldAppliance): string | null {
+  if (!sale.rates?.length) return null;
+  let earliest: SaleRate | null = null;
+  let earliestTime = Number.POSITIVE_INFINITY;
+  for (const rate of sale.rates) {
+    if (Number(rate.remaining) <= 0) continue;
+    const t = new Date(rate.due_date).getTime();
+    if (Number.isNaN(t)) continue;
+    if (t < earliestTime) {
+      earliest = rate;
+      earliestTime = t;
+    }
+  }
+  return earliest?.due_date ?? null;
+}
+
 export function salePaid(sale: SoldAppliance): number {
   if (sale.total_paid != null) return Number(sale.total_paid);
   const downPayment = Number(sale.down_payment ?? 0);

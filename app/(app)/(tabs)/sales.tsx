@@ -15,6 +15,7 @@ import {
   SoldAppliance,
   SoldAppliancePage,
   fetchSoldAppliancePage,
+  nextDueDate,
   saleCost,
   salePaid,
   saleCustomerName,
@@ -170,6 +171,7 @@ function SaleCard({
   const planLabel = describePlan(sale);
   const sizeLabel = shortLabel(name);
   const customerName = saleCustomerName(sale);
+  const nextDue = nextDueDate(sale) ?? sale.first_payment_date ?? null;
 
   return (
     <Pressable
@@ -188,9 +190,9 @@ function SaleCard({
         </View>
         {done ? (
           <Pill label="PAID" tone="green" />
-        ) : sale.first_payment_date ? (
+        ) : nextDue ? (
           <Text variant="bodyEmphasis" tone="muted">
-            Next {formatShortDate(sale.first_payment_date)}
+            Next {formatShortDate(nextDue)}
           </Text>
         ) : null}
       </View>
