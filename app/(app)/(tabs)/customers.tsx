@@ -295,7 +295,9 @@ function CustomerRow({
 }) {
   const phone = primaryPhone(customer);
   const pending = isPendingCustomer(customer);
-  const meta = pending ? null : describeMeta(customer, hasShs, shsName, preferShs);
+  const meta = pending
+    ? null
+    : describeMeta(customer, hasShs, shsName, preferShs);
   const registeredToday = isToday(customer.created_at);
   const failed = pending && customer._outbox_status === 'failed';
 
