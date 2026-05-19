@@ -53,6 +53,8 @@ export function PhoneField({
       : value.replace(/^\+/, '');
   });
 
+  const [touched, setTouched] = useState(Boolean(value));
+
   function emit(country: ICountry | null, phone: string) {
     if (!country) {
       onChange('');
@@ -63,6 +65,7 @@ export function PhoneField({
   }
 
   function handlePhoneChange(phone: string) {
+    if (phone) setTouched(true);
     setPhoneNumber(phone);
     emit(selectedCountry, phone);
   }
@@ -93,7 +96,7 @@ export function PhoneField({
         modalPopularCountriesTitle="Suggested"
         modalAllCountriesTitle="All countries"
         phoneInputStyles={{
-          container: error ? styles.frameError : styles.frame,
+          container: touched && error ? styles.frameError : styles.frame,
           flagContainer: styles.flagContainer,
           flag: styles.flag,
           callingCode: styles.callingCode,
@@ -102,7 +105,7 @@ export function PhoneField({
           input: styles.input,
         }}
       />
-      {error ? (
+      {touched && error ? (
         <Text variant="meta" tone="danger" style={styles.helper}>
           {error}
         </Text>

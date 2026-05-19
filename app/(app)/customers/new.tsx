@@ -13,7 +13,10 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { isValidPhoneNumber } from 'libphonenumber-js';
+import {
+  isValidPhoneNumber,
+  validatePhoneNumberLength,
+} from 'libphonenumber-js';
 
 import { Customer, registerCustomer } from '@/api/customer';
 import { City, fetchCities } from '@/api/referenceData';
@@ -48,7 +51,15 @@ const schema = z.object({
   phone: z
     .string()
     .trim()
-    .refine((v) => isValidPhoneNumber(v), 'Enter a valid phone number.'),
+    .superRefine((v, ctx) => {
+      if (!v) {
+        ctx.addIssue({ code: 'custom', message: 'Enter a phone number.' });
+        return;
+      }
+      if (validatePhoneNumberLength(v) || !isValidPhoneNumber(v)) {
+        ctx.addIssue({ code: 'custom', message: 'Invalid phone number.' });
+      }
+    }),
   city_id: z.number({ error: 'Choose a village.' }),
 });
 
@@ -108,6 +119,7 @@ export default function RegisterCustomerScreen() {
     formState: { errors },
   } = useForm<RegisterForm>({
     resolver: zodResolver(schema),
+    mode: 'onChange',
     defaultValues: {
       name: '',
       surname: '',
