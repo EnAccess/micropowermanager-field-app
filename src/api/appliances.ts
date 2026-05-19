@@ -32,6 +32,40 @@ export async function fetchAgentAssignedAppliances(
   return data.data ?? [];
 }
 
+export type UnassignedDeviceType = 'solar_home_system' | 'e_bike';
+
+export type UnassignedDevice = {
+  id: number;
+  person_id: number | null;
+  device_type: UnassignedDeviceType | string;
+  device_id: number;
+  device_serial: string;
+  device?: {
+    id: number;
+    appliance_id: number;
+    serial_number: string;
+    manufacturer_id?: number;
+    manufacturer?: { id: number; name: string; type?: string } | null;
+    appliance?: {
+      id: number;
+      name: string;
+      price?: number;
+    } | null;
+  } | null;
+};
+
+export async function fetchUnassignedDevices(
+  client: AxiosInstance,
+  applianceId: number,
+  type: UnassignedDeviceType,
+): Promise<UnassignedDevice[]> {
+  const { data } = await client.get<{ data: UnassignedDevice[] }>(
+    '/app/agents/devices/unassigned',
+    { params: { appliance_id: applianceId, type } },
+  );
+  return data.data ?? [];
+}
+
 export type SaleRate = {
   id: number;
   rate_cost: number;

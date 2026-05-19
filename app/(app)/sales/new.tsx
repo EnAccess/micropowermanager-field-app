@@ -23,6 +23,7 @@ import {
   AgentAssignedAppliance,
   AppliancePaymentType,
   fetchAgentAssignedAppliances,
+  fetchUnassignedDevices,
   isSolarHomeSystem,
   sellAppliance,
 } from '@/api/appliances';
@@ -42,6 +43,8 @@ import {
   ProgressSteps,
   ReceiptCard,
   SecondaryHeader,
+  Select,
+  SelectOption,
   StripedThumbnail,
   SuccessCheckmark,
   Text,
@@ -220,7 +223,10 @@ export default function SellShsScreen() {
         customer={customer}
         selectedId={assignment?.id ?? null}
         onChangeCustomer={() => setStep('customer')}
-        onSelect={setAssignment}
+        onSelect={(next) => {
+          if (next.id !== assignment?.id) setDeviceSerial('');
+          setAssignment(next);
+        }}
         onContinue={() => assignment && setStep('plan')}
         onBack={() => setStep('customer')}
         formatCurrency={formatCurrency}
@@ -644,9 +650,44 @@ function PlanStep({
   onContinue: () => void;
 }) {
   const insets = useSafeAreaInsets();
+  const { api } = useSession();
   const customerName = `${customer.name} ${customer.surname}`.trim();
   const unitName =
     assignment.appliance?.name ?? assignment.appliance_type?.name ?? 'SHS unit';
+
+  const applianceId = assignment.appliance?.id ?? null;
+  const unassignedQuery = useQuery({
+    queryKey: ['unassigned-devices', applianceId],
+    queryFn: () =>
+      fetchUnassignedDevices(api!, applianceId!, 'solar_home_system'),
+    enabled: !!api && applianceId != null,
+  });
+
+  const serialOptions = useMemo<SelectOption<string>[]>(() => {
+    return (unassignedQuery.data ?? [])
+      .filter((d) => !!d.device_serial)
+      .map((d) => {
+        const description = [
+          d.device?.manufacturer?.name,
+          d.device?.appliance?.name,
+        ]
+          .filter(Boolean)
+          .join(' · ');
+        return {
+          value: d.device_serial,
+          label: d.device_serial,
+          description: description || undefined,
+        };
+      });
+  }, [unassignedQuery.data]);
+
+  const serialError = unassignedQuery.isError
+    ? 'Could not load unassigned units. Check your connection.'
+    : applianceId == null
+      ? 'This appliance is missing — contact your admin.'
+      : !unassignedQuery.isLoading && serialOptions.length === 0
+        ? 'No unassigned units available for this appliance.'
+        : undefined;
 
   return (
     <View style={styles.root}>
@@ -836,14 +877,17 @@ function PlanStep({
             </Text>
           </Callout>
 
-          <TextField
+          <Select<string>
             label="Unit serial number"
-            placeholder="e.g. SHS-000123"
-            autoCapitalize="characters"
-            autoCorrect={false}
-            mono
-            value={deviceSerial}
-            onChangeText={onChangeSerial}
+            placeholder="Pick an unassigned unit"
+            searchable
+            searchPlaceholder="Search by serial…"
+            options={serialOptions}
+            value={deviceSerial || null}
+            onChange={onChangeSerial}
+            loading={unassignedQuery.isLoading}
+            error={serialError}
+            disabled={serialOptions.length === 0}
             containerStyle={styles.planSerial}
           />
         </ScrollView>

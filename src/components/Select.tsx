@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react';
 import {
   FlatList,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   StyleProp,
   StyleSheet,
@@ -117,70 +119,76 @@ export function Select<TValue>({
         animationType="slide"
         onRequestClose={close}
       >
-        <Pressable style={styles.backdrop} onPress={close} />
-        <SafeAreaView style={styles.sheet} edges={['bottom']}>
-          <View style={styles.sheetHeader}>
-            <Text variant="screenTitle">{label ?? 'Select'}</Text>
-            <Pressable onPress={close}>
-              <Text variant="bodyEmphasis" tone="brand">
-                Close
-              </Text>
-            </Pressable>
-          </View>
-          {searchable ? (
-            <TextInput
-              value={query}
-              onChangeText={setQuery}
-              placeholder={searchPlaceholder}
-              placeholderTextColor={semantic.ink3}
-              autoCapitalize="none"
-              autoCorrect={false}
-              style={styles.search}
-            />
-          ) : null}
-          <FlatList
-            data={visibleOptions}
-            keyExtractor={(option) => String(option.value)}
-            keyboardShouldPersistTaps="handled"
-            ItemSeparatorComponent={() => <View style={styles.separator} />}
-            ListEmptyComponent={
-              <Text variant="meta" tone="muted" style={styles.empty}>
-                {searchable && query.trim()
-                  ? 'No matches.'
-                  : 'No options available.'}
-              </Text>
-            }
-            renderItem={({ item }) => {
-              const isSelected = item.value === value;
-              return (
-                <Pressable
-                  onPress={() => {
-                    onChange(item.value);
-                    close();
-                  }}
-                  style={({ pressed }) => [
-                    styles.option,
-                    pressed ? styles.optionPressed : null,
-                  ]}
-                >
-                  <View style={styles.optionBody}>
-                    <Text variant="bodyEmphasis">{item.label}</Text>
-                    {item.description ? (
-                      <Text variant="meta" tone="muted">
-                        {item.description}
+        <KeyboardAvoidingView
+          style={styles.modalContainer}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          pointerEvents="box-none"
+        >
+          <Pressable style={styles.backdrop} onPress={close} />
+          <SafeAreaView style={styles.sheet} edges={['bottom']}>
+            <View style={styles.sheetHeader}>
+              <Text variant="screenTitle">{label ?? 'Select'}</Text>
+              <Pressable onPress={close}>
+                <Text variant="bodyEmphasis" tone="brand">
+                  Close
+                </Text>
+              </Pressable>
+            </View>
+            {searchable ? (
+              <TextInput
+                value={query}
+                onChangeText={setQuery}
+                placeholder={searchPlaceholder}
+                placeholderTextColor={semantic.ink3}
+                autoCapitalize="none"
+                autoCorrect={false}
+                style={styles.search}
+              />
+            ) : null}
+            <FlatList
+              data={visibleOptions}
+              keyExtractor={(option) => String(option.value)}
+              keyboardShouldPersistTaps="handled"
+              ItemSeparatorComponent={() => <View style={styles.separator} />}
+              ListEmptyComponent={
+                <Text variant="meta" tone="muted" style={styles.empty}>
+                  {searchable && query.trim()
+                    ? 'No matches.'
+                    : 'No options available.'}
+                </Text>
+              }
+              renderItem={({ item }) => {
+                const isSelected = item.value === value;
+                return (
+                  <Pressable
+                    onPress={() => {
+                      onChange(item.value);
+                      close();
+                    }}
+                    style={({ pressed }) => [
+                      styles.option,
+                      pressed ? styles.optionPressed : null,
+                    ]}
+                  >
+                    <View style={styles.optionBody}>
+                      <Text variant="bodyEmphasis">{item.label}</Text>
+                      {item.description ? (
+                        <Text variant="meta" tone="muted">
+                          {item.description}
+                        </Text>
+                      ) : null}
+                    </View>
+                    {isSelected ? (
+                      <Text variant="bodyEmphasis" tone="brand">
+                        ✓
                       </Text>
                     ) : null}
-                  </View>
-                  {isSelected ? (
-                    <Text variant="bodyEmphasis" tone="brand">
-                      ✓
-                    </Text>
-                  ) : null}
-                </Pressable>
-              );
-            }}
-          />
-        </SafeAreaView>
+                  </Pressable>
+                );
+              }}
+            />
+          </SafeAreaView>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
@@ -232,6 +240,9 @@ const styles = StyleSheet.create({
   },
   helper: {
     marginTop: spacing.xs,
+  },
+  modalContainer: {
+    flex: 1,
   },
   backdrop: {
     flex: 1,
