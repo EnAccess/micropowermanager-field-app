@@ -5,10 +5,13 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import { router } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
+  Animated,
   FlatList,
+  PanResponder,
   Pressable,
   StyleSheet,
   View,
@@ -24,6 +27,7 @@ import {
 } from '@/api/customer';
 import { useSession } from '@/auth/SessionContext';
 import { Button, Pill, SyncBanner, Text, TextField } from '@/components';
+import { removeOutboxEntry } from '@/storage/outbox';
 import { useDrainerStatus } from '@/storage/outboxDrainer';
 import {
   PendingCustomer,
@@ -31,7 +35,7 @@ import {
   outboxAsCustomers,
   useRegisterCustomerOutbox,
 } from '@/storage/useOutbox';
-import { radii, semantic, shadows, spacing } from '@/theme';
+import { fonts, radii, semantic, shadows, spacing } from '@/theme';
 import { initials } from '@/utils/format';
 
 type FilterId = 'all' | 'meter' | 'shs' | 'today';
@@ -262,20 +266,33 @@ export default function CustomersTab() {
               </View>
             ) : null
           }
-          renderItem={({ item }) => (
-            <CustomerRow
-              customer={item}
-              hasShs={
-                isPendingCustomer(item) ? false : personIdsWithSold.has(item.id)
-              }
-              shsName={
-                isPendingCustomer(item)
-                  ? null
-                  : (shsNameByPerson.get(item.id) ?? null)
-              }
-              preferShs={filter === 'shs'}
-            />
-          )}
+          renderItem={({ item }) => {
+            const row = (
+              <CustomerRow
+                customer={item}
+                hasShs={
+                  isPendingCustomer(item)
+                    ? false
+                    : personIdsWithSold.has(item.id)
+                }
+                shsName={
+                  isPendingCustomer(item)
+                    ? null
+                    : (shsNameByPerson.get(item.id) ?? null)
+                }
+                preferShs={filter === 'shs'}
+              />
+            );
+            if (!isPendingCustomer(item)) return row;
+            return (
+              <SwipeToDiscardRow
+                localId={item._local_id}
+                name={`${item.name} ${item.surname}`.trim()}
+              >
+                {row}
+              </SwipeToDiscardRow>
+            );
+          }}
         />
       )}
     </View>
@@ -354,6 +371,87 @@ function CustomerRow({
     </Pressable>
   );
 }
+
+function SwipeToDiscardRow({
+  localId,
+  name,
+  children,
+}: {
+  localId: string;
+  name: string;
+  children: React.ReactNode;
+}) {
+  const translateX = useRef(new Animated.Value(0)).current;
+
+  const reset = useCallback(() => {
+    Animated.spring(translateX, {
+      toValue: 0,
+      useNativeDriver: true,
+      bounciness: 4,
+    }).start();
+  }, [translateX]);
+
+  const confirm = useCallback(() => {
+    Animated.spring(translateX, {
+      toValue: -DISCARD_ACTION_WIDTH,
+      useNativeDriver: true,
+      bounciness: 4,
+    }).start();
+    const displayName = name || 'this entry';
+    Alert.alert(
+      'Discard local customer?',
+      `${displayName} hasn't been sent to the server yet. Discarding deletes the local entry permanently.`,
+      [
+        { text: 'Cancel', style: 'cancel', onPress: reset },
+        {
+          text: 'Discard',
+          style: 'destructive',
+          onPress: () => {
+            void removeOutboxEntry(localId);
+          },
+        },
+      ],
+      { cancelable: true, onDismiss: reset },
+    );
+  }, [translateX, name, localId, reset]);
+
+  const panResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_, g) =>
+          Math.abs(g.dx) > 8 && Math.abs(g.dx) > Math.abs(g.dy) * 1.5,
+        onPanResponderMove: (_, g) => {
+          translateX.setValue(
+            Math.min(0, Math.max(g.dx, -DISCARD_ACTION_WIDTH - 24)),
+          );
+        },
+        onPanResponderRelease: (_, g) => {
+          if (g.dx <= -DISCARD_TRIGGER) confirm();
+          else reset();
+        },
+        onPanResponderTerminate: reset,
+      }),
+    [translateX, confirm, reset],
+  );
+
+  return (
+    <View style={styles.swipeContainer}>
+      <View style={styles.swipeAction} pointerEvents="none">
+        <Feather name="trash-2" size={20} color={semantic.paper} />
+        <Text style={styles.swipeActionLabel}>Discard</Text>
+      </View>
+      <Animated.View
+        style={[styles.swipeForeground, { transform: [{ translateX }] }]}
+        {...panResponder.panHandlers}
+      >
+        {children}
+      </Animated.View>
+    </View>
+  );
+}
+
+const DISCARD_ACTION_WIDTH = 96;
+const DISCARD_TRIGGER = 72;
 
 function matchesFilter(
   customer: Customer | PendingCustomer,
@@ -574,5 +672,29 @@ const styles = StyleSheet.create({
   emptyCta: {
     marginTop: spacing.md,
     alignSelf: 'stretch',
+  },
+  swipeContainer: {
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  swipeAction: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    right: 0,
+    width: DISCARD_ACTION_WIDTH,
+    backgroundColor: semantic.red,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+  },
+  swipeActionLabel: {
+    color: semantic.paper,
+    fontFamily: fonts.ptBold,
+    fontSize: 12,
+    letterSpacing: 0.5,
+  },
+  swipeForeground: {
+    backgroundColor: semantic.paper,
   },
 });
