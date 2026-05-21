@@ -42,6 +42,15 @@
           "locationWhenInUsePermission": "MicroPowerManager uses your location to geotag customers and meters you register in the field."
         }
       ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "MicroPowerManager uses the camera so you can capture customer documents (e.g. signed contracts) and attach them to a customer record.",
+          "photosPermission": "MicroPowerManager needs access to your photos so you can attach a captured document to a customer record.",
+          "microphonePermission": false
+        }
+      ],
+      "expo-document-picker",
       "@react-native-community/datetimepicker"
     ]
   }

@@ -1,4 +1,3 @@
-import { Feather } from '@expo/vector-icons';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -26,8 +25,8 @@ import { fetchOnline, useNetworkStatus } from '@/auth/useNetworkStatus';
 import {
   Button,
   Callout,
+  DocumentSection,
   PhoneField,
-  Pill,
   ProgressSteps,
   SecondaryHeader,
   Select,
@@ -456,22 +455,11 @@ function FormStep({
             </View>
           </View>
 
-          <Text variant="sectionLabel" tone="muted" style={styles.photoLabel}>
-            PHOTO{' '}
-            <Text variant="meta" tone="muted" style={styles.photoOptional}>
-              (optional)
-            </Text>
-          </Text>
-
-          <View style={styles.photoTiles}>
-            <PhotoTile icon="camera" label="Take photo" />
-            <PhotoTile icon="image" label="Upload" />
-          </View>
-
           <Callout tone="info" style={styles.callout}>
             <Text variant="meta" tone="secondary">
               Meter / SHS setup happens after — you can register identity first
-              and link a device later.
+              and link a device later. Documents can be attached once the
+              customer is saved.
             </Text>
           </Callout>
 
@@ -507,27 +495,6 @@ function FormStep({
           />
         </View>
       </KeyboardAvoidingView>
-    </View>
-  );
-}
-
-function PhotoTile({
-  icon,
-  label,
-}: {
-  icon: React.ComponentProps<typeof Feather>['name'];
-  label: string;
-}) {
-  return (
-    <View
-      style={[styles.photoTile, styles.photoTileDisabled]}
-      accessibilityState={{ disabled: true }}
-    >
-      <Feather name={icon} size={22} color={semantic.ink3} />
-      <Text variant="bodyEmphasis" tone="muted" style={styles.photoTileLabel}>
-        {label}
-      </Text>
-      <Pill label="Coming soon" tone="neutral" style={styles.photoTilePill} />
     </View>
   );
 }
@@ -576,9 +543,14 @@ function SuccessStep({
           <Callout tone="info" style={styles.successCallout}>
             <Text variant="meta" tone="secondary">
               You&apos;re offline. We&apos;ll sync this customer to the server
-              automatically when you&apos;re back online.
+              automatically when you&apos;re back online. Documents can be added
+              once the customer reaches the server.
             </Text>
           </Callout>
+        ) : customer ? (
+          <View style={styles.successDocs}>
+            <DocumentSection customerId={customer.id} />
+          </View>
         ) : null}
       </ScrollView>
 
@@ -683,38 +655,6 @@ const styles = StyleSheet.create({
     color: semantic.ink2,
     fontSize: 15,
   },
-  photoLabel: {
-    marginTop: spacing.md,
-  },
-  photoOptional: {
-    textTransform: 'none',
-    letterSpacing: 0,
-  },
-  photoTiles: {
-    flexDirection: 'row',
-    gap: spacing.md,
-  },
-  photoTile: {
-    flex: 1,
-    minHeight: 88,
-    borderWidth: 1.5,
-    borderColor: semantic.line2,
-    borderStyle: 'dashed',
-    borderRadius: radii.input,
-    backgroundColor: semantic.bgSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-  },
-  photoTileDisabled: {
-    opacity: 0.55,
-  },
-  photoTileLabel: {
-    color: semantic.ink2,
-  },
-  photoTilePill: {
-    marginTop: 4,
-  },
   callout: {
     marginTop: spacing.xs,
   },
@@ -762,6 +702,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   successCallout: {
+    marginTop: spacing.lg,
+    alignSelf: 'stretch',
+  },
+  successDocs: {
     marginTop: spacing.lg,
     alignSelf: 'stretch',
   },

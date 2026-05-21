@@ -22,7 +22,15 @@ import {
 } from '@/api/appliances';
 import { Customer, CustomerDevice, fetchCustomer } from '@/api/customer';
 import { useSession } from '@/auth/SessionContext';
-import { Button, Card, GradientHero, MonoChip, Pill, Text } from '@/components';
+import {
+  Button,
+  Card,
+  DocumentSection,
+  GradientHero,
+  MonoChip,
+  Pill,
+  Text,
+} from '@/components';
 import { fonts, radii, semantic, shadows, spacing } from '@/theme';
 import { initials } from '@/utils/format';
 import { useCurrency } from '@/utils/useCurrency';
@@ -160,6 +168,10 @@ export default function CustomerDetailScreen() {
             <KpiDivider />
             <KpiCol label="SINCE" value={since ?? '—'} tone="primary" />
           </Card>
+        </View>
+
+        <View style={styles.section}>
+          <DocumentSection customerId={id} />
         </View>
 
         {deviceCount > 0 ? (

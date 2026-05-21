@@ -10,6 +10,7 @@ export { Card } from './Card';
 export { ContextStrip } from './ContextStrip';
 export { CustomerChip } from './CustomerChip';
 export { DateField, toIsoDate } from './DateField';
+export { DocumentSection } from './DocumentSection';
 export { Fab } from './Fab';
 export { GradientHero } from './GradientHero';
 export { LocationPickerSheet } from './LocationPickerSheet';
