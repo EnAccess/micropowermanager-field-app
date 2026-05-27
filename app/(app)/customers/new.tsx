@@ -6,6 +6,7 @@ import { Controller, useForm } from 'react-hook-form';
 import {
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   View,
@@ -17,7 +18,7 @@ import {
   validatePhoneNumberLength,
 } from 'libphonenumber-js';
 
-import { Customer, registerCustomer } from '@/api/customer';
+import { Customer, Gender, registerCustomer } from '@/api/customer';
 import { City, fetchCities } from '@/api/referenceData';
 import { readCachedCities, writeCachedCities } from '@/storage/citiesCache';
 import { useSession } from '@/auth/SessionContext';
@@ -25,7 +26,10 @@ import { fetchOnline, useNetworkStatus } from '@/auth/useNetworkStatus';
 import {
   Button,
   Callout,
+  Card,
+  DateField,
   DocumentSection,
+  LocationPickerSheet,
   PhoneField,
   ProgressSteps,
   SecondaryHeader,
@@ -33,6 +37,7 @@ import {
   SuccessCheckmark,
   Text,
   TextField,
+  toIsoDate,
 } from '@/components';
 import {
   enqueueRegisterCustomer,
@@ -41,8 +46,19 @@ import {
 } from '@/storage/outbox';
 import { useRegisterCustomerOutbox } from '@/storage/useOutbox';
 import { fonts, radii, semantic, spacing } from '@/theme';
-import { captureGeoPoint, formatGeoPoint } from '@/utils/location';
+import {
+  GeoPoint,
+  captureGeoPoint,
+  formatGeoPoint,
+  parseGeoPoint,
+} from '@/utils/location';
 import { z } from 'zod';
+
+const GENDER_OPTIONS: { value: Gender; label: string }[] = [
+  { value: 'male', label: 'Male' },
+  { value: 'female', label: 'Female' },
+  { value: 'non-binary', label: 'Non-binary' },
+];
 
 const schema = z.object({
   name: z.string().trim().min(2, 'At least 2 characters.'),
@@ -60,6 +76,11 @@ const schema = z.object({
       }
     }),
   city_id: z.number({ error: 'Choose a village.' }),
+  birth_date: z
+    .date()
+    .max(new Date(), 'Date of birth cannot be in the future.')
+    .optional(),
+  gender: z.enum(['male', 'female', 'non-binary']).optional(),
 });
 
 type RegisterForm = z.infer<typeof schema>;
@@ -86,19 +107,35 @@ export default function RegisterCustomerScreen() {
   const [pendingLocal, setPendingLocal] =
     useState<RegisterCustomerOutboxEntry | null>(null);
   const [continueAfterSave, setContinueAfterSave] = useState(false);
-  const geoPointsRef = useRef<string | null>(null);
+  const [geoPoints, setGeoPoints] = useState<string | null>(null);
+  const [locationStatus, setLocationStatus] = useState<
+    'pending' | 'captured' | 'denied'
+  >('pending');
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const hasCaptured = useRef(false);
 
-  // Silent, non-blocking GPS capture (no UI for permission status).
+  function applyPoint(point: GeoPoint) {
+    const formatted = formatGeoPoint(point);
+    setGeoPoints(formatted);
+    setLocationStatus(formatted ? 'captured' : 'denied');
+  }
+
   useEffect(() => {
-    let cancelled = false;
+    if (hasCaptured.current) return;
+    hasCaptured.current = true;
     void captureGeoPoint().then((point) => {
-      if (cancelled) return;
-      geoPointsRef.current = formatGeoPoint(point);
+      const formatted = formatGeoPoint(point);
+      setGeoPoints(formatted);
+      setLocationStatus(formatted ? 'captured' : 'denied');
     });
-    return () => {
-      cancelled = true;
-    };
   }, []);
+
+  async function retryLocation() {
+    setLocationStatus('pending');
+    const point = await captureGeoPoint();
+    if (point) applyPoint(point);
+    else setLocationStatus('denied');
+  }
 
   const cities = useCachedCities(api, agent?.id ?? null);
 
@@ -124,6 +161,8 @@ export default function RegisterCustomerScreen() {
       surname: '',
       phone: '',
       city_id: undefined as unknown as number,
+      birth_date: undefined,
+      gender: undefined,
     },
   });
 
@@ -135,9 +174,14 @@ export default function RegisterCustomerScreen() {
       surname: retryEntry.payload.surname,
       phone: retryEntry.payload.phone,
       city_id: retryEntry.payload.city_id,
+      birth_date: retryEntry.payload.birth_date
+        ? new Date(`${retryEntry.payload.birth_date}T00:00:00`)
+        : undefined,
+      gender: retryEntry.payload.gender ?? undefined,
     });
     if (retryEntry.payload.geo_points) {
-      geoPointsRef.current = retryEntry.payload.geo_points;
+      setGeoPoints(retryEntry.payload.geo_points);
+      setLocationStatus('captured');
     }
   }, [retryEntry, resetForm]);
 
@@ -147,7 +191,15 @@ export default function RegisterCustomerScreen() {
 
   const registerMutation = useMutation<RegisterResult, unknown, RegisterForm>({
     mutationFn: async (payload) => {
-      const fullPayload = { ...payload, geo_points: geoPointsRef.current };
+      const fullPayload = {
+        name: payload.name,
+        surname: payload.surname,
+        phone: payload.phone,
+        city_id: payload.city_id,
+        birth_date: payload.birth_date ? toIsoDate(payload.birth_date) : null,
+        gender: payload.gender ?? null,
+        geo_points: geoPoints,
+      };
       // Pre-flight: re-check connectivity here rather than trusting the cached
       // hook state, which can be stale on first render. If we're definitely
       // offline we skip the request entirely and queue immediately.
@@ -213,25 +265,40 @@ export default function RegisterCustomerScreen() {
   }
 
   return (
-    <FormStep
-      control={control}
-      errors={errors}
-      cities={scopedCities}
-      citiesLoading={cities.loading}
-      citiesUnavailable={cities.unavailable}
-      onRetryCities={() => void cities.refetch()}
-      gridLabel={agent?.mini_grid_id ? `#${agent.mini_grid_id}` : '—'}
-      busy={registerMutation.isPending}
-      retryHint={retryEntry?.last_error?.message ?? null}
-      error={
-        registerMutation.isError
-          ? mutationErrorMessage(registerMutation.error)
-          : null
-      }
-      onContinue={submit('continue')}
-      onSaveLinkLater={submit('save')}
-      onBack={() => router.back()}
-    />
+    <>
+      <FormStep
+        control={control}
+        errors={errors}
+        cities={scopedCities}
+        citiesLoading={cities.loading}
+        citiesUnavailable={cities.unavailable}
+        onRetryCities={() => void cities.refetch()}
+        gridLabel={agent?.mini_grid_id ? `#${agent.mini_grid_id}` : '—'}
+        busy={registerMutation.isPending}
+        retryHint={retryEntry?.last_error?.message ?? null}
+        error={
+          registerMutation.isError
+            ? mutationErrorMessage(registerMutation.error)
+            : null
+        }
+        geoPoints={geoPoints}
+        locationStatus={locationStatus}
+        onPickLocation={() => setPickerOpen(true)}
+        onRetryLocation={retryLocation}
+        onContinue={submit('continue')}
+        onSaveLinkLater={submit('save')}
+        onBack={() => router.back()}
+      />
+      <LocationPickerSheet
+        visible={pickerOpen}
+        initial={parseGeoPoint(geoPoints)}
+        onClose={() => setPickerOpen(false)}
+        onConfirm={(point) => {
+          applyPoint(point);
+          setPickerOpen(false);
+        }}
+      />
+    </>
   );
 }
 
@@ -307,6 +374,10 @@ function FormStep({
   busy,
   retryHint,
   error,
+  geoPoints,
+  locationStatus,
+  onPickLocation,
+  onRetryLocation,
   onContinue,
   onSaveLinkLater,
   onBack,
@@ -321,6 +392,10 @@ function FormStep({
   busy: boolean;
   retryHint: string | null;
   error: string | null;
+  geoPoints: string | null;
+  locationStatus: 'pending' | 'captured' | 'denied';
+  onPickLocation: () => void;
+  onRetryLocation: () => void;
   onContinue: () => void;
   onSaveLinkLater: () => void;
   onBack: () => void;
@@ -420,6 +495,41 @@ function FormStep({
             />
 
             <View style={styles.row}>
+              <View style={styles.flex}>
+                <Controller
+                  control={control}
+                  name="birth_date"
+                  render={({ field: { value, onChange } }) => (
+                    <DateField
+                      label="Date of birth"
+                      placeholder="Optional"
+                      value={value ?? null}
+                      onChange={onChange}
+                      maximumDate={new Date()}
+                      error={errors.birth_date?.message}
+                    />
+                  )}
+                />
+              </View>
+              <View style={styles.flex}>
+                <Controller
+                  control={control}
+                  name="gender"
+                  render={({ field: { value, onChange } }) => (
+                    <Select
+                      label="Gender"
+                      placeholder="Optional"
+                      value={value ?? null}
+                      onChange={onChange}
+                      options={GENDER_OPTIONS}
+                      error={errors.gender?.message}
+                    />
+                  )}
+                />
+              </View>
+            </View>
+
+            <View style={styles.row}>
               <View style={styles.cellVillage}>
                 <Controller
                   control={control}
@@ -454,6 +564,34 @@ function FormStep({
               </View>
             </View>
           </View>
+
+          <Card style={styles.locationCard}>
+            <View style={styles.locationRow}>
+              <View style={styles.locationBody}>
+                <Text variant="label">Select your Address</Text>
+                <Text variant="caption" tone="muted">
+                  {locationStatus === 'pending' && 'Capturing position…'}
+                  {locationStatus === 'captured' &&
+                    geoPoints &&
+                    `Captured: ${geoPoints}`}
+                  {locationStatus === 'denied' &&
+                    'Skipped. Pick on map or retry if you are at the home.'}
+                </Text>
+              </View>
+              <View style={styles.locationActions}>
+                <Pressable onPress={onPickLocation} hitSlop={8}>
+                  <Text variant="label" tone="brand">
+                    Pick on map
+                  </Text>
+                </Pressable>
+                <Pressable onPress={onRetryLocation} hitSlop={8}>
+                  <Text variant="label" tone="brand">
+                    Retry
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+          </Card>
 
           <Callout tone="info" style={styles.callout}>
             <Text variant="meta" tone="secondary">
@@ -654,6 +792,24 @@ const styles = StyleSheet.create({
     fontFamily: fonts.ptBold,
     color: semantic.ink2,
     fontSize: 15,
+  },
+  locationCard: {
+    marginTop: spacing.xs,
+    padding: spacing.md,
+  },
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.md,
+  },
+  locationBody: {
+    flex: 1,
+    gap: spacing.xs,
+  },
+  locationActions: {
+    alignItems: 'flex-end',
+    gap: spacing.sm,
   },
   callout: {
     marginTop: spacing.xs,
