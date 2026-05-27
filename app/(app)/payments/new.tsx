@@ -5,6 +5,7 @@ import * as Clipboard from 'expo-clipboard';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -15,6 +16,7 @@ import {
   ToastAndroid,
   View,
 } from 'react-native';
+import type { TFunction } from 'i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { SoldAppliance, fetchCustomerSoldAppliances } from '@/api/appliances';
@@ -51,6 +53,7 @@ import { useCurrency } from '@/utils/useCurrency';
 type Step = 'find' | 'amount' | 'confirm' | 'success';
 
 export default function CollectPaymentScreen() {
+  const { t } = useTranslation();
   const { api } = useSession();
   const queryClient = useQueryClient();
   const { symbol: currency } = useCurrency();
@@ -119,7 +122,7 @@ export default function CollectPaymentScreen() {
         queryKey: ['agent-transactions-list'],
       });
     },
-    onError: (e) => setSubmitError(errorMessage(e)),
+    onError: (e) => setSubmitError(errorMessage(e, t)),
   });
 
   const amountValue = Number(amountStr) || 0;
@@ -139,13 +142,15 @@ export default function CollectPaymentScreen() {
           setLookup(match);
           setStep('amount');
         } else {
-          setLookupError(`No device found with serial "${prefilledSerial}".`);
+          setLookupError(
+            t('paymentNew.find.errorNotFound', { serial: prefilledSerial }),
+          );
         }
       } catch (e) {
-        setLookupError(errorMessage(e, 'Lookup failed. Try again.'));
+        setLookupError(errorMessage(e, t, 'paymentNew.find.errorGeneric'));
       }
     })();
-  }, [api, prefilledSerial, autoLookupAttempted, lookupMutation]);
+  }, [api, prefilledSerial, autoLookupAttempted, lookupMutation, t]);
 
   function reset() {
     setStep('find');
@@ -164,19 +169,19 @@ export default function CollectPaymentScreen() {
     setLookupError(null);
     const trimmed = serial.trim();
     if (!trimmed) {
-      setLookupError('Enter the meter or SHS serial.');
+      setLookupError(t('paymentNew.find.errorEnter'));
       return;
     }
     try {
       const match = await lookupMutation.mutateAsync(trimmed);
       if (!match) {
-        setLookupError(`No device found with serial "${trimmed}".`);
+        setLookupError(t('paymentNew.find.errorNotFound', { serial: trimmed }));
         return;
       }
       setLookup(match);
       setStep('amount');
     } catch (e) {
-      setLookupError(errorMessage(e, 'Lookup failed. Try again.'));
+      setLookupError(errorMessage(e, t, 'paymentNew.find.errorGeneric'));
     }
   }
 
@@ -276,12 +281,13 @@ function FindStep({
   error: string | null;
   onBack: () => void;
 }) {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   return (
     <View style={styles.root}>
       <SecondaryHeader
-        title="Collect payment"
-        subtitle="Find device"
+        title={t('paymentNew.find.title')}
+        subtitle={t('paymentNew.find.subtitle')}
         onBack={onBack}
       />
       <KeyboardAvoidingView
@@ -293,14 +299,14 @@ function FindStep({
           keyboardShouldPersistTaps="handled"
         >
           <Text variant="pageTitle" style={styles.findTitle}>
-            Which device are you collecting for?
+            {t('paymentNew.find.question')}
           </Text>
           <Text variant="body" tone="muted" style={styles.findSubtitle}>
-            Enter the meter or SHS serial. We&apos;ll show the customer next.
+            {t('paymentNew.find.hint')}
           </Text>
           <TextField
-            label="Device serial"
-            placeholder="e.g. MTR-000123"
+            label={t('paymentNew.find.label')}
+            placeholder={t('paymentNew.find.placeholder')}
             autoCapitalize="characters"
             autoCorrect={false}
             value={serial}
@@ -313,7 +319,11 @@ function FindStep({
         <View
           style={[styles.footer, { paddingBottom: insets.bottom + spacing.md }]}
         >
-          <Button label="Continue" onPress={onContinue} loading={loading} />
+          <Button
+            label={t('paymentNew.find.continue')}
+            onPress={onContinue}
+            loading={loading}
+          />
         </View>
       </KeyboardAvoidingView>
     </View>
@@ -345,6 +355,7 @@ function AmountStep({
   onContinue: () => void;
   onBack: () => void;
 }) {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const customerName =
     `${lookup.customer.name} ${lookup.customer.surname}`.trim();
@@ -352,8 +363,8 @@ function AmountStep({
   return (
     <View style={styles.root}>
       <SecondaryHeader
-        title="Collect payment"
-        subtitle="Step 1 of 3"
+        title={t('paymentNew.amount.title')}
+        subtitle={t('paymentNew.amount.step')}
         onBack={onBack}
       />
       <View style={styles.progressWrap}>
@@ -363,14 +374,14 @@ function AmountStep({
       <View style={styles.amountBody}>
         <CustomerChip
           name={customerName}
-          meta={deviceShortLabel(lookup.device.device_type)}
+          meta={deviceShortLabel(lookup.device.device_type, t)}
           onChange={onChangeCustomer}
           style={styles.amountChip}
         />
 
         <View style={styles.amountCenter}>
           <Text variant="sectionLabel" tone="muted">
-            AMOUNT RECEIVED
+            {t('paymentNew.amount.label')}
           </Text>
           <Text
             variant="heroNumber"
@@ -392,7 +403,9 @@ function AmountStep({
               tone={belowMinimum ? 'danger' : 'muted'}
               style={styles.amountMinimum}
             >
-              {belowMinimum ? 'Below minimum: ' : 'Minimum: '}
+              {belowMinimum
+                ? t('paymentNew.amount.belowMin')
+                : t('paymentNew.amount.minimum')}
               {currency ? `${currency} ` : ''}
               {formatAmount(String(minimumPayment))}
             </Text>
@@ -411,7 +424,7 @@ function AmountStep({
       >
         <Button
           tone="accent"
-          label="Review & confirm"
+          label={t('paymentNew.amount.next')}
           onPress={onContinue}
           disabled={amount <= 0 || belowMinimum}
         />
@@ -439,6 +452,7 @@ function ConfirmStep({
   loading: boolean;
   error: string | null;
 }) {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const customerName =
     `${lookup.customer.name} ${lookup.customer.surname}`.trim();
@@ -447,8 +461,8 @@ function ConfirmStep({
   return (
     <View style={styles.root}>
       <SecondaryHeader
-        title="Confirm payment"
-        subtitle="Step 2 of 3"
+        title={t('paymentNew.confirm.title')}
+        subtitle={t('paymentNew.confirm.step')}
         onBack={onBack}
       />
       <View style={styles.progressWrap}>
@@ -461,7 +475,7 @@ function ConfirmStep({
           style={styles.confirmHero}
         >
           <Text variant="sectionLabel" tone="muted">
-            YOU ARE COLLECTING
+            {t('paymentNew.confirm.label')}
           </Text>
           <Text
             variant="heroNumber"
@@ -472,7 +486,9 @@ function ConfirmStep({
             {amountFormatted}
           </Text>
           <Text variant="body" tone="secondary">
-            {currency ? `${currency} · in cash` : 'In cash'}
+            {currency
+              ? t('paymentNew.confirm.inCashWith', { currency })
+              : t('paymentNew.confirm.inCash')}
           </Text>
         </LinearGradient>
 
@@ -497,10 +513,10 @@ function ConfirmStep({
             </View>
 
             <DataRow
-              label="For"
+              label={t('paymentNew.confirm.for')}
               value={
                 <Pill
-                  label={deviceForLabel(lookup.device.device_type)}
+                  label={deviceForLabel(lookup.device.device_type, t)}
                   tone="blue"
                   leading={
                     <Feather
@@ -517,7 +533,7 @@ function ConfirmStep({
               }
             />
             <DataRow
-              label="Device"
+              label={t('paymentNew.confirm.device')}
               value={
                 <MonoChip value={truncateUuid(lookup.device.device_serial)} />
               }
@@ -526,8 +542,7 @@ function ConfirmStep({
 
           <Callout tone="warning" style={styles.confirmCallout}>
             <Text variant="body" tone="secondary">
-              Confirm only <Text variant="bodyStrong">after</Text> you&apos;ve
-              received cash from the customer. This action is final.
+              {t('paymentNew.confirm.warning')}
             </Text>
           </Callout>
 
@@ -547,14 +562,14 @@ function ConfirmStep({
         ]}
       >
         <Button
-          label="Back"
+          label={t('paymentNew.confirm.back')}
           tone="ghost"
           onPress={onBack}
           style={styles.footerBack}
         />
         <Button
           tone="success"
-          label="Cash received — confirm"
+          label={t('paymentNew.confirm.submit')}
           onPress={onConfirm}
           loading={loading}
           disabled={amount <= 0}
@@ -582,6 +597,7 @@ function SuccessStep({
   onClose: () => void;
   onNext: () => void;
 }) {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { api } = useSession();
   const customerName =
@@ -615,10 +631,12 @@ function SuccessStep({
         <View style={styles.successHero}>
           <SuccessCheckmark />
           <Text variant="pageTitle" tone="success" style={styles.successTitle}>
-            Payment collected
+            {t('paymentNew.result.title')}
           </Text>
           <Text variant="body" tone="muted" style={styles.successSubtitle}>
-            {phone ? `Receipt sent to ${phone}` : 'Recorded successfully'}
+            {phone
+              ? t('paymentNew.result.receiptSent', { phone })
+              : t('paymentNew.result.recorded')}
           </Text>
         </View>
 
@@ -628,11 +646,11 @@ function SuccessStep({
           amount={amountFormatted}
           currency={
             currency
-              ? `${currency} · ${deviceShortLabel(lookup.device.device_type).toLowerCase()}`
-              : deviceShortLabel(lookup.device.device_type)
+              ? `${currency} · ${deviceShortLabel(lookup.device.device_type, t).toLowerCase()}`
+              : deviceShortLabel(lookup.device.device_type, t)
           }
           customerName={customerName}
-          reference={`Ref #${reference}`}
+          reference={t('paymentNew.result.refLabel', { ref: reference })}
           style={styles.receipt}
         />
       </ScrollView>
@@ -645,13 +663,13 @@ function SuccessStep({
         ]}
       >
         <Button
-          label="Back to home"
+          label={t('paymentNew.result.backHome')}
           tone="ghost"
           onPress={onClose}
           style={styles.footerBack}
         />
         <Button
-          label="Next customer"
+          label={t('paymentNew.result.next')}
           onPress={onNext}
           style={styles.footerPrimary}
         />
@@ -718,6 +736,7 @@ function TokenCard({
   token: PaymentToken | null;
   state: TokenStatus;
 }) {
+  const { t } = useTranslation();
   if (state === 'skipped') return null;
 
   if (state === 'pending') {
@@ -726,13 +745,13 @@ function TokenCard({
         <View style={styles.tokenHeader}>
           <Feather name="key" size={16} color={semantic.blue} />
           <Text variant="sectionLabel" tone="brand">
-            GENERATING TOKEN
+            {t('paymentNew.token.generating')}
           </Text>
         </View>
         <View style={styles.tokenLoadingRow}>
           <ActivityIndicator color={semantic.blue} />
           <Text variant="meta" tone="muted">
-            Waiting for the device to issue a code…
+            {t('paymentNew.token.waiting')}
           </Text>
         </View>
       </View>
@@ -745,12 +764,11 @@ function TokenCard({
         <View style={styles.tokenHeader}>
           <Feather name="info" size={16} color={semantic.ink3} />
           <Text variant="sectionLabel" tone="muted">
-            NO TOKEN ISSUED
+            {t('paymentNew.token.none')}
           </Text>
         </View>
         <Text variant="meta" tone="muted">
-          The payment was recorded. If a token is sent later, the customer will
-          receive it via SMS.
+          {t('paymentNew.token.noneBody')}
         </Text>
       </View>
     );
@@ -761,11 +779,11 @@ function TokenCard({
       <View style={styles.tokenHeader}>
         <Feather name="key" size={16} color={semantic.green} />
         <Text variant="sectionLabel" tone="success">
-          TOKEN
+          {t('paymentNew.token.label')}
         </Text>
       </View>
       <Pressable
-        onPress={() => copyToken(token.token)}
+        onPress={() => copyToken(token.token, t)}
         style={({ pressed }) => [
           styles.tokenValueRow,
           pressed && { opacity: 0.7 },
@@ -782,7 +800,7 @@ function TokenCard({
         <Feather name="copy" size={16} color={semantic.ink2} />
       </Pressable>
       <Text variant="meta" tone="muted">
-        {describeTokenAmount(token) ?? 'Read this code to the customer.'}
+        {describeTokenAmount(token) ?? t('paymentNew.token.readToCustomer')}
       </Text>
     </View>
   );
@@ -799,10 +817,10 @@ function describeTokenAmount(token: PaymentToken): string | null {
   return unit ? `${amount} ${unit}` : null;
 }
 
-async function copyToken(value: string) {
+async function copyToken(value: string, t: TFunction) {
   await Clipboard.setStringAsync(value);
   if (Platform.OS === 'android') {
-    ToastAndroid.show('Token copied', ToastAndroid.SHORT);
+    ToastAndroid.show(t('paymentNew.token.copied'), ToastAndroid.SHORT);
   }
 }
 
@@ -846,25 +864,25 @@ function deviceKind(deviceType: string): DeviceKind {
   return 'other';
 }
 
-function deviceForLabel(deviceType: string): string {
+function deviceForLabel(deviceType: string, t: TFunction): string {
   switch (deviceKind(deviceType)) {
     case 'meter':
-      return 'Energy (meter)';
+      return t('paymentNew.device.energyMeter');
     case 'shs':
-      return 'Solar home system';
+      return t('paymentNew.device.shs');
     default:
-      return deviceType || 'Device';
+      return deviceType || t('paymentNew.device.fallback');
   }
 }
 
-function deviceShortLabel(deviceType: string): string {
+function deviceShortLabel(deviceType: string, t: TFunction): string {
   switch (deviceKind(deviceType)) {
     case 'meter':
-      return 'Meter';
+      return t('paymentNew.device.meterShort');
     case 'shs':
-      return 'SHS';
+      return t('paymentNew.device.shsShort');
     default:
-      return deviceType || 'Device';
+      return deviceType || t('paymentNew.device.fallback');
   }
 }
 
@@ -895,8 +913,10 @@ function formatAmount(raw: string): string {
 
 function errorMessage(
   error: unknown,
-  fallback = 'Payment failed. Try again.',
+  t: TFunction,
+  fallbackKey = 'paymentNew.failed',
 ): string {
+  const fallback = t(fallbackKey);
   if (error == null) return fallback;
 
   if (typeof error === 'object' && 'response' in error) {
@@ -921,13 +941,12 @@ function errorMessage(
     if (response?.data?.message) return response.data.message;
 
     const status = response?.status;
-    if (status === 401) return 'Session expired. Sign in again.';
-    if (status === 403) return 'You don’t have permission for this action.';
-    if (status === 404) return 'Not found on the server.';
-    if (status === 409)
-      return 'Conflicting request. Pull to refresh and retry.';
+    if (status === 401) return t('errors.sessionExpired');
+    if (status === 403) return t('errors.noPermission');
+    if (status === 404) return t('errors.notFound');
+    if (status === 409) return t('errors.conflict');
     if (typeof status === 'number' && status >= 500) {
-      return 'Server is having trouble. Try again in a moment.';
+      return t('errors.serverTrouble');
     }
   }
 
@@ -936,7 +955,7 @@ function errorMessage(
     if (typeof msg === 'string') {
       const lower = msg.toLowerCase();
       if (lower.includes('network') || lower.includes('timeout')) {
-        return 'No connection. Check your internet and retry.';
+        return t('errors.noConnection');
       }
       if (msg.length > 0) return msg;
     }

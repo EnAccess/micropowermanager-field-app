@@ -6,6 +6,7 @@ import { AppState, AppStateStatus } from 'react-native';
 
 import { registerCustomer } from '@/api/customer';
 
+import { markSyncedNow } from './lastSync';
 import {
   bumpOutboxAttempt,
   listOutbox,
@@ -107,6 +108,8 @@ export async function drainOutbox(
       await queryClient.invalidateQueries({ queryKey: ['agent-customers'] });
       await queryClient.invalidateQueries({ queryKey: ['customer-search'] });
     }
+
+    void markSyncedNow();
 
     return {
       attempted,

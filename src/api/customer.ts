@@ -15,15 +15,11 @@ export type CustomerDevice = {
   device_type: string;
 };
 
-export type Gender = 'male' | 'female' | 'non-binary';
-
 export type Customer = {
   id: number;
   name: string;
   surname: string;
   is_customer: number;
-  birth_date?: string | null;
-  gender?: Gender | string | null;
   created_at?: string;
   addresses?: CustomerAddress[];
   devices?: CustomerDevice[];
@@ -34,8 +30,6 @@ export type RegisterCustomerPayload = {
   surname: string;
   phone: string;
   city_id: number;
-  birth_date?: string | null;
-  gender?: Gender | null;
   geo_points?: string | null;
 };
 

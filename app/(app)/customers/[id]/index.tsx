@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import * as Clipboard from 'expo-clipboard';
 import { router, useLocalSearchParams } from 'expo-router';
 import type { ComponentProps } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   Linking,
@@ -13,6 +14,7 @@ import {
   ToastAndroid,
   View,
 } from 'react-native';
+import type { TFunction } from 'i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
@@ -36,6 +38,7 @@ import { initials } from '@/utils/format';
 import { useCurrency } from '@/utils/useCurrency';
 
 export default function CustomerDetailScreen() {
+  const { t } = useTranslation();
   const params = useLocalSearchParams<{ id: string }>();
   const id = Number(params.id);
   const { api } = useSession();
@@ -68,9 +71,13 @@ export default function CustomerDetailScreen() {
     return (
       <View style={styles.loadingRoot}>
         <Text variant="body" tone="muted">
-          Customer not found.
+          {t('customerDetail.notFound')}
         </Text>
-        <Button label="Back" tone="ghost" onPress={() => router.back()} />
+        <Button
+          label={t('customerDetail.back')}
+          tone="ghost"
+          onPress={() => router.back()}
+        />
       </View>
     );
   }
@@ -108,7 +115,7 @@ export default function CustomerDetailScreen() {
           </Pressable>
           <View style={styles.heroLabel}>
             <Text variant="meta" tone="onNavyMuted">
-              Customer
+              {t('customerDetail.title')}
             </Text>
           </View>
           {phone ? (
@@ -158,15 +165,23 @@ export default function CustomerDetailScreen() {
       >
         <View style={styles.kpiWrap}>
           <Card elevated style={styles.kpiCard}>
-            <KpiCol label="DEVICES" value={String(deviceCount)} tone="brand" />
+            <KpiCol
+              label={t('customerDetail.devices')}
+              value={String(deviceCount)}
+              tone="brand"
+            />
             <KpiDivider />
             <KpiCol
-              label="PAID YTD"
+              label={t('customerDetail.paidYtd')}
               value={formatCurrency(totalPaid)}
               tone="brand"
             />
             <KpiDivider />
-            <KpiCol label="SINCE" value={since ?? '—'} tone="primary" />
+            <KpiCol
+              label={t('customerDetail.since')}
+              value={since ?? '—'}
+              tone="primary"
+            />
           </Card>
         </View>
 
@@ -178,14 +193,14 @@ export default function CustomerDetailScreen() {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text variant="sectionLabel" tone="muted">
-                DEVICES
+                {t('customerDetail.devices')}
               </Text>
               <Pressable
                 onPress={() => router.push(`/(app)/customers/${id}/add-meter`)}
                 hitSlop={8}
               >
                 <Text variant="label" tone="brand">
-                  + Assign meter
+                  {t('customerDetail.addAssignMeter')}
                 </Text>
               </Pressable>
             </View>
@@ -194,6 +209,7 @@ export default function CustomerDetailScreen() {
                 <MeterCard
                   key={`meter-${d.id}`}
                   device={d}
+                  t={t}
                   onPress={() =>
                     router.push({
                       pathname: '/(app)/payments/new',
@@ -207,6 +223,7 @@ export default function CustomerDetailScreen() {
                   key={`sale-${s.id}`}
                   sale={s}
                   formatCurrency={formatCurrency}
+                  t={t}
                   onPress={
                     s.device_serial
                       ? () =>
@@ -225,14 +242,14 @@ export default function CustomerDetailScreen() {
             <Card elevated style={styles.emptyDevicesCard}>
               <Feather name="zap" size={28} color={semantic.blue} />
               <Text variant="bodyEmphasis" style={styles.emptyDevicesTitle}>
-                No devices yet
+                {t('customerDetail.noDevicesYet')}
               </Text>
               <Text variant="meta" tone="muted" style={styles.emptyDevicesBody}>
-                Assign a meter to start collecting payments.
+                {t('customerDetail.noDevicesBody')}
               </Text>
               <Button
                 tone="accent"
-                label="Assign meter"
+                label={t('customerDetail.assignMeter')}
                 onPress={() => router.push(`/(app)/customers/${id}/add-meter`)}
                 style={styles.emptyDevicesCta}
               />
@@ -261,7 +278,7 @@ export default function CustomerDetailScreen() {
         </Pressable>
         <Button
           tone="accent"
-          label="Collect payment"
+          label={t('customerDetail.collectPayment')}
           onPress={() => router.push('/(app)/payments/new')}
           style={styles.collectCta}
         />
@@ -280,9 +297,11 @@ async function copyToClipboard(value: string, toast: string) {
 function MeterCard({
   device,
   onPress,
+  t,
 }: {
   device: CustomerDevice;
   onPress?: () => void;
+  t: TFunction;
 }) {
   return (
     <Pressable
@@ -301,13 +320,16 @@ function MeterCard({
           </View>
           <View style={styles.deviceBody}>
             <Text variant="bodyEmphasis" numberOfLines={1}>
-              {humanizeDeviceType(device.device_type)}
+              {humanizeDeviceType(device.device_type, t)}
             </Text>
             <View style={styles.deviceSerialRow}>
               <MonoChip
                 value={device.device_serial}
                 onCopy={() =>
-                  copyToClipboard(device.device_serial, 'Serial copied')
+                  copyToClipboard(
+                    device.device_serial,
+                    t('customerDetail.serialCopied'),
+                  )
                 }
               />
             </View>
@@ -325,12 +347,14 @@ function ApplianceCard({
   sale,
   formatCurrency,
   onPress,
+  t,
 }: {
   sale: SoldAppliance;
   formatCurrency: (n: number) => string;
   onPress?: () => void;
+  t: TFunction;
 }) {
-  const name = sale.appliance?.name ?? 'SHS unit';
+  const name = sale.appliance?.name ?? t('customerDetail.shsUnit');
   const cost = sale.total_cost ?? sale.appliance?.cost ?? 0;
   const paid = salePaid(sale);
   const hasCost = cost > 0;
@@ -338,11 +362,11 @@ function ApplianceCard({
   const progress = hasCost ? Math.min(1, paid / cost) : 0;
   const planLabel =
     sale.payment_type === 'energy_service'
-      ? 'Energy service'
+      ? t('customerDetail.energyService')
       : sale.payment_type === 'installment'
         ? sale.tenure
-          ? `${sale.tenure}-month plan`
-          : 'Installment plan'
+          ? t('customerDetail.monthlyPlan', { count: sale.tenure })
+          : t('customerDetail.installmentPlan')
         : null;
 
   return (
@@ -369,7 +393,7 @@ function ApplianceCard({
               >
                 {name}
               </Text>
-              {done ? <Pill label="PAID" tone="green" /> : null}
+              {done ? <Pill label={t('saleDetail.paid')} tone="green" /> : null}
             </View>
             {planLabel ? (
               <Text variant="meta" tone="muted">
@@ -381,14 +405,20 @@ function ApplianceCard({
                 <MonoChip
                   value={sale.device_serial}
                   onCopy={() =>
-                    copyToClipboard(sale.device_serial!, 'Serial copied')
+                    copyToClipboard(
+                      sale.device_serial!,
+                      t('customerDetail.serialCopied'),
+                    )
                   }
                 />
               ) : (
                 <MonoChip
-                  value={`Sale #${sale.id}`}
+                  value={t('customerDetail.saleNumber', { id: sale.id })}
                   onCopy={() =>
-                    copyToClipboard(String(sale.id), 'Sale ID copied')
+                    copyToClipboard(
+                      String(sale.id),
+                      t('customerDetail.saleIdCopied'),
+                    )
                   }
                 />
               )}
@@ -413,10 +443,12 @@ function ApplianceCard({
             </View>
             <View style={styles.applianceFoot}>
               <Text variant="meta" tone="muted">
-                Paid <Text style={styles.mono}>{formatCurrency(paid)}</Text>
+                {t('customerDetail.paid')}{' '}
+                <Text style={styles.mono}>{formatCurrency(paid)}</Text>
               </Text>
               <Text variant="meta" tone="muted">
-                Total <Text style={styles.mono}>{formatCurrency(cost)}</Text>
+                {t('customerDetail.total')}{' '}
+                <Text style={styles.mono}>{formatCurrency(cost)}</Text>
               </Text>
             </View>
           </>
@@ -471,11 +503,13 @@ function formatSince(value?: string): string | null {
   return d.toLocaleDateString(undefined, { month: 'short', year: 'numeric' });
 }
 
-function humanizeDeviceType(type: string): string {
-  const t = type.toLowerCase();
-  if (t.includes('meter')) return 'Meter';
-  if (t.includes('solar') || t.includes('shs')) return 'SHS unit';
-  if (t.includes('bike') || t.includes('bms')) return 'E-bike';
+function humanizeDeviceType(type: string, t: TFunction): string {
+  const lower = type.toLowerCase();
+  if (lower.includes('meter')) return t('customerDetail.meterName');
+  if (lower.includes('solar') || lower.includes('shs'))
+    return t('customerDetail.shsUnitName');
+  if (lower.includes('bike') || lower.includes('bms'))
+    return t('customerDetail.ebikeName');
   return type;
 }
 

@@ -1,0 +1,546 @@
+{
+  "common": {
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "loading": "A carregar…",
+    "agent": "Agente",
+    "back": "Voltar",
+    "continue": "Continuar",
+    "retry": "Tentar novamente",
+    "done": "Concluído",
+    "discard": "Descartar",
+    "search": "Pesquisar…",
+    "select": "Selecionar…",
+    "selectTitle": "Selecionar",
+    "close": "Fechar",
+    "noOptions": "Sem opções disponíveis.",
+    "selectNoMatches": "Sem resultados.",
+    "noMatches": "Sem resultados",
+    "tryDifferentSearch": "Tente outra pesquisa.",
+    "tryDifferentFilter": "Tente outro filtro.",
+    "month_one": "mês",
+    "month_other": "meses"
+  },
+  "time": {
+    "justNow": "agora mesmo",
+    "minutesAgo": "há {{count}} min",
+    "hoursAgo": "há {{count}} h",
+    "daysAgo": "há {{count}} d"
+  },
+  "errors": {
+    "sessionExpired": "Sessão expirada. Inicie sessão novamente.",
+    "noPermission": "Não tem permissão para esta ação.",
+    "notFound": "Não encontrado no servidor.",
+    "conflict": "Pedido em conflito. Puxe para atualizar e tente novamente.",
+    "serverTrouble": "O servidor está com problemas. Tente novamente em instantes.",
+    "noConnection": "Sem ligação. Verifique a sua Internet e tente novamente."
+  },
+  "tabs": {
+    "home": "Início",
+    "customers": "Clientes",
+    "sales": "Vendas",
+    "payments": "Pagamentos"
+  },
+  "home": {
+    "greeting": "Bem-vindo, {{name}}",
+    "notifications": "Notificações",
+    "collectedToday": "RECEBIDO HOJE",
+    "noPaymentsYet": "Sem pagamentos ainda",
+    "transactionCount_one": "{{count}} transação",
+    "transactionCount_other": "{{count}} transações",
+    "stat": {
+      "paymentsToday": "Pagamentos hoje",
+      "cashToday": "Dinheiro hoje",
+      "balance": "Saldo"
+    },
+    "section": {
+      "yourDay": "O SEU DIA"
+    },
+    "emptyToday": "Sem atividade ainda. Toque no botão laranja para começar a cobrar.",
+    "fab": {
+      "collect": "Receber pagamento",
+      "sell": "Vender SHS",
+      "register": "Registar cliente"
+    },
+    "shsDownPayment": "Entrada SHS"
+  },
+  "settings": {
+    "title": "Definições",
+    "language": "Idioma",
+    "sync": "Sincronização",
+    "syncStatus": {
+      "synced": "SINCRONIZADO",
+      "pending_one": "{{count}} pendente",
+      "pending_other": "{{count}} pendentes",
+      "lastSynced": "Última sincronização {{when}}",
+      "allUpToDate": "todos os dados atualizados",
+      "never": "Ainda não sincronizado"
+    },
+    "signOut": "Terminar sessão",
+    "signOutConfirm": {
+      "title": "Terminar sessão?",
+      "message": "Terá de iniciar sessão novamente para continuar."
+    },
+    "version": "v{{version}} · build {{build}}",
+    "appName": "MicroPowerManager"
+  },
+  "language": {
+    "title": "Idioma",
+    "english": "English",
+    "french": "Français",
+    "arabic": "العربية",
+    "burmese": "မြန်မာ",
+    "portuguese": "Português"
+  },
+  "login": {
+    "title": "Bem-vindo de volta",
+    "email": "E-mail",
+    "emailPlaceholder": "voce@exemplo.com",
+    "password": "Palavra-passe",
+    "passwordPlaceholder": "••••••••",
+    "show": "Mostrar",
+    "hide": "Ocultar",
+    "signIn": "Entrar",
+    "wrongServer": "Servidor errado? ",
+    "change": "Mudar",
+    "errors": {
+      "invalidEmail": "Introduza um e-mail válido.",
+      "passwordRequired": "Palavra-passe obrigatória.",
+      "generic": "Falha ao iniciar sessão. Tente novamente."
+    }
+  },
+  "environment": {
+    "demo": "Demo",
+    "demoSubtitle": "Explore com dados de exemplo. Sem configuração.",
+    "cloud": "Nuvem",
+    "cloudSubtitle": "Inicie sessão na nuvem MicroPowerManager.",
+    "custom": "Personalizado",
+    "customSubtitle": "Auto-hospedado, local ou staging.",
+    "appName": "MicroPowerManager",
+    "title": "Ligue a sua conta",
+    "subtitle": "Escolha com que servidor esta app deve falar.",
+    "serverUrl": "URL do servidor",
+    "serverUrlPlaceholder": "https://mpm.exemplo.com",
+    "urlError": "Introduza um URL completo começando por http:// ou https://",
+    "saveError": "Não foi possível guardar o ambiente."
+  },
+  "customersList": {
+    "title": "Clientes",
+    "total": "no total",
+    "search": "Pesquisar nome ou telefone…",
+    "filters": {
+      "all": "Todos",
+      "withMeter": "Com contador",
+      "withShs": "Com SHS",
+      "registeredToday": "Registados hoje"
+    },
+    "empty": {
+      "noMatchesTitle": "Sem resultados",
+      "noneTitle": "Ainda sem clientes",
+      "noMatchesBody": "Tente outra pesquisa.",
+      "noFilterMatchesBody": "Tente outro filtro.",
+      "noneBody": "Registe o seu primeiro cliente para começar.",
+      "registerCta": "Registar cliente"
+    },
+    "badge": {
+      "syncFailed": "FALHA SYNC",
+      "pendingSync": "PENDENTE",
+      "new": "NOVO"
+    },
+    "discard": {
+      "title": "Descartar cliente local?",
+      "message": "{{name}} ainda não foi enviado para o servidor. Descartar elimina a entrada local permanentemente.",
+      "cancel": "Cancelar",
+      "confirm": "Descartar",
+      "thisEntry": "esta entrada"
+    }
+  },
+  "salesList": {
+    "title": "As suas vendas",
+    "subtitleAll_one": "{{count}} sistema · sempre",
+    "subtitleAll_other": "{{count}} sistemas · sempre",
+    "filters": {
+      "all": "Todos {{count}}",
+      "inPayoff": "Em pagamento",
+      "paid": "Pagos"
+    },
+    "plan": "Plano",
+    "empty": {
+      "noneTitle": "Ainda sem vendas",
+      "filterTitle": "Nada corresponde a este filtro",
+      "noneBody": "Quando vender uma unidade SHS aparecerá aqui.",
+      "filterBody": "Tente outro filtro.",
+      "sellCta": "Vender SHS"
+    },
+    "nextDue": "Próximo {{date}}",
+    "paid": "Pago",
+    "left": "Resta",
+    "energyService": "Serviço de energia",
+    "monthlyPlan": "Plano de {{count}} meses",
+    "installmentPlan": "Plano a prestações"
+  },
+  "paymentsList": {
+    "title": "Pagamentos",
+    "summary": "{{count}} {{scope}} · {{amount}}",
+    "categories": {
+      "all": "Todos",
+      "meter": "Contador",
+      "installment": "Prestação"
+    },
+    "scope": {
+      "today": "Hoje",
+      "week": "Esta semana",
+      "all": "Sempre",
+      "todayShort": "hoje",
+      "weekShort": "esta semana",
+      "allShort": "sempre"
+    },
+    "cash": "DINHEIRO",
+    "count": "QUANTIDADE",
+    "errorTitle": "Não foi possível carregar os pagamentos",
+    "errorBody": "Puxe para baixo para tentar novamente.",
+    "noneTitle": "Ainda sem pagamentos",
+    "filterTitle": "Nada corresponde a este filtro",
+    "noneBody": "Receba um pagamento a partir do início.",
+    "filterBody": "Tente outro filtro.",
+    "cta": "Receber um pagamento"
+  },
+  "customerNew": {
+    "title": "Registar cliente",
+    "step": "Passo 1 de 2 · Identidade",
+    "errors": {
+      "firstNameMin": "Pelo menos 2 caracteres.",
+      "surnameMin": "Pelo menos 2 caracteres.",
+      "phoneRequired": "Introduza um número de telefone.",
+      "phoneInvalid": "Número de telefone inválido.",
+      "cityRequired": "Escolha uma aldeia.",
+      "submitGeneric": "Não foi possível registar o cliente. Tente novamente."
+    },
+    "retryHint": "Última sincronização falhou: {{reason}}. Edite os detalhes e guarde para tentar novamente.",
+    "noVillages": "As aldeias ainda não estão carregadas. Ligue-se uma vez para ativar o registo.",
+    "retry": "Tentar novamente",
+    "section": "QUEM ESTÁ A REGISTAR?",
+    "firstName": "Primeiro nome",
+    "firstNamePlaceholder": "ex. Fatuma",
+    "surname": "Apelido",
+    "surnamePlaceholder": "ex. Moshi",
+    "phone": "Telefone",
+    "village": "Aldeia",
+    "villagePlaceholder": "Escolha uma aldeia",
+    "grid": "REDE",
+    "hint": "A instalação do contador / SHS acontece depois — pode primeiro registar a identidade e ligar um aparelho mais tarde. Os documentos podem ser anexados após o cliente ser guardado.",
+    "saveLater": "Guardar e ligar mais tarde",
+    "continue": "Continuar",
+    "successSavedLocally": "Guardado localmente",
+    "successRegistered": "Cliente registado",
+    "offlineNote": "Está offline. Vamos sincronizar este cliente para o servidor automaticamente quando estiver online. Os documentos podem ser adicionados depois.",
+    "done": "Concluído",
+    "assignMeter": "Atribuir contador"
+  },
+  "customerDetail": {
+    "notFound": "Cliente não encontrado.",
+    "back": "Voltar",
+    "title": "Cliente",
+    "devices": "APARELHOS",
+    "paidYtd": "PAGO NO ANO",
+    "since": "DESDE",
+    "addAssignMeter": "+ Atribuir contador",
+    "noDevicesYet": "Ainda sem aparelhos",
+    "noDevicesBody": "Atribua um contador para começar a receber pagamentos.",
+    "assignMeter": "Atribuir contador",
+    "paid": "Pago",
+    "total": "Total",
+    "saleNumber": "Venda #{{id}}",
+    "serialCopied": "Número de série copiado",
+    "saleIdCopied": "ID da venda copiado",
+    "energyService": "Serviço de energia",
+    "monthlyPlan": "Plano de {{count}} meses",
+    "installmentPlan": "Plano a prestações",
+    "shsUnit": "Unidade SHS",
+    "meterName": "Contador",
+    "shsUnitName": "Unidade SHS",
+    "ebikeName": "Bicicleta elétrica",
+    "collectPayment": "Receber pagamento"
+  },
+  "addMeter": {
+    "errors": {
+      "manufacturer": "Escolha um fabricante.",
+      "meterType": "Escolha um tipo de contador.",
+      "meter": "Escolha um contador.",
+      "tariff": "Escolha uma tarifa.",
+      "connectionGroup": "Escolha um grupo de ligação.",
+      "connectionType": "Escolha um tipo de ligação.",
+      "invalidCustomer": "Cliente inválido.",
+      "pickMeter": "Escolha um contador da lista.",
+      "submitGeneric": "Não foi possível atribuir o contador. Tente novamente."
+    },
+    "assigned": "Contador atribuído",
+    "backHome": "Voltar ao início",
+    "title": "Atribuir contador",
+    "customerLabel": "Cliente #{{id}}",
+    "heading": "Atribuir um contador",
+    "subheading": "Preencha os detalhes do equipamento e da tarifa para este cliente.",
+    "manufacturer": "Fabricante",
+    "meterType": "Tipo de contador",
+    "serial": "Número de série",
+    "noUnassigned": "Nenhum contador não atribuído corresponde",
+    "selectMeter": "Selecione um contador…",
+    "pickFirst": "Escolha primeiro o fabricante e o tipo",
+    "searchSerial": "Pesquisar número de série",
+    "tariff": "Tarifa",
+    "connectionGroup": "Grupo de ligação",
+    "connectionType": "Tipo de ligação",
+    "online": "Online",
+    "offline": "Offline",
+    "location": {
+      "label": "Localização do contador",
+      "pending": "A capturar posição…",
+      "captured": "Capturado: {{coords}}",
+      "denied": "Ignorado. Escolha no mapa ou tente novamente se o contador estiver noutro local.",
+      "pickOnMap": "Escolher no mapa",
+      "retry": "Tentar novamente"
+    },
+    "submit": "Atribuir contador"
+  },
+  "paymentNew": {
+    "find": {
+      "errorEnter": "Introduza o número de série do contador ou SHS.",
+      "errorNotFound": "Nenhum aparelho encontrado com o número de série \"{{serial}}\".",
+      "errorGeneric": "A pesquisa falhou. Tente novamente.",
+      "title": "Receber pagamento",
+      "subtitle": "Encontrar aparelho",
+      "question": "Para que aparelho está a receber?",
+      "hint": "Introduza o número de série do contador ou SHS. Mostraremos o cliente a seguir.",
+      "label": "Número de série",
+      "placeholder": "ex. MTR-000123",
+      "continue": "Continuar"
+    },
+    "amount": {
+      "title": "Receber pagamento",
+      "step": "Passo 1 de 3",
+      "label": "MONTANTE RECEBIDO",
+      "belowMin": "Abaixo do mínimo: ",
+      "minimum": "Mínimo: ",
+      "next": "Rever e confirmar"
+    },
+    "confirm": {
+      "title": "Confirmar pagamento",
+      "step": "Passo 2 de 3",
+      "label": "ESTÁ A RECEBER",
+      "inCashWith": "{{currency}} · em dinheiro",
+      "inCash": "Em dinheiro",
+      "for": "Para",
+      "device": "Aparelho",
+      "warning": "Confirme apenas depois de ter recebido o dinheiro do cliente. Esta ação é final.",
+      "back": "Voltar",
+      "submit": "Dinheiro recebido — confirmar"
+    },
+    "result": {
+      "title": "Pagamento recebido",
+      "receiptSent": "Recibo enviado para {{phone}}",
+      "recorded": "Registado com sucesso",
+      "backHome": "Voltar ao início",
+      "next": "Próximo cliente",
+      "refLabel": "Ref. #{{ref}}"
+    },
+    "device": {
+      "energyMeter": "Energia (contador)",
+      "shs": "Sistema solar doméstico",
+      "fallback": "Aparelho",
+      "meterShort": "Contador",
+      "shsShort": "SHS"
+    },
+    "token": {
+      "generating": "A GERAR CÓDIGO",
+      "waiting": "À espera que o aparelho emita um código…",
+      "none": "SEM CÓDIGO EMITIDO",
+      "noneBody": "O pagamento foi registado. Se um código for enviado mais tarde, o cliente recebê-lo-á por SMS.",
+      "label": "CÓDIGO",
+      "readToCustomer": "Leia este código ao cliente.",
+      "copied": "Código copiado"
+    },
+    "failed": "Pagamento falhou. Tente novamente."
+  },
+  "paymentDetail": {
+    "notFound": "Venda não encontrada.",
+    "back": "Voltar",
+    "serialCopied": "Número de série copiado",
+    "title": "Pagamento",
+    "ref": "Ref. #{{id}}",
+    "when": "Quando",
+    "for": "Para",
+    "device": "Aparelho",
+    "deviceLabel": "Aparelho · {{type}}",
+    "noDevice": "Sem aparelho atribuído",
+    "dash": "—",
+    "sender": "Remetente",
+    "reference": "Referência",
+    "customer": "CLIENTE",
+    "shsHint": "As entradas SHS ainda não estão ligadas ao registo do cliente neste ecrã — abra o separador Clientes para os encontrar.",
+    "noCustomerSerial": "Nenhum cliente corresponde ao número de série {{serial}}.",
+    "noCustomer": "Sem cliente ligado.",
+    "meter": "Contador",
+    "shsUnit": "Unidade SHS",
+    "appliance": "Aparelho"
+  },
+  "saleNew": {
+    "plans": {
+      "cash": {
+        "title": "Dinheiro à vista",
+        "subtitle": "O cliente paga o preço total hoje."
+      },
+      "twelve": {
+        "title": "PAYG 12 meses",
+        "subtitle": "Ativo a cada pagamento mensal."
+      },
+      "twentyFour": {
+        "title": "PAYG 24 meses",
+        "subtitle": "Pagamento mensal mais baixo."
+      },
+      "custom": {
+        "title": "Plano personalizado",
+        "subtitle": "Defina o seu próprio depósito e número de meses."
+      },
+      "energy": {
+        "title": "Serviço de energia",
+        "subtitle": "Recargas pré-pagas. Sem duração fixa."
+      }
+    },
+    "tier": {
+      "starter": "Inicial",
+      "popular": "Mais popular",
+      "large": "Grande agregado"
+    },
+    "pickCustomer": {
+      "title": "Vender SHS",
+      "step": "Passo 1 de 4",
+      "label": "ESCOLHER UM CLIENTE",
+      "search": "Pesquisar por nome ou telefone…",
+      "noMatches": "Sem resultados. Tente outra pesquisa.",
+      "noCustomers": "Ainda sem clientes. Registe um primeiro."
+    },
+    "pickSystem": {
+      "title": "Vender SHS",
+      "step": "Passo 2 de 4",
+      "newCustomer": "Novo cliente",
+      "label": "ESCOLHER UM SISTEMA",
+      "noUnits": "Nenhuma unidade SHS atribuída a si. Peça ao seu administrador para atribuir uma.",
+      "shsUnit": "Unidade SHS"
+    },
+    "plan": {
+      "back": "Voltar",
+      "title": "Plano de pagamento",
+      "label": "Plano de pagamento",
+      "total": "Total",
+      "cashToday": "Dinheiro hoje",
+      "depositToday": "Depósito hoje",
+      "howWillTheyPay": "COMO IRÁ PAGAR?",
+      "perMonth": "/ mês",
+      "months": "Meses",
+      "monthsDefault": "6",
+      "depositLabel": "Depósito hoje",
+      "depositDefault": "0",
+      "pricePerDay": "Preço / dia",
+      "pricePerDayDefault": "0",
+      "minTopUp": "Recarga mín.",
+      "minTopUpDefault": "0",
+      "downPayment": "Depósito (opcional)",
+      "downPaymentDefault": "0",
+      "easHint": "O cliente paga por dia de uso. O serviço pausa quando o saldo termina.",
+      "paygHint": "PAYG desbloqueia após cada pagamento mensal. O cliente recebe lembretes SMS antes de cada vencimento.",
+      "unitSerial": "Número de série da unidade",
+      "pickUnassigned": "Escolher uma unidade não atribuída",
+      "searchSerial": "Pesquisar por número de série…",
+      "backStep": "Voltar",
+      "collectCash": "Receber {{amount}} em dinheiro",
+      "collectDeposit": "Receber {{amount}} de depósito",
+      "continue": "Continuar"
+    },
+    "confirm": {
+      "title": "Confirmar venda",
+      "step": "Passo 4 de 4",
+      "labelCash": "DINHEIRO HOJE",
+      "labelDeposit": "DEPÓSITO HOJE",
+      "activationOnly": "Apenas ativação — sem dinheiro recebido",
+      "inCashWith": "{{currency}} · em dinheiro",
+      "inCash": "Em dinheiro",
+      "unit": "Unidade",
+      "plan": "Plano",
+      "total": "Total",
+      "pricePerDay": "Preço / dia",
+      "minTopUp": "Recarga mín.",
+      "monthlyPayments_one": "{{count}} pagamento mensal",
+      "monthlyPayments_other": "{{count}} pagamentos mensais",
+      "monthlyAmount": "{{amount}} / mês",
+      "firstPayment": "Primeiro pagamento",
+      "deviceSerial": "Número de série",
+      "warningEas": "A ativação inicia o contrato de serviço de energia. Esta ação é final.",
+      "warningCash": "Confirme apenas após ter recebido o dinheiro. Esta ação é final.",
+      "warningDeposit": "Confirme apenas após ter recebido o depósito. Esta ação é final.",
+      "back": "Voltar",
+      "activate": "Ativar serviço de energia",
+      "submit": "Dinheiro recebido — confirmar"
+    },
+    "result": {
+      "titleActivated": "Serviço ativado",
+      "titleSold": "SHS vendido",
+      "cash": "Dinheiro",
+      "deposit": "Depósito",
+      "backHome": "Voltar ao início",
+      "next": "Próxima venda",
+      "refLabel": "Ref. #{{ref}}"
+    },
+    "errors": {
+      "serialLoad": "Não foi possível carregar as unidades não atribuídas. Verifique a sua ligação.",
+      "applianceMissing": "Este aparelho está em falta — contacte o seu administrador.",
+      "noUnits": "Sem unidades não atribuídas disponíveis para este aparelho."
+    },
+    "planSubtitle": "{{customer}} · {{unit}}",
+    "failed": "Venda falhou. Tente novamente."
+  },
+  "saleDetail": {
+    "notFound": "Venda não encontrada.",
+    "back": "Voltar",
+    "title": "Venda",
+    "customerFallback": "Cliente",
+    "shsUnit": "Unidade SHS",
+    "serialCopied": "Número de série copiado",
+    "paid": "PAGO",
+    "left": "RESTA",
+    "total": "TOTAL",
+    "fullyPaid": "Totalmente pago",
+    "progress": "{{percent}}% pago · {{remaining}} restante",
+    "plan": "PLANO",
+    "type": "Tipo",
+    "tenure": "Prazo",
+    "tenureMonths_one": "{{count}} mês",
+    "tenureMonths_other": "{{count}} meses",
+    "downPayment": "Depósito",
+    "monthly": "Mensal",
+    "monthlyValue": "{{amount}} / mês",
+    "firstPayment": "Primeiro pagamento",
+    "nextDue": "Próximo vencimento",
+    "soldOn": "Vendido em",
+    "device": "APARELHO",
+    "noSerial": "Sem número de série registado",
+    "schedule": "CALENDÁRIO DE PAGAMENTOS",
+    "customer": "Cliente",
+    "paidOff": "Pago",
+    "collectPayment": "Receber pagamento",
+    "paidFull": "Pago {{amount}}",
+    "partial": "Parcial — {{paid}} de {{total}}",
+    "due": "Devido {{amount}}",
+    "energyService": "Serviço de energia",
+    "monthlyPayg": "PAYG {{count}} meses",
+    "installment": "Prestação",
+    "planFallback": "Plano",
+    "dueDash": "—"
+  },
+  "syncBanner": {
+    "offline": "Ainda offline — sincronizamos assim que voltar à rede.",
+    "failedAndPending": "{{failed}} falha de sync · {{pending}} pendente",
+    "customer_one": "{{count}} cliente por sincronizar",
+    "customer_other": "{{count}} clientes por sincronizar",
+    "syncNow": "Sincronizar"
+  }
+}

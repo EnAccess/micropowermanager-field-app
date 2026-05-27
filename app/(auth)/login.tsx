@@ -1,8 +1,9 @@
 import { Feather } from '@expo/vector-icons';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -18,17 +19,22 @@ import { Button, GradientHero, Logo, Text, TextField } from '@/components';
 import { environmentHost } from '@/config/environments';
 import { fonts, radii, semantic, spacing } from '@/theme';
 
-const schema = z.object({
-  email: z.string().email('Enter a valid email.'),
-  password: z.string().min(1, 'Password required.'),
-});
-
-type LoginForm = z.infer<typeof schema>;
+type LoginForm = { email: string; password: string };
 
 export default function LoginScreen() {
+  const { t } = useTranslation();
   const { environment, login } = useSession();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+
+  const schema = useMemo(
+    () =>
+      z.object({
+        email: z.string().email(t('login.errors.invalidEmail')),
+        password: z.string().min(1, t('login.errors.passwordRequired')),
+      }),
+    [t],
+  );
 
   const {
     control,
@@ -44,7 +50,7 @@ export default function LoginScreen() {
     try {
       await login(values);
     } catch (caught) {
-      setSubmitError(errorMessage(caught));
+      setSubmitError(errorMessage(caught, t('login.errors.generic')));
     }
   });
 
@@ -67,7 +73,7 @@ export default function LoginScreen() {
           </Text>
         </View>
         <Text variant="pageTitle" tone="onNavy" style={styles.title}>
-          Welcome back
+          {t('login.title')}
         </Text>
         {host ? (
           <View style={styles.serverPill}>
@@ -93,8 +99,8 @@ export default function LoginScreen() {
               name="email"
               render={({ field: { value, onChange, onBlur } }) => (
                 <TextField
-                  label="Email"
-                  placeholder="you@example.com"
+                  label={t('login.email')}
+                  placeholder={t('login.emailPlaceholder')}
                   autoCapitalize="none"
                   autoCorrect={false}
                   keyboardType="email-address"
@@ -110,8 +116,8 @@ export default function LoginScreen() {
               name="password"
               render={({ field: { value, onChange, onBlur } }) => (
                 <TextField
-                  label="Password"
-                  placeholder="••••••••"
+                  label={t('login.password')}
+                  placeholder={t('login.passwordPlaceholder')}
                   secureTextEntry={!showPassword}
                   autoCapitalize="none"
                   autoCorrect={false}
@@ -125,7 +131,7 @@ export default function LoginScreen() {
                       hitSlop={8}
                     >
                       <Text variant="bodyEmphasis" tone="brand">
-                        {showPassword ? 'Hide' : 'Show'}
+                        {showPassword ? t('login.hide') : t('login.show')}
                       </Text>
                     </Pressable>
                   }
@@ -141,19 +147,23 @@ export default function LoginScreen() {
           ) : null}
 
           <View style={styles.cta}>
-            <Button label="Sign in" onPress={onSubmit} loading={isSubmitting} />
+            <Button
+              label={t('login.signIn')}
+              onPress={onSubmit}
+              loading={isSubmitting}
+            />
           </View>
 
           <View style={styles.switch}>
             <Text variant="meta" tone="muted">
-              Wrong server?{' '}
+              {t('login.wrongServer')}
             </Text>
             <Pressable
               onPress={() => router.replace('/(auth)/environment')}
               hitSlop={8}
             >
               <Text variant="bodyEmphasis" tone="brand">
-                Change
+                {t('login.change')}
               </Text>
             </Pressable>
           </View>
@@ -163,14 +173,14 @@ export default function LoginScreen() {
   );
 }
 
-function errorMessage(caught: unknown): string {
+function errorMessage(caught: unknown, fallback: string): string {
   if (typeof caught === 'object' && caught !== null && 'response' in caught) {
     const response = (caught as { response?: { data?: { message?: string } } })
       .response;
     if (response?.data?.message) return response.data.message;
   }
   if (caught instanceof Error) return caught.message;
-  return 'Sign-in failed. Try again.';
+  return fallback;
 }
 
 const styles = StyleSheet.create({

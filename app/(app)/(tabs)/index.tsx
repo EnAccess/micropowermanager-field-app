@@ -3,13 +3,13 @@ import { useQueries, useQuery } from '@tanstack/react-query';
 import { Href, router } from 'expo-router';
 import { useCallback, useMemo } from 'react';
 import {
-  Alert,
   Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
   View,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import {
   AgentTransaction,
@@ -42,35 +42,39 @@ import { useCurrency } from '@/utils/useCurrency';
 const FAB_ACTIONS = [
   {
     key: 'collect',
-    label: 'Collect payment',
+    labelKey: 'home.fab.collect',
     icon: 'credit-card' as const,
     color: semantic.orange,
     href: '/(app)/payments/new',
   },
   {
     key: 'sell',
-    label: 'Sell SHS',
+    labelKey: 'home.fab.sell',
     icon: 'shopping-bag' as const,
     color: semantic.blue,
     href: '/(app)/sales/new',
   },
   {
     key: 'register',
-    label: 'Register customer',
+    labelKey: 'home.fab.register',
     icon: 'user-plus' as const,
     color: semantic.green,
     href: '/(app)/customers/new',
   },
 ] satisfies {
   key: string;
-  label: string;
+  labelKey: string;
   icon: React.ComponentProps<typeof Feather>['name'];
   color: string;
   href: Href;
 }[];
 
+// TODO: fetch real notifications and show count in the bell icon badge.
+const hasUnreadNotifications = false;
+
 export default function Home() {
-  const { api, agent, logout, refreshSession } = useSession();
+  const { t } = useTranslation();
+  const { api, agent, refreshSession } = useSession();
   const { format: formatCurrency } = useCurrency();
   const balanceQuery = useBalance();
   const todayQuery = useTodaysTransactions();
@@ -126,15 +130,8 @@ export default function Home() {
   const isRefreshing = balanceQuery.isFetching || todayQuery.isFetching;
 
   const fullName = agentFullName(agent);
-  const greeting = `Welcome, ${fullName ?? 'Agent'}`;
+  const greeting = t('home.greeting', { name: fullName ?? t('common.agent') });
   const initial = initials(fullName ?? agent?.email ?? 'A').slice(0, 1);
-
-  function confirmSignOut() {
-    Alert.alert('Sign out?', 'You will need to sign in again to continue.', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Sign out', style: 'destructive', onPress: () => void logout() },
-    ]);
-  }
 
   return (
     <View style={styles.root}>
@@ -166,16 +163,35 @@ export default function Home() {
                 </Text>
               ) : null}
             </View>
-            <Pressable
-              onPress={confirmSignOut}
-              hitSlop={8}
-              style={({ pressed }) => [
-                styles.heroBtn,
-                pressed && { opacity: 0.6 },
-              ]}
-            >
-              <Feather name="log-out" size={18} color={semantic.paper} />
-            </Pressable>
+            <View style={styles.heroActions}>
+              <Pressable
+                onPress={() => {
+                  // TODO: route to notifications screen once available.
+                }}
+                hitSlop={8}
+                accessibilityLabel={t('home.notifications')}
+                style={({ pressed }) => [
+                  styles.heroBtn,
+                  pressed && { opacity: 0.6 },
+                ]}
+              >
+                <Feather name="bell" size={18} color={semantic.paper} />
+                {hasUnreadNotifications ? (
+                  <View style={styles.unreadDot} />
+                ) : null}
+              </Pressable>
+              <Pressable
+                onPress={() => router.push('/(app)/settings')}
+                hitSlop={8}
+                accessibilityLabel={t('settings.title')}
+                style={({ pressed }) => [
+                  styles.heroBtn,
+                  pressed && { opacity: 0.6 },
+                ]}
+              >
+                <Feather name="menu" size={20} color={semantic.paper} />
+              </Pressable>
+            </View>
           </View>
 
           <View style={styles.heroAmountBlock}>
@@ -184,17 +200,15 @@ export default function Home() {
               tone="onNavyMuted"
               style={styles.heroLabel}
             >
-              COLLECTED TODAY
+              {t('home.collectedToday')}
             </Text>
             <Text variant="heroNumberSm" tone="onNavy">
               {formatCurrency(cashToday)}
             </Text>
             <Text variant="meta" tone="onNavyMuted">
               {todays.length === 0
-                ? 'No payments yet'
-                : `${todays.length} ${
-                    todays.length === 1 ? 'transaction' : 'transactions'
-                  }`}
+                ? t('home.noPaymentsYet')
+                : t('home.transactionCount', { count: todays.length })}
             </Text>
           </View>
         </GradientHero>
@@ -202,19 +216,19 @@ export default function Home() {
         <View style={styles.statsWrap}>
           <Card elevated style={styles.statsCard}>
             <StatCol
-              label="Payments today"
+              label={t('home.stat.paymentsToday')}
               value={String(todays.length)}
               tone="orange"
             />
             <Divider />
             <StatCol
-              label="Cash today"
+              label={t('home.stat.cashToday')}
               value={formatCurrency(cashToday)}
               tone="blue"
             />
             <Divider />
             <StatCol
-              label="Balance"
+              label={t('home.stat.balance')}
               value={
                 balanceQuery.isLoading
                   ? '—'
@@ -227,21 +241,26 @@ export default function Home() {
 
         <View style={styles.section}>
           <Text variant="sectionLabel" tone="muted" style={styles.sectionLabel}>
-            YOUR DAY
+            {t('home.section.yourDay')}
           </Text>
 
           {todayQuery.isLoading ? (
             <Text variant="meta" tone="muted">
-              Loading…
+              {t('common.loading')}
             </Text>
           ) : todays.length > 0 ? (
             <Timeline
-              items={buildTimeline(todays, customerBySerial, formatCurrency)}
+              items={buildTimeline(
+                todays,
+                customerBySerial,
+                formatCurrency,
+                t('home.shsDownPayment'),
+              )}
             />
           ) : (
             <View style={styles.empty}>
               <Text variant="body" tone="muted" style={styles.emptyText}>
-                No activity yet. Tap the orange button to start collecting.
+                {t('home.emptyToday')}
               </Text>
             </View>
           )}
@@ -251,7 +270,7 @@ export default function Home() {
       <Fab
         actions={FAB_ACTIONS.map((a) => ({
           key: a.key,
-          label: a.label,
+          label: t(a.labelKey),
           icon: a.icon,
           color: a.color,
           onPress: () => router.push(a.href),
@@ -339,6 +358,7 @@ function buildTimeline(
   transactions: AgentTransaction[],
   customerBySerial: Map<string, string>,
   formatCurrency: (n: number) => string,
+  shsDownPaymentLabel: string,
 ): TimelineItem[] {
   return transactions.slice(0, 6).map((tx) => {
     const serial = transactionSerial(tx);
@@ -349,7 +369,7 @@ function buildTimeline(
       passedName ??
       lookedUpName ??
       serial ??
-      (isShs ? 'SHS down payment' : humanizeTransactionType(tx.type));
+      (isShs ? shsDownPaymentLabel : humanizeTransactionType(tx.type));
     const tone = isShs ? 'blue' : timelineTone(tx.type);
     const icon = isShs ? 'shopping-bag' : timelineIcon(tx.type);
 
@@ -431,6 +451,11 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 2,
   },
+  heroActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
   heroBtn: {
     width: 36,
     height: 36,
@@ -438,6 +463,17 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.14)',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  unreadDot: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: semantic.orange,
+    borderWidth: 1.5,
+    borderColor: semantic.blue,
   },
   heroAmountBlock: {
     marginTop: spacing.lg,

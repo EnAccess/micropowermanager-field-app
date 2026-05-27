@@ -2,6 +2,7 @@ import { Feather } from '@expo/vector-icons';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   FlatList,
@@ -9,6 +10,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
+import type { TFunction } from 'i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
@@ -27,13 +29,14 @@ import { useCurrency } from '@/utils/useCurrency';
 
 type FilterId = 'all' | 'in_payoff' | 'paid';
 
-const FILTERS: { id: FilterId; label: string }[] = [
-  { id: 'all', label: 'All' },
-  { id: 'in_payoff', label: 'In payoff' },
-  { id: 'paid', label: 'Paid off' },
+const FILTER_IDS: { id: FilterId; key: string }[] = [
+  { id: 'all', key: 'salesList.filters.all' },
+  { id: 'in_payoff', key: 'salesList.filters.inPayoff' },
+  { id: 'paid', key: 'salesList.filters.paid' },
 ];
 
 export default function SalesTab() {
+  const { t } = useTranslation();
   const { api } = useSession();
   const insets = useSafeAreaInsets();
   const { format: formatCurrency } = useCurrency();
@@ -66,9 +69,9 @@ export default function SalesTab() {
     <View style={[styles.root, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <View style={styles.headerTitle}>
-          <Text variant="screenTitle">Your sales</Text>
+          <Text variant="screenTitle">{t('salesList.title')}</Text>
           <Text variant="meta" tone="muted">
-            {counts.all} system{counts.all === 1 ? '' : 's'} · all-time
+            {t('salesList.subtitleAll', { count: counts.all })}
           </Text>
         </View>
         <Pressable
@@ -81,9 +84,12 @@ export default function SalesTab() {
       </View>
 
       <View style={styles.chipsRow}>
-        {FILTERS.map((f) => {
+        {FILTER_IDS.map((f) => {
           const active = filter === f.id;
-          const label = f.id === 'all' ? `All ${counts.all}` : f.label;
+          const label =
+            f.id === 'all'
+              ? t('salesList.filters.all', { count: counts.all })
+              : t(f.key);
           return (
             <Pill
               key={f.id}
@@ -107,17 +113,17 @@ export default function SalesTab() {
           </View>
           <Text variant="screenTitle" style={styles.emptyTitle}>
             {items.length === 0
-              ? 'No sales yet'
-              : 'Nothing matches this filter'}
+              ? t('salesList.empty.noneTitle')
+              : t('salesList.empty.filterTitle')}
           </Text>
           <Text variant="meta" tone="muted" style={styles.emptySubtitle}>
             {items.length === 0
-              ? 'When you sell an SHS unit it will show up here.'
-              : 'Try a different filter.'}
+              ? t('salesList.empty.noneBody')
+              : t('salesList.empty.filterBody')}
           </Text>
           {items.length === 0 ? (
             <Button
-              label="Sell SHS"
+              label={t('salesList.empty.sellCta')}
               onPress={() => router.push('/(app)/sales/new')}
               style={styles.emptyCta}
             />
@@ -145,7 +151,7 @@ export default function SalesTab() {
             ) : null
           }
           renderItem={({ item }) => (
-            <SaleCard sale={item} formatCurrency={formatCurrency} />
+            <SaleCard sale={item} formatCurrency={formatCurrency} t={t} />
           )}
         />
       )}
@@ -156,9 +162,11 @@ export default function SalesTab() {
 function SaleCard({
   sale,
   formatCurrency,
+  t,
 }: {
   sale: SoldAppliance;
   formatCurrency: (n: number) => string;
+  t: TFunction;
 }) {
   const cost = saleCost(sale);
   const paid = salePaid(sale);
@@ -167,8 +175,8 @@ function SaleCard({
   const progress = hasCost ? Math.min(1, paid / cost) : 0;
   const done = hasCost && progress >= 1;
 
-  const name = sale.appliance?.name ?? 'SHS unit';
-  const planLabel = describePlan(sale);
+  const name = sale.appliance?.name ?? t('saleNew.pickSystem.shsUnit');
+  const planLabel = describePlan(sale, t);
   const sizeLabel = shortLabel(name);
   const customerName = saleCustomerName(sale);
   const nextDue = nextDueDate(sale) ?? sale.first_payment_date ?? null;
@@ -189,10 +197,10 @@ function SaleCard({
           </Text>
         </View>
         {done ? (
-          <Pill label="PAID" tone="green" />
+          <Pill label={t('saleDetail.paid')} tone="green" />
         ) : nextDue ? (
           <Text variant="bodyEmphasis" tone="muted">
-            Next {formatShortDate(nextDue)}
+            {t('salesList.nextDue', { date: formatShortDate(nextDue) })}
           </Text>
         ) : null}
       </View>
@@ -213,10 +221,11 @@ function SaleCard({
 
           <View style={styles.cardFoot}>
             <Text variant="meta" tone="muted">
-              Paid <Text style={styles.mono}>{formatCurrency(paid)}</Text>
+              {t('salesList.paid')}{' '}
+              <Text style={styles.mono}>{formatCurrency(paid)}</Text>
             </Text>
             <Text variant="meta" tone="muted">
-              Left{' '}
+              {t('salesList.left')}{' '}
               <Text style={[styles.mono, done && { color: semantic.green }]}>
                 {formatCurrency(left)}
               </Text>
@@ -228,12 +237,15 @@ function SaleCard({
   );
 }
 
-function describePlan(sale: SoldAppliance): string {
-  if (sale.payment_type === 'energy_service') return 'Energy service';
+function describePlan(sale: SoldAppliance, t: TFunction): string {
+  if (sale.payment_type === 'energy_service')
+    return t('salesList.energyService');
   if (sale.payment_type === 'installment') {
-    return sale.tenure ? `${sale.tenure}-month plan` : 'Installment plan';
+    return sale.tenure
+      ? t('salesList.monthlyPlan', { count: sale.tenure })
+      : t('salesList.installmentPlan');
   }
-  return 'Plan';
+  return t('salesList.plan');
 }
 
 function matches(sale: SoldAppliance, filter: FilterId): boolean {

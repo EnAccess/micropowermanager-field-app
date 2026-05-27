@@ -2,6 +2,7 @@ import { Feather } from '@expo/vector-icons';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   FlatList,
@@ -9,6 +10,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
+import type { TFunction } from 'i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
@@ -31,24 +33,28 @@ import { useCurrency } from '@/utils/useCurrency';
 type Category = 'all' | 'meter' | 'installment';
 type Scope = 'today' | 'week' | 'all';
 
-const CATEGORIES: { id: Category; label: string }[] = [
-  { id: 'all', label: 'All' },
-  { id: 'meter', label: 'Meter' },
-  { id: 'installment', label: 'Installment' },
-];
-
-const SCOPE_OPTIONS: { value: Scope; label: string }[] = [
-  { value: 'today', label: 'Today' },
-  { value: 'week', label: 'This week' },
-  { value: 'all', label: 'All time' },
+const CATEGORY_IDS: { id: Category; key: string }[] = [
+  { id: 'all', key: 'paymentsList.categories.all' },
+  { id: 'meter', key: 'paymentsList.categories.meter' },
+  { id: 'installment', key: 'paymentsList.categories.installment' },
 ];
 
 export default function PaymentsTab() {
+  const { t } = useTranslation();
   const { api } = useSession();
   const insets = useSafeAreaInsets();
   const { format: formatCurrency } = useCurrency();
   const [category, setCategory] = useState<Category>('all');
   const [scope, setScope] = useState<Scope>('today');
+
+  const scopeOptions: { value: Scope; label: string }[] = useMemo(
+    () => [
+      { value: 'today', label: t('paymentsList.scope.today') },
+      { value: 'week', label: t('paymentsList.scope.week') },
+      { value: 'all', label: t('paymentsList.scope.all') },
+    ],
+    [t],
+  );
 
   const transactions = useInfiniteQuery({
     queryKey: ['agent-transactions-list'],
@@ -71,14 +77,19 @@ export default function PaymentsTab() {
     [items, category, scope],
   );
   const filteredCash = filtered.reduce((sum, tx) => sum + (tx.amount || 0), 0);
-  const scopeLabel =
-    scope === 'today' ? 'today' : scope === 'week' ? 'this week' : 'all time';
+  const scopeLabel = t(
+    scope === 'today'
+      ? 'paymentsList.scope.todayShort'
+      : scope === 'week'
+        ? 'paymentsList.scope.weekShort'
+        : 'paymentsList.scope.allShort',
+  );
 
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <View style={styles.headerTitle}>
-          <Text variant="screenTitle">Payments</Text>
+          <Text variant="screenTitle">{t('paymentsList.title')}</Text>
           <Text variant="meta" tone="muted">
             {filtered.length} {scopeLabel} · {formatCurrency(filteredCash)}
           </Text>
@@ -86,10 +97,10 @@ export default function PaymentsTab() {
       </View>
 
       <View style={styles.chipsRow}>
-        {CATEGORIES.map((c) => (
+        {CATEGORY_IDS.map((c) => (
           <Pill
             key={c.id}
-            label={c.label}
+            label={t(c.key)}
             tone="neutral"
             selected={category === c.id}
             onPress={() => setCategory(c.id)}
@@ -100,7 +111,7 @@ export default function PaymentsTab() {
         <Select<Scope>
           value={scope}
           onChange={setScope}
-          options={SCOPE_OPTIONS}
+          options={scopeOptions}
           compact
           containerStyle={styles.scopeSelect}
         />
@@ -108,11 +119,15 @@ export default function PaymentsTab() {
 
       <View style={styles.summary}>
         <SummaryCol
-          label="CASH"
+          label={t('paymentsList.cash')}
           value={formatCurrency(filteredCash)}
           tone="orange"
         />
-        <SummaryCol label="COUNT" value={String(filtered.length)} tone="ink" />
+        <SummaryCol
+          label={t('paymentsList.count')}
+          value={String(filtered.length)}
+          tone="ink"
+        />
       </View>
 
       {transactions.isLoading ? (
@@ -122,23 +137,23 @@ export default function PaymentsTab() {
       ) : transactions.isError ? (
         <EmptyState
           icon="alert-circle"
-          title="Couldn't load payments"
-          subtitle="Pull down to retry."
+          title={t('paymentsList.errorTitle')}
+          subtitle={t('paymentsList.errorBody')}
         />
       ) : filtered.length === 0 ? (
         <EmptyState
           icon="credit-card"
           title={
             items.length === 0
-              ? 'No payments yet'
-              : 'Nothing matches this filter'
+              ? t('paymentsList.noneTitle')
+              : t('paymentsList.filterTitle')
           }
           subtitle={
             items.length === 0
-              ? 'Collect a payment from the home screen.'
-              : 'Try a different filter.'
+              ? t('paymentsList.noneBody')
+              : t('paymentsList.filterBody')
           }
-          ctaLabel={items.length === 0 ? 'Collect a payment' : undefined}
+          ctaLabel={items.length === 0 ? t('paymentsList.cta') : undefined}
           onCta={
             items.length === 0
               ? () => router.push('/(app)/payments/new')
@@ -172,6 +187,7 @@ export default function PaymentsTab() {
             <TransactionRow
               transaction={item}
               formatCurrency={formatCurrency}
+              t={t}
             />
           )}
         />
@@ -210,9 +226,11 @@ function SummaryCol({
 function TransactionRow({
   transaction,
   formatCurrency,
+  t,
 }: {
   transaction: AgentTransaction;
   formatCurrency: (n: number) => string;
+  t: TFunction;
 }) {
   const time = formatTime(transaction.created_at);
   const ref = `#${transaction.id}`;
@@ -224,7 +242,8 @@ function TransactionRow({
   const person = transactionPersonName(transaction);
 
   // Pick the most informative primary line we can produce from this row.
-  const primary = person ?? serial ?? (isShs ? 'SHS down payment' : typeLabel);
+  const primary =
+    person ?? serial ?? (isShs ? t('home.shsDownPayment') : typeLabel);
 
   return (
     <Pressable
