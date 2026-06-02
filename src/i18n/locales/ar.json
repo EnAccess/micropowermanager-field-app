@@ -1,0 +1,546 @@
+{
+  "common": {
+    "cancel": "إلغاء",
+    "save": "حفظ",
+    "loading": "جارٍ التحميل…",
+    "agent": "وكيل",
+    "back": "رجوع",
+    "continue": "متابعة",
+    "retry": "إعادة المحاولة",
+    "done": "تم",
+    "discard": "تجاهل",
+    "search": "بحث…",
+    "select": "اختر…",
+    "selectTitle": "اختيار",
+    "close": "إغلاق",
+    "noOptions": "لا توجد خيارات متاحة.",
+    "selectNoMatches": "لا توجد نتائج.",
+    "noMatches": "لا توجد نتائج",
+    "tryDifferentSearch": "جرّب بحثًا آخر.",
+    "tryDifferentFilter": "جرّب فلترًا آخر.",
+    "month_one": "شهر",
+    "month_other": "أشهر"
+  },
+  "time": {
+    "justNow": "الآن",
+    "minutesAgo": "قبل {{count}} دقيقة",
+    "hoursAgo": "قبل {{count}} ساعة",
+    "daysAgo": "قبل {{count}} يوم"
+  },
+  "errors": {
+    "sessionExpired": "انتهت الجلسة. سجل الدخول مرة أخرى.",
+    "noPermission": "ليس لديك إذن لهذا الإجراء.",
+    "notFound": "غير موجود على الخادم.",
+    "conflict": "طلب متعارض. اسحب للتحديث وأعد المحاولة.",
+    "serverTrouble": "هناك مشكلة في الخادم. أعد المحاولة بعد قليل.",
+    "noConnection": "لا يوجد اتصال. تحقق من الإنترنت وأعد المحاولة."
+  },
+  "tabs": {
+    "home": "الرئيسية",
+    "customers": "العملاء",
+    "sales": "المبيعات",
+    "payments": "المدفوعات"
+  },
+  "home": {
+    "greeting": "مرحبًا، {{name}}",
+    "notifications": "الإشعارات",
+    "collectedToday": "المحصّل اليوم",
+    "noPaymentsYet": "لا توجد مدفوعات بعد",
+    "transactionCount_one": "{{count}} معاملة",
+    "transactionCount_other": "{{count}} معاملات",
+    "stat": {
+      "paymentsToday": "مدفوعات اليوم",
+      "cashToday": "النقد اليوم",
+      "balance": "الرصيد"
+    },
+    "section": {
+      "yourDay": "يومك"
+    },
+    "emptyToday": "لا يوجد نشاط بعد. اضغط على الزر البرتقالي لبدء التحصيل.",
+    "fab": {
+      "collect": "تحصيل دفعة",
+      "sell": "بيع SHS",
+      "register": "تسجيل عميل"
+    },
+    "shsDownPayment": "دفعة أولى SHS"
+  },
+  "settings": {
+    "title": "الإعدادات",
+    "language": "اللغة",
+    "sync": "المزامنة",
+    "syncStatus": {
+      "synced": "تمت المزامنة",
+      "pending_one": "{{count}} قيد الانتظار",
+      "pending_other": "{{count}} قيد الانتظار",
+      "lastSynced": "آخر مزامنة {{when}}",
+      "allUpToDate": "جميع البيانات محدّثة",
+      "never": "لم تتم المزامنة بعد"
+    },
+    "signOut": "تسجيل الخروج",
+    "signOutConfirm": {
+      "title": "تسجيل الخروج؟",
+      "message": "سيتعين عليك تسجيل الدخول مرة أخرى للمتابعة."
+    },
+    "version": "v{{version}} · build {{build}}",
+    "appName": "MicroPowerManager"
+  },
+  "language": {
+    "title": "اللغة",
+    "english": "English",
+    "french": "Français",
+    "arabic": "العربية",
+    "burmese": "မြန်မာ",
+    "portuguese": "Português"
+  },
+  "login": {
+    "title": "مرحبًا بعودتك",
+    "email": "البريد الإلكتروني",
+    "emailPlaceholder": "you@example.com",
+    "password": "كلمة المرور",
+    "passwordPlaceholder": "••••••••",
+    "show": "إظهار",
+    "hide": "إخفاء",
+    "signIn": "تسجيل الدخول",
+    "wrongServer": "خادم خاطئ؟ ",
+    "change": "تغيير",
+    "errors": {
+      "invalidEmail": "أدخل بريدًا إلكترونيًا صالحًا.",
+      "passwordRequired": "كلمة المرور مطلوبة.",
+      "generic": "فشل تسجيل الدخول. حاول مرة أخرى."
+    }
+  },
+  "environment": {
+    "demo": "تجريبي",
+    "demoSubtitle": "استكشف ببيانات تجريبية. بدون إعداد.",
+    "cloud": "السحابة",
+    "cloudSubtitle": "سجّل الدخول إلى سحابة MicroPowerManager.",
+    "custom": "مخصص",
+    "customSubtitle": "مستضاف ذاتيًا أو محلي أو تجريبي.",
+    "appName": "MicroPowerManager",
+    "title": "اربط حسابك",
+    "subtitle": "اختر إلى أي خادم يتصل هذا التطبيق.",
+    "serverUrl": "عنوان الخادم",
+    "serverUrlPlaceholder": "https://mpm.example.com",
+    "urlError": "أدخل عنوانًا كاملًا يبدأ بـ http:// أو https://",
+    "saveError": "تعذّر حفظ البيئة."
+  },
+  "customersList": {
+    "title": "العملاء",
+    "total": "إجمالي",
+    "search": "ابحث بالاسم أو الهاتف…",
+    "filters": {
+      "all": "الكل",
+      "withMeter": "مع عدّاد",
+      "withShs": "مع SHS",
+      "registeredToday": "مسجّلون اليوم"
+    },
+    "empty": {
+      "noMatchesTitle": "لا توجد نتائج",
+      "noneTitle": "لا يوجد عملاء بعد",
+      "noMatchesBody": "جرّب بحثًا آخر.",
+      "noFilterMatchesBody": "جرّب فلترًا آخر.",
+      "noneBody": "سجّل أول عميل لك للبدء.",
+      "registerCta": "تسجيل عميل"
+    },
+    "badge": {
+      "syncFailed": "فشل المزامنة",
+      "pendingSync": "قيد المزامنة",
+      "new": "جديد"
+    },
+    "discard": {
+      "title": "تجاهل العميل المحلي؟",
+      "message": "لم يُرسل {{name}} إلى الخادم بعد. التجاهل سيحذف الإدخال المحلي نهائيًا.",
+      "cancel": "إلغاء",
+      "confirm": "تجاهل",
+      "thisEntry": "هذا الإدخال"
+    }
+  },
+  "salesList": {
+    "title": "مبيعاتك",
+    "subtitleAll_one": "{{count}} نظام · منذ البداية",
+    "subtitleAll_other": "{{count}} أنظمة · منذ البداية",
+    "filters": {
+      "all": "الكل {{count}}",
+      "inPayoff": "قيد السداد",
+      "paid": "مسدّدة"
+    },
+    "plan": "خطة",
+    "empty": {
+      "noneTitle": "لا توجد مبيعات بعد",
+      "filterTitle": "لا شيء يطابق هذا الفلتر",
+      "noneBody": "عندما تبيع وحدة SHS ستظهر هنا.",
+      "filterBody": "جرّب فلترًا آخر.",
+      "sellCta": "بيع SHS"
+    },
+    "nextDue": "التالي {{date}}",
+    "paid": "مدفوع",
+    "left": "متبقي",
+    "energyService": "خدمة الطاقة",
+    "monthlyPlan": "خطة {{count}} شهر",
+    "installmentPlan": "خطة أقساط"
+  },
+  "paymentsList": {
+    "title": "المدفوعات",
+    "summary": "{{count}} {{scope}} · {{amount}}",
+    "categories": {
+      "all": "الكل",
+      "meter": "عدّاد",
+      "installment": "قسط"
+    },
+    "scope": {
+      "today": "اليوم",
+      "week": "هذا الأسبوع",
+      "all": "كل الأوقات",
+      "todayShort": "اليوم",
+      "weekShort": "هذا الأسبوع",
+      "allShort": "كل الأوقات"
+    },
+    "cash": "نقد",
+    "count": "العدد",
+    "errorTitle": "تعذّر تحميل المدفوعات",
+    "errorBody": "اسحب للأسفل للمحاولة مجددًا.",
+    "noneTitle": "لا توجد مدفوعات بعد",
+    "filterTitle": "لا شيء يطابق هذا الفلتر",
+    "noneBody": "حصّل دفعة من الشاشة الرئيسية.",
+    "filterBody": "جرّب فلترًا آخر.",
+    "cta": "تحصيل دفعة"
+  },
+  "customerNew": {
+    "title": "تسجيل عميل",
+    "step": "الخطوة 1 من 2 · الهوية",
+    "errors": {
+      "firstNameMin": "حرفان على الأقل.",
+      "surnameMin": "حرفان على الأقل.",
+      "phoneRequired": "أدخل رقم هاتف.",
+      "phoneInvalid": "رقم هاتف غير صالح.",
+      "cityRequired": "اختر قرية.",
+      "submitGeneric": "تعذّر تسجيل العميل. حاول مرة أخرى."
+    },
+    "retryHint": "آخر محاولة مزامنة فشلت: {{reason}}. عدّل التفاصيل واحفظ للمحاولة مجددًا.",
+    "noVillages": "لم تُحمّل القرى بعد. اتصل مرة لتمكين التسجيل.",
+    "retry": "إعادة المحاولة",
+    "section": "من تسجّل؟",
+    "firstName": "الاسم الأول",
+    "firstNamePlaceholder": "مثل: فاطمة",
+    "surname": "اللقب",
+    "surnamePlaceholder": "مثل: موشي",
+    "phone": "الهاتف",
+    "village": "القرية",
+    "villagePlaceholder": "اختر قرية",
+    "grid": "الشبكة",
+    "hint": "إعداد العدّاد / SHS يتم لاحقًا — يمكنك تسجيل الهوية أولًا وربط الجهاز لاحقًا. يمكن إرفاق المستندات بعد حفظ العميل.",
+    "saveLater": "احفظ واربط لاحقًا",
+    "continue": "متابعة",
+    "successSavedLocally": "تم الحفظ محليًا",
+    "successRegistered": "تم تسجيل العميل",
+    "offlineNote": "أنت غير متصل. سنزامن هذا العميل تلقائيًا عند عودة الاتصال. يمكن إضافة المستندات بعد وصول العميل إلى الخادم.",
+    "done": "تم",
+    "assignMeter": "إسناد عدّاد"
+  },
+  "customerDetail": {
+    "notFound": "العميل غير موجود.",
+    "back": "رجوع",
+    "title": "العميل",
+    "devices": "الأجهزة",
+    "paidYtd": "المدفوع منذ بداية السنة",
+    "since": "منذ",
+    "addAssignMeter": "+ إسناد عدّاد",
+    "noDevicesYet": "لا توجد أجهزة بعد",
+    "noDevicesBody": "أسند عدّادًا لبدء تحصيل المدفوعات.",
+    "assignMeter": "إسناد عدّاد",
+    "paid": "مدفوع",
+    "total": "الإجمالي",
+    "saleNumber": "بيع #{{id}}",
+    "serialCopied": "تم نسخ الرقم التسلسلي",
+    "saleIdCopied": "تم نسخ معرّف البيع",
+    "energyService": "خدمة الطاقة",
+    "monthlyPlan": "خطة {{count}} شهر",
+    "installmentPlan": "خطة أقساط",
+    "shsUnit": "وحدة SHS",
+    "meterName": "عدّاد",
+    "shsUnitName": "وحدة SHS",
+    "ebikeName": "دراجة كهربائية",
+    "collectPayment": "تحصيل دفعة"
+  },
+  "addMeter": {
+    "errors": {
+      "manufacturer": "اختر مصنّعًا.",
+      "meterType": "اختر نوع العدّاد.",
+      "meter": "اختر عدّادًا.",
+      "tariff": "اختر تعريفة.",
+      "connectionGroup": "اختر مجموعة الاتصال.",
+      "connectionType": "اختر نوع الاتصال.",
+      "invalidCustomer": "عميل غير صالح.",
+      "pickMeter": "اختر عدّادًا من القائمة.",
+      "submitGeneric": "تعذّر إرفاق العدّاد. حاول مرة أخرى."
+    },
+    "assigned": "تم إسناد العدّاد",
+    "backHome": "العودة إلى الرئيسية",
+    "title": "إسناد عدّاد",
+    "customerLabel": "عميل رقم {{id}}",
+    "heading": "إسناد عدّاد",
+    "subheading": "املأ تفاصيل الجهاز والتعريفة لهذا العميل.",
+    "manufacturer": "المصنّع",
+    "meterType": "نوع العدّاد",
+    "serial": "الرقم التسلسلي",
+    "noUnassigned": "لا توجد عدّادات غير مُسندة تطابق",
+    "selectMeter": "اختر عدّادًا…",
+    "pickFirst": "اختر المصنّع ونوع العدّاد أولًا",
+    "searchSerial": "ابحث عن الرقم التسلسلي",
+    "tariff": "التعريفة",
+    "connectionGroup": "مجموعة الاتصال",
+    "connectionType": "نوع الاتصال",
+    "online": "متصل",
+    "offline": "غير متصل",
+    "location": {
+      "label": "موقع العدّاد",
+      "pending": "جارٍ تحديد الموقع…",
+      "captured": "تم التقاطه: {{coords}}",
+      "denied": "تم تخطّيه. اختر على الخريطة أو أعد المحاولة إذا كان العدّاد في مكان آخر.",
+      "pickOnMap": "اختر على الخريطة",
+      "retry": "إعادة المحاولة"
+    },
+    "submit": "إسناد العدّاد"
+  },
+  "paymentNew": {
+    "find": {
+      "errorEnter": "أدخل الرقم التسلسلي للعدّاد أو SHS.",
+      "errorNotFound": "لم يُعثر على جهاز بالرقم التسلسلي \"{{serial}}\".",
+      "errorGeneric": "فشل البحث. حاول مرة أخرى.",
+      "title": "تحصيل دفعة",
+      "subtitle": "البحث عن الجهاز",
+      "question": "لأي جهاز تحصّل؟",
+      "hint": "أدخل الرقم التسلسلي للعدّاد أو SHS. سنعرض العميل بعد ذلك.",
+      "label": "الرقم التسلسلي",
+      "placeholder": "مثال: MTR-000123",
+      "continue": "متابعة"
+    },
+    "amount": {
+      "title": "تحصيل دفعة",
+      "step": "الخطوة 1 من 3",
+      "label": "المبلغ المُستلم",
+      "belowMin": "تحت الحد الأدنى: ",
+      "minimum": "الحد الأدنى: ",
+      "next": "مراجعة وتأكيد"
+    },
+    "confirm": {
+      "title": "تأكيد الدفع",
+      "step": "الخطوة 2 من 3",
+      "label": "أنت تحصّل",
+      "inCashWith": "{{currency}} · نقدًا",
+      "inCash": "نقدًا",
+      "for": "لـ",
+      "device": "الجهاز",
+      "warning": "أكّد فقط بعد استلام النقد من العميل. هذا الإجراء نهائي.",
+      "back": "رجوع",
+      "submit": "تم استلام النقد — تأكيد"
+    },
+    "result": {
+      "title": "تم تحصيل الدفعة",
+      "receiptSent": "أُرسل الإيصال إلى {{phone}}",
+      "recorded": "تم التسجيل بنجاح",
+      "backHome": "العودة إلى الرئيسية",
+      "next": "العميل التالي",
+      "refLabel": "مرجع #{{ref}}"
+    },
+    "device": {
+      "energyMeter": "طاقة (عدّاد)",
+      "shs": "نظام طاقة شمسية منزلي",
+      "fallback": "جهاز",
+      "meterShort": "عدّاد",
+      "shsShort": "SHS"
+    },
+    "token": {
+      "generating": "جارٍ توليد الرمز",
+      "waiting": "في انتظار إصدار الرمز من الجهاز…",
+      "none": "لم يُصدر رمز",
+      "noneBody": "تم تسجيل الدفعة. إذا أُرسل رمز لاحقًا، سيستلمه العميل عبر SMS.",
+      "label": "الرمز",
+      "readToCustomer": "اقرأ هذا الرمز للعميل.",
+      "copied": "تم نسخ الرمز"
+    },
+    "failed": "فشل الدفع. حاول مرة أخرى."
+  },
+  "paymentDetail": {
+    "notFound": "البيع غير موجود.",
+    "back": "رجوع",
+    "serialCopied": "تم نسخ الرقم التسلسلي",
+    "title": "الدفعة",
+    "ref": "مرجع #{{id}}",
+    "when": "متى",
+    "for": "لـ",
+    "device": "الجهاز",
+    "deviceLabel": "الجهاز · {{type}}",
+    "noDevice": "لم يُسند جهاز",
+    "dash": "—",
+    "sender": "المُرسِل",
+    "reference": "المرجع",
+    "customer": "العميل",
+    "shsHint": "الدفعات الأولى لـ SHS غير مرتبطة بسجل العميل في هذه الشاشة بعد — افتح تبويب العملاء للعثور عليها.",
+    "noCustomerSerial": "لم يطابق أي عميل الرقم التسلسلي {{serial}}.",
+    "noCustomer": "لا يوجد عميل مرتبط.",
+    "meter": "عدّاد",
+    "shsUnit": "وحدة SHS",
+    "appliance": "جهاز"
+  },
+  "saleNew": {
+    "plans": {
+      "cash": {
+        "title": "نقدًا مقدمًا",
+        "subtitle": "يدفع العميل السعر الكامل اليوم."
+      },
+      "twelve": {
+        "title": "PAYG لمدة 12 شهرًا",
+        "subtitle": "يُفعَّل عند كل دفعة شهرية."
+      },
+      "twentyFour": {
+        "title": "PAYG لمدة 24 شهرًا",
+        "subtitle": "دفعة شهرية أقل."
+      },
+      "custom": {
+        "title": "خطة مخصصة",
+        "subtitle": "حدد إيداعك وعدد الأشهر بنفسك."
+      },
+      "energy": {
+        "title": "خدمة الطاقة",
+        "subtitle": "شحن حسب الاستخدام. لا توجد مدة ثابتة."
+      }
+    },
+    "tier": {
+      "starter": "مبتدئ",
+      "popular": "الأكثر شيوعًا",
+      "large": "أسرة كبيرة"
+    },
+    "pickCustomer": {
+      "title": "بيع SHS",
+      "step": "الخطوة 1 من 4",
+      "label": "اختر عميلًا",
+      "search": "ابحث بالاسم أو الهاتف…",
+      "noMatches": "لا توجد نتائج. جرّب بحثًا آخر.",
+      "noCustomers": "لا يوجد عملاء بعد. سجّل واحدًا أولًا."
+    },
+    "pickSystem": {
+      "title": "بيع SHS",
+      "step": "الخطوة 2 من 4",
+      "newCustomer": "عميل جديد",
+      "label": "اختر نظامًا",
+      "noUnits": "لا توجد وحدات SHS مُسندة إليك. اطلب من مديرك إسناد واحدة.",
+      "shsUnit": "وحدة SHS"
+    },
+    "plan": {
+      "back": "رجوع",
+      "title": "خطة الدفع",
+      "label": "خطة الدفع",
+      "total": "الإجمالي",
+      "cashToday": "نقد اليوم",
+      "depositToday": "إيداع اليوم",
+      "howWillTheyPay": "كيف سيدفعون؟",
+      "perMonth": "/ شهر",
+      "months": "أشهر",
+      "monthsDefault": "6",
+      "depositLabel": "إيداع اليوم",
+      "depositDefault": "0",
+      "pricePerDay": "السعر / يوم",
+      "pricePerDayDefault": "0",
+      "minTopUp": "الحد الأدنى للشحن",
+      "minTopUpDefault": "0",
+      "downPayment": "إيداع (اختياري)",
+      "downPaymentDefault": "0",
+      "easHint": "يدفع العميل لكل يوم استخدام. تتوقف الخدمة عند نفاد الرصيد.",
+      "paygHint": "PAYG يُفتح بعد كل دفعة شهرية. يتلقى العميل تذكيرات SMS قبل كل موعد استحقاق.",
+      "unitSerial": "الرقم التسلسلي للوحدة",
+      "pickUnassigned": "اختر وحدة غير مُسندة",
+      "searchSerial": "ابحث بالرقم التسلسلي…",
+      "backStep": "رجوع",
+      "collectCash": "تحصيل {{amount}} نقدًا",
+      "collectDeposit": "تحصيل إيداع {{amount}}",
+      "continue": "متابعة"
+    },
+    "confirm": {
+      "title": "تأكيد البيع",
+      "step": "الخطوة 4 من 4",
+      "labelCash": "نقد اليوم",
+      "labelDeposit": "إيداع اليوم",
+      "activationOnly": "تفعيل فقط — لم يُحصَّل أي نقد",
+      "inCashWith": "{{currency}} · نقدًا",
+      "inCash": "نقدًا",
+      "unit": "الوحدة",
+      "plan": "الخطة",
+      "total": "الإجمالي",
+      "pricePerDay": "السعر / يوم",
+      "minTopUp": "الحد الأدنى للشحن",
+      "monthlyPayments_one": "{{count}} دفعة شهرية",
+      "monthlyPayments_other": "{{count}} دفعات شهرية",
+      "monthlyAmount": "{{amount}} / شهر",
+      "firstPayment": "الدفعة الأولى",
+      "deviceSerial": "الرقم التسلسلي للجهاز",
+      "warningEas": "التفعيل يبدأ عقد خدمة الطاقة. هذا الإجراء نهائي.",
+      "warningCash": "أكّد فقط بعد استلام النقد. هذا الإجراء نهائي.",
+      "warningDeposit": "أكّد فقط بعد استلام الإيداع. هذا الإجراء نهائي.",
+      "back": "رجوع",
+      "activate": "تفعيل خدمة الطاقة",
+      "submit": "تم استلام النقد — تأكيد"
+    },
+    "result": {
+      "titleActivated": "تم تفعيل الخدمة",
+      "titleSold": "تم بيع SHS",
+      "cash": "نقد",
+      "deposit": "إيداع",
+      "backHome": "العودة إلى الرئيسية",
+      "next": "البيع التالي",
+      "refLabel": "مرجع #{{ref}}"
+    },
+    "errors": {
+      "serialLoad": "تعذّر تحميل الوحدات غير المُسندة. تحقق من اتصالك.",
+      "applianceMissing": "هذا الجهاز مفقود — تواصل مع المدير.",
+      "noUnits": "لا توجد وحدات غير مُسندة متاحة لهذا الجهاز."
+    },
+    "planSubtitle": "{{customer}} · {{unit}}",
+    "failed": "فشل البيع. حاول مرة أخرى."
+  },
+  "saleDetail": {
+    "notFound": "البيع غير موجود.",
+    "back": "رجوع",
+    "title": "البيع",
+    "customerFallback": "العميل",
+    "shsUnit": "وحدة SHS",
+    "serialCopied": "تم نسخ الرقم التسلسلي",
+    "paid": "مدفوع",
+    "left": "متبقي",
+    "total": "الإجمالي",
+    "fullyPaid": "مدفوع بالكامل",
+    "progress": "{{percent}}% مدفوع · {{remaining}} متبقي",
+    "plan": "الخطة",
+    "type": "النوع",
+    "tenure": "المدة",
+    "tenureMonths_one": "{{count}} شهر",
+    "tenureMonths_other": "{{count}} أشهر",
+    "downPayment": "إيداع",
+    "monthly": "شهري",
+    "monthlyValue": "{{amount}} / شهر",
+    "firstPayment": "الدفعة الأولى",
+    "nextDue": "الاستحقاق التالي",
+    "soldOn": "بيع في",
+    "device": "الجهاز",
+    "noSerial": "لم يُسجَّل رقم تسلسلي",
+    "schedule": "جدول الدفع",
+    "customer": "العميل",
+    "paidOff": "مدفوع",
+    "collectPayment": "تحصيل دفعة",
+    "paidFull": "مدفوع {{amount}}",
+    "partial": "جزئي — {{paid}} من {{total}}",
+    "due": "مستحق {{amount}}",
+    "energyService": "خدمة الطاقة",
+    "monthlyPayg": "PAYG لمدة {{count}} شهر",
+    "installment": "قسط",
+    "planFallback": "خطة",
+    "dueDash": "—"
+  },
+  "syncBanner": {
+    "offline": "ما زلت غير متصل — سنزامن فور عودتك إلى الشبكة.",
+    "failedAndPending": "{{failed}} فشل مزامنة · {{pending}} قيد الانتظار",
+    "customer_one": "{{count}} عميل قيد المزامنة",
+    "customer_other": "{{count}} عملاء قيد المزامنة",
+    "syncNow": "زامن الآن"
+  }
+}

@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Clipboard from 'expo-clipboard';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   Linking,
@@ -13,6 +14,7 @@ import {
   ToastAndroid,
   View,
 } from 'react-native';
+import type { TFunction } from 'i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
@@ -32,6 +34,7 @@ import { initials } from '@/utils/format';
 import { useCurrency } from '@/utils/useCurrency';
 
 export default function SaleDetailScreen() {
+  const { t } = useTranslation();
   const params = useLocalSearchParams<{ id: string }>();
   const id = Number(params.id);
   const { api } = useSession();
@@ -62,9 +65,13 @@ export default function SaleDetailScreen() {
         ) : (
           <>
             <Text variant="body" tone="muted">
-              Sale not found.
+              {t('saleDetail.notFound')}
             </Text>
-            <Button label="Back" tone="ghost" onPress={() => router.back()} />
+            <Button
+              label={t('saleDetail.back')}
+              tone="ghost"
+              onPress={() => router.back()}
+            />
           </>
         )}
       </View>
@@ -72,7 +79,8 @@ export default function SaleDetailScreen() {
   }
 
   const customerId = sale.person_id ?? sale.person?.id ?? null;
-  const customerName = saleCustomerName(sale) ?? 'Customer';
+  const customerName =
+    saleCustomerName(sale) ?? t('saleDetail.customerFallback');
   const phone = saleCustomerPhone(sale);
   const cost = saleCost(sale);
   const paid = salePaid(sale);
@@ -87,8 +95,8 @@ export default function SaleDetailScreen() {
     !isEnergyService && tenure > 1
       ? Math.round(Math.max(0, cost - downPayment) / tenure)
       : 0;
-  const planLabel = describePlan(sale);
-  const applianceName = sale.appliance?.name ?? 'SHS unit';
+  const planLabel = describePlan(sale, t);
+  const applianceName = sale.appliance?.name ?? t('saleDetail.shsUnit');
   const nextDue = nextDueDate(sale);
 
   return (
@@ -107,7 +115,7 @@ export default function SaleDetailScreen() {
           </Pressable>
           <View style={styles.heroLabel}>
             <Text variant="meta" tone="onNavyMuted">
-              Sale
+              {t('saleDetail.title')}
             </Text>
           </View>
           {phone ? (
@@ -152,15 +160,23 @@ export default function SaleDetailScreen() {
       >
         <View style={styles.kpiWrap}>
           <Card elevated style={styles.kpiCard}>
-            <KpiCol label="PAID" value={formatCurrency(paid)} tone="brand" />
+            <KpiCol
+              label={t('saleDetail.paid')}
+              value={formatCurrency(paid)}
+              tone="brand"
+            />
             <KpiDivider />
             <KpiCol
-              label="LEFT"
+              label={t('saleDetail.left')}
               value={formatCurrency(remaining)}
               tone="primary"
             />
             <KpiDivider />
-            <KpiCol label="TOTAL" value={formatCurrency(cost)} tone="primary" />
+            <KpiCol
+              label={t('saleDetail.total')}
+              value={formatCurrency(cost)}
+              tone="primary"
+            />
           </Card>
         </View>
 
@@ -179,51 +195,56 @@ export default function SaleDetailScreen() {
             </View>
             <Text variant="meta" tone="muted" style={styles.progressMeta}>
               {done
-                ? 'Fully paid off'
-                : `${Math.round(progress * 100)}% paid · ${formatCurrency(remaining)} remaining`}
+                ? t('saleDetail.fullyPaid')
+                : t('saleDetail.progress', {
+                    percent: Math.round(progress * 100),
+                    remaining: formatCurrency(remaining),
+                  })}
             </Text>
           </View>
         ) : null}
 
         <View style={styles.section}>
           <Text variant="sectionLabel" tone="muted" style={styles.sectionLabel}>
-            PLAN
+            {t('saleDetail.plan')}
           </Text>
           <Card elevated>
             <DetailRow
-              label="Type"
+              label={t('saleDetail.type')}
               value={<Pill label={planLabel} tone="blue" />}
             />
             {!isEnergyService && tenure > 0 ? (
               <DetailRow
-                label="Tenure"
-                value={`${tenure} month${tenure === 1 ? '' : 's'}`}
+                label={t('saleDetail.tenure')}
+                value={t('saleDetail.tenureMonths', { count: tenure })}
               />
             ) : null}
             {downPayment > 0 ? (
               <DetailRow
-                label="Down payment"
+                label={t('saleDetail.downPayment')}
                 value={formatCurrency(downPayment)}
                 mono
               />
             ) : null}
             {monthlyEstimate > 0 ? (
               <DetailRow
-                label="Monthly"
-                value={`${formatCurrency(monthlyEstimate)} / mo`}
+                label={t('saleDetail.monthly')}
+                value={t('saleDetail.monthlyValue', {
+                  amount: formatCurrency(monthlyEstimate),
+                })}
                 mono
               />
             ) : null}
             {sale.first_payment_date ? (
               <DetailRow
-                label="First payment"
+                label={t('saleDetail.firstPayment')}
                 value={formatDate(sale.first_payment_date)}
                 mono
               />
             ) : null}
             {nextDue && !done ? (
               <DetailRow
-                label="Next due"
+                label={t('saleDetail.nextDue')}
                 value={formatDate(nextDue)}
                 mono
                 last={!sale.created_at}
@@ -231,7 +252,7 @@ export default function SaleDetailScreen() {
             ) : null}
             {sale.created_at ? (
               <DetailRow
-                label="Sold on"
+                label={t('saleDetail.soldOn')}
                 value={formatDate(sale.created_at)}
                 mono
                 last
@@ -242,7 +263,7 @@ export default function SaleDetailScreen() {
 
         <View style={styles.section}>
           <Text variant="sectionLabel" tone="muted" style={styles.sectionLabel}>
-            DEVICE
+            {t('saleDetail.device')}
           </Text>
           <Card elevated>
             <View style={styles.deviceRow}>
@@ -258,12 +279,15 @@ export default function SaleDetailScreen() {
                     <MonoChip
                       value={sale.device_serial}
                       onCopy={() =>
-                        copyToClipboard(sale.device_serial!, 'Serial copied')
+                        copyToClipboard(
+                          sale.device_serial!,
+                          t('saleDetail.serialCopied'),
+                        )
                       }
                     />
                   ) : (
                     <Text variant="meta" tone="muted">
-                      No serial recorded
+                      {t('saleDetail.noSerial')}
                     </Text>
                   )}
                 </View>
@@ -279,7 +303,7 @@ export default function SaleDetailScreen() {
               tone="muted"
               style={styles.sectionLabel}
             >
-              PAYMENT SCHEDULE
+              {t('saleDetail.schedule')}
             </Text>
             <Card elevated padded={false} style={styles.scheduleCard}>
               {sortedRates.map((rate, idx) => (
@@ -287,6 +311,7 @@ export default function SaleDetailScreen() {
                   key={rate.id}
                   rate={rate}
                   formatCurrency={formatCurrency}
+                  t={t}
                   last={idx === sortedRates.length - 1}
                 />
               ))}
@@ -303,7 +328,7 @@ export default function SaleDetailScreen() {
         ]}
       >
         <Button
-          label="Customer"
+          label={t('saleDetail.customer')}
           tone="ghost"
           disabled={!customerId}
           onPress={() => {
@@ -315,7 +340,9 @@ export default function SaleDetailScreen() {
         />
         <Button
           tone="accent"
-          label={done ? 'Paid off' : 'Collect payment'}
+          label={
+            done ? t('saleDetail.paidOff') : t('saleDetail.collectPayment')
+          }
           disabled={done}
           onPress={() =>
             router.push({
@@ -380,17 +407,21 @@ function DetailRow({
 function RateRow({
   rate,
   formatCurrency,
+  t,
   last,
 }: {
   rate: SaleRate;
   formatCurrency: (n: number) => string;
+  t: TFunction;
   last: boolean;
 }) {
   const cost = rate.rate_cost;
   const remaining = rate.remaining;
   const paid = Math.max(0, cost - remaining);
   const fullyPaid = remaining <= 0;
-  const dueDate = rate.due_date ? formatDate(rate.due_date) : '—';
+  const dueDate = rate.due_date
+    ? formatDate(rate.due_date)
+    : t('saleDetail.dueDash');
 
   return (
     <View style={[styles.rateRow, last && styles.rateRowLast]}>
@@ -406,14 +437,17 @@ function RateRow({
         </Text>
         <Text variant="meta" tone="muted">
           {fullyPaid
-            ? `Paid ${formatCurrency(cost)}`
+            ? t('saleDetail.paidFull', { amount: formatCurrency(cost) })
             : paid > 0
-              ? `Partial — ${formatCurrency(paid)} of ${formatCurrency(cost)}`
-              : `Due ${formatCurrency(cost)}`}
+              ? t('saleDetail.partial', {
+                  paid: formatCurrency(paid),
+                  total: formatCurrency(cost),
+                })
+              : t('saleDetail.due', { amount: formatCurrency(cost) })}
         </Text>
       </View>
       {fullyPaid ? (
-        <Pill label="PAID" tone="green" />
+        <Pill label={t('saleDetail.paid')} tone="green" />
       ) : (
         <Text variant="mono" style={styles.rateAmount}>
           {formatCurrency(remaining)}
@@ -496,12 +530,15 @@ function findInCachedPages(
   return null;
 }
 
-function describePlan(sale: SoldAppliance): string {
-  if (sale.payment_type === 'energy_service') return 'Energy service';
+function describePlan(sale: SoldAppliance, t: TFunction): string {
+  if (sale.payment_type === 'energy_service')
+    return t('saleDetail.energyService');
   if (sale.payment_type === 'installment') {
-    return sale.tenure ? `${sale.tenure}-month PAYG` : 'Installment';
+    return sale.tenure
+      ? t('saleDetail.monthlyPayg', { count: sale.tenure })
+      : t('saleDetail.installment');
   }
-  return 'Plan';
+  return t('saleDetail.planFallback');
 }
 
 function formatDate(value: string): string {

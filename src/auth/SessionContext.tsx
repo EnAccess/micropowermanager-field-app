@@ -23,6 +23,7 @@ import { createApiClient } from '@/api/client';
 import { Environment } from '@/config/environments';
 import { clearAllCachedCities } from '@/storage/citiesCache';
 import { getOrCreateDeviceId } from '@/storage/deviceId';
+import { markSyncedNow } from '@/storage/lastSync';
 import {
   readJson,
   readString,
@@ -88,6 +89,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       } else {
         await remove('appSettings');
       }
+      void markSyncedNow();
     } catch (error) {
       // 401 is handled by api client `onUnauthenticated`. Surface other
       // failures so we don't silently keep stale settings (the most common

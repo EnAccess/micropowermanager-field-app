@@ -1,5 +1,6 @@
 import { Feather } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -7,6 +8,7 @@ import { usePrefetchCities } from '@/storage/usePrefetchCities';
 import { fonts, semantic } from '@/theme';
 
 export default function TabsLayout() {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const bottomInset = Math.max(insets.bottom, 8);
   usePrefetchCities();
@@ -31,7 +33,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: t('tabs.home'),
           tabBarIcon: ({ color, size }) => (
             <Feather name="home" size={size} color={color} />
           ),
@@ -40,7 +42,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="customers"
         options={{
-          title: 'Customers',
+          title: t('tabs.customers'),
           tabBarIcon: ({ color, size }) => (
             <Feather name="users" size={size} color={color} />
           ),
@@ -49,7 +51,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="sales"
         options={{
-          title: 'Sales',
+          title: t('tabs.sales'),
           tabBarIcon: ({ color, size }) => (
             <Feather name="shopping-bag" size={size} color={color} />
           ),
@@ -58,7 +60,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="payments"
         options={{
-          title: 'Payments',
+          title: t('tabs.payments'),
           tabBarIcon: ({ color, size }) => (
             <Feather name="credit-card" size={size} color={color} />
           ),

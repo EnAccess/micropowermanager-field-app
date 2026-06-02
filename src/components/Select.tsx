@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   FlatList,
   KeyboardAvoidingView,
@@ -39,7 +40,7 @@ type SelectProps<TValue> = {
 
 export function Select<TValue>({
   label,
-  placeholder = 'Select…',
+  placeholder,
   options,
   value,
   onChange,
@@ -47,10 +48,13 @@ export function Select<TValue>({
   disabled,
   loading,
   searchable,
-  searchPlaceholder = 'Search…',
+  searchPlaceholder,
   compact,
   containerStyle,
 }: SelectProps<TValue>) {
+  const { t } = useTranslation();
+  const resolvedPlaceholder = placeholder ?? t('common.select');
+  const resolvedSearchPlaceholder = searchPlaceholder ?? t('common.search');
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
 
@@ -103,7 +107,11 @@ export function Select<TValue>({
           ]}
           numberOfLines={1}
         >
-          {loading ? 'Loading…' : selected ? selected.label : placeholder}
+          {loading
+            ? t('common.loading')
+            : selected
+              ? selected.label
+              : resolvedPlaceholder}
         </Text>
         <Text style={styles.caret}>▾</Text>
       </Pressable>
@@ -127,10 +135,12 @@ export function Select<TValue>({
           <Pressable style={styles.backdrop} onPress={close} />
           <SafeAreaView style={styles.sheet} edges={['bottom']}>
             <View style={styles.sheetHeader}>
-              <Text variant="screenTitle">{label ?? 'Select'}</Text>
+              <Text variant="screenTitle">
+                {label ?? t('common.selectTitle')}
+              </Text>
               <Pressable onPress={close}>
                 <Text variant="bodyEmphasis" tone="brand">
-                  Close
+                  {t('common.close')}
                 </Text>
               </Pressable>
             </View>
@@ -138,7 +148,7 @@ export function Select<TValue>({
               <TextInput
                 value={query}
                 onChangeText={setQuery}
-                placeholder={searchPlaceholder}
+                placeholder={resolvedSearchPlaceholder}
                 placeholderTextColor={semantic.ink3}
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -153,8 +163,8 @@ export function Select<TValue>({
               ListEmptyComponent={
                 <Text variant="meta" tone="muted" style={styles.empty}>
                   {searchable && query.trim()
-                    ? 'No matches.'
-                    : 'No options available.'}
+                    ? t('common.selectNoMatches')
+                    : t('common.noOptions')}
                 </Text>
               }
               renderItem={({ item }) => {

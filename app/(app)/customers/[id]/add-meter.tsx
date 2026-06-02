@@ -2,11 +2,13 @@ import { Feather } from '@expo/vector-icons';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { z } from 'zod';
+import type { TFunction } from 'i18next';
 
 import { assignMeterToCustomer, fetchAvailableMeters } from '@/api/customer';
 import {
@@ -35,21 +37,36 @@ import {
 } from '@/utils/location';
 import { formatCurrency } from '@/utils/format';
 
-const schema = z.object({
-  manufacturer_id: z.number({ error: 'Choose a manufacturer.' }),
-  meter_type_id: z.number({ error: 'Choose a meter type.' }),
-  meter_id: z.number({ error: 'Choose a meter.' }),
-  tariff_id: z.number({ error: 'Choose a tariff.' }),
-  connection_group_id: z.number({ error: 'Choose a connection group.' }),
-  connection_type_id: z.number({ error: 'Choose a connection type.' }),
-});
+function buildSchema(t: TFunction) {
+  return z.object({
+    manufacturer_id: z.number({ error: t('addMeter.errors.manufacturer') }),
+    meter_type_id: z.number({ error: t('addMeter.errors.meterType') }),
+    meter_id: z.number({ error: t('addMeter.errors.meter') }),
+    tariff_id: z.number({ error: t('addMeter.errors.tariff') }),
+    connection_group_id: z.number({
+      error: t('addMeter.errors.connectionGroup'),
+    }),
+    connection_type_id: z.number({
+      error: t('addMeter.errors.connectionType'),
+    }),
+  });
+}
 
-type AssignMeterForm = z.infer<typeof schema>;
+type AssignMeterForm = {
+  manufacturer_id: number;
+  meter_type_id: number;
+  meter_id: number;
+  tariff_id: number;
+  connection_group_id: number;
+  connection_type_id: number;
+};
 
 export default function AddMeterScreen() {
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const customerId = Number(id);
   const { api } = useSession();
+  const schema = useMemo(() => buildSchema(t), [t]);
   const insets = useSafeAreaInsets();
   const bottomInset = Math.max(insets.bottom, 8);
   const [geoPoints, setGeoPoints] = useState<string | null>(null);
@@ -130,7 +147,7 @@ export default function AddMeterScreen() {
       const meter = availableMeters.data?.find(
         (m) => m.id === payload.meter_id,
       );
-      if (!meter) throw new Error('Pick a meter from the list.');
+      if (!meter) throw new Error(t('addMeter.errors.pickMeter'));
       const { meter_id: _meterId, ...rest } = payload;
       return assignMeterToCustomer(api!, customerId, {
         ...rest,
@@ -170,7 +187,7 @@ export default function AddMeterScreen() {
     return (
       <Screen>
         <Text variant="body" tone="danger">
-          Invalid customer.
+          {t('addMeter.errors.invalidCustomer')}
         </Text>
       </Screen>
     );
@@ -184,10 +201,10 @@ export default function AddMeterScreen() {
             <Feather name="check" size={36} color={colors.text.inverse} />
           </View>
           <Text variant="title" style={styles.successTitle}>
-            Meter assigned
+            {t('addMeter.assigned')}
           </Text>
           <Button
-            label="Back to home"
+            label={t('addMeter.backHome')}
             onPress={() => router.replace('/(app)/(tabs)')}
             style={styles.successCta}
           />
@@ -199,15 +216,15 @@ export default function AddMeterScreen() {
   return (
     <View style={styles.root}>
       <AppBar
-        title="Assign meter"
-        subtitle={`Customer #${customerId}`}
+        title={t('addMeter.title')}
+        subtitle={t('addMeter.customerLabel', { id: customerId })}
         onBack={() => router.back()}
       />
       <Screen scroll>
         <View style={styles.header}>
-          <Text variant="title">Assign a meter</Text>
+          <Text variant="title">{t('addMeter.heading')}</Text>
           <Text variant="caption" tone="muted" style={styles.subtitle}>
-            Fill in the hardware and tariff details for this customer.
+            {t('addMeter.subheading')}
           </Text>
         </View>
 
@@ -217,7 +234,7 @@ export default function AddMeterScreen() {
             name="manufacturer_id"
             render={({ field: { value, onChange } }) => (
               <Select
-                label="Manufacturer"
+                label={t('addMeter.manufacturer')}
                 value={value ?? null}
                 onChange={(next) => {
                   onChange(next);
@@ -239,7 +256,7 @@ export default function AddMeterScreen() {
             name="meter_type_id"
             render={({ field: { value, onChange } }) => (
               <Select
-                label="Meter type"
+                label={t('addMeter.meterType')}
                 value={value ?? null}
                 onChange={(next) => {
                   onChange(next);
@@ -250,7 +267,7 @@ export default function AddMeterScreen() {
                 loading={meterTypes.isLoading}
                 options={(meterTypes.data ?? []).map((m) => ({
                   value: m.id,
-                  label: `${m.max_current}A · ${m.phase}P · ${m.online ? 'Online' : 'Offline'}`,
+                  label: `${m.max_current}A · ${m.phase}P · ${m.online ? t('addMeter.online') : t('addMeter.offline')}`,
                 }))}
                 error={errors.meter_type_id?.message}
               />
@@ -264,13 +281,13 @@ export default function AddMeterScreen() {
               const meters = availableMeters.data ?? [];
               return (
                 <Select
-                  label="Serial number"
+                  label={t('addMeter.serial')}
                   placeholder={
                     ready
                       ? meters.length === 0 && !availableMeters.isLoading
-                        ? 'No un-assigned meters match'
-                        : 'Select a meter…'
-                      : 'Choose manufacturer and meter type first'
+                        ? t('addMeter.noUnassigned')
+                        : t('addMeter.selectMeter')
+                      : t('addMeter.pickFirst')
                   }
                   value={value ?? null}
                   onChange={onChange}
@@ -280,7 +297,7 @@ export default function AddMeterScreen() {
                   }
                   loading={availableMeters.isLoading}
                   searchable
-                  searchPlaceholder="Search serial number"
+                  searchPlaceholder={t('addMeter.searchSerial')}
                   options={meters.map((m) => ({
                     value: m.id,
                     label: m.serial_number,
@@ -295,14 +312,14 @@ export default function AddMeterScreen() {
             name="tariff_id"
             render={({ field: { value, onChange } }) => (
               <Select
-                label="Tariff"
+                label={t('addMeter.tariff')}
                 value={value ?? null}
                 onChange={onChange}
                 loading={tariffs.isLoading}
-                options={(tariffs.data ?? []).map((t) => ({
-                  value: t.id,
-                  label: t.name,
-                  description: formatCurrency(t.price, t.currency),
+                options={(tariffs.data ?? []).map((tariff) => ({
+                  value: tariff.id,
+                  label: tariff.name,
+                  description: formatCurrency(tariff.price, tariff.currency),
                 }))}
                 error={errors.tariff_id?.message}
               />
@@ -313,7 +330,7 @@ export default function AddMeterScreen() {
             name="connection_group_id"
             render={({ field: { value, onChange } }) => (
               <Select
-                label="Connection group"
+                label={t('addMeter.connectionGroup')}
                 value={value ?? null}
                 onChange={onChange}
                 loading={connectionGroups.isLoading}
@@ -330,13 +347,13 @@ export default function AddMeterScreen() {
             name="connection_type_id"
             render={({ field: { value, onChange } }) => (
               <Select
-                label="Connection type"
+                label={t('addMeter.connectionType')}
                 value={value ?? null}
                 onChange={onChange}
                 loading={connectionTypes.isLoading}
-                options={(connectionTypes.data ?? []).map((t) => ({
-                  value: t.id,
-                  label: t.name,
+                options={(connectionTypes.data ?? []).map((ct) => ({
+                  value: ct.id,
+                  label: ct.name,
                 }))}
                 error={errors.connection_type_id?.message}
               />
@@ -347,25 +364,24 @@ export default function AddMeterScreen() {
         <Card style={styles.locationCard}>
           <View style={styles.locationRow}>
             <View style={styles.locationBody}>
-              <Text variant="label">Meter location</Text>
+              <Text variant="label">{t('addMeter.location.label')}</Text>
               <Text variant="caption" tone="muted">
-                {locationStatus === 'pending' && 'Capturing position…'}
+                {locationStatus === 'pending' && t('addMeter.location.pending')}
                 {locationStatus === 'captured' &&
                   geoPoints &&
-                  `Captured: ${geoPoints}`}
-                {locationStatus === 'denied' &&
-                  'Skipped. Pick on map or retry if the meter is elsewhere.'}
+                  t('addMeter.location.captured', { coords: geoPoints })}
+                {locationStatus === 'denied' && t('addMeter.location.denied')}
               </Text>
             </View>
             <View style={styles.locationActions}>
               <Pressable onPress={() => setPickerOpen(true)} hitSlop={8}>
                 <Text variant="label" tone="brand">
-                  Pick on map
+                  {t('addMeter.location.pickOnMap')}
                 </Text>
               </Pressable>
               <Pressable onPress={retryLocation} hitSlop={8}>
                 <Text variant="label" tone="brand">
-                  Retry
+                  {t('addMeter.location.retry')}
                 </Text>
               </Pressable>
             </View>
@@ -384,12 +400,12 @@ export default function AddMeterScreen() {
 
         {assignMutation.isError ? (
           <Text variant="caption" tone="danger" style={styles.error}>
-            {mutationErrorMessage(assignMutation.error)}
+            {mutationErrorMessage(assignMutation.error, t)}
           </Text>
         ) : null}
 
         <Button
-          label="Assign meter"
+          label={t('addMeter.submit')}
           onPress={onSubmit}
           loading={isSubmitting || assignMutation.isPending}
           style={[styles.cta, { marginBottom: bottomInset }]}
@@ -399,7 +415,7 @@ export default function AddMeterScreen() {
   );
 }
 
-function mutationErrorMessage(error: unknown): string {
+function mutationErrorMessage(error: unknown, t: TFunction): string {
   if (typeof error === 'object' && error !== null && 'response' in error) {
     const response = (
       error as {
@@ -415,7 +431,7 @@ function mutationErrorMessage(error: unknown): string {
     if (response?.data?.message) return response.data.message;
   }
   if (error instanceof Error) return error.message;
-  return 'Could not attach the meter. Try again.';
+  return t('addMeter.errors.submitGeneric');
 }
 
 const styles = StyleSheet.create({

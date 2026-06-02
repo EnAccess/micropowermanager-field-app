@@ -7,6 +7,7 @@ import {
 } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   FlatList,
@@ -17,6 +18,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
+import type { TFunction } from 'i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
@@ -61,8 +63,8 @@ type PlanId = 'cash' | 'twelve' | 'twentyfour' | 'custom' | 'energy';
 
 type Plan = {
   id: PlanId;
-  label: string;
-  description: string;
+  labelKey: string;
+  descriptionKey: string;
   tenure: number;
   downPaymentRatio: number;
 };
@@ -70,48 +72,49 @@ type Plan = {
 const PLANS: Plan[] = [
   {
     id: 'cash',
-    label: 'Cash upfront',
-    description: 'Customer pays the full price today.',
+    labelKey: 'saleNew.plans.cash.title',
+    descriptionKey: 'saleNew.plans.cash.subtitle',
     tenure: 1,
     downPaymentRatio: 1,
   },
   {
     id: 'twelve',
-    label: '12-month PAYG',
-    description: 'Active on each monthly payment.',
+    labelKey: 'saleNew.plans.twelve.title',
+    descriptionKey: 'saleNew.plans.twelve.subtitle',
     tenure: 12,
     downPaymentRatio: 0.1,
   },
   {
     id: 'twentyfour',
-    label: '24-month PAYG',
-    description: 'Lower monthly payment.',
+    labelKey: 'saleNew.plans.twentyFour.title',
+    descriptionKey: 'saleNew.plans.twentyFour.subtitle',
     tenure: 24,
     downPaymentRatio: 0.1,
   },
   {
     id: 'custom',
-    label: 'Custom plan',
-    description: 'Set your own deposit and number of months.',
+    labelKey: 'saleNew.plans.custom.title',
+    descriptionKey: 'saleNew.plans.custom.subtitle',
     tenure: 6,
     downPaymentRatio: 0.1,
   },
   {
     id: 'energy',
-    label: 'Energy service',
-    description: 'Pay-as-you-go top-ups. No fixed tenure.',
+    labelKey: 'saleNew.plans.energy.title',
+    descriptionKey: 'saleNew.plans.energy.subtitle',
     tenure: 0,
     downPaymentRatio: 0,
   },
 ];
 
-const HINT_BY_INDEX: Record<number, string> = {
-  0: 'Starter',
-  1: 'Most popular',
-  2: 'Large household',
+const HINT_KEY_BY_INDEX: Record<number, string> = {
+  0: 'saleNew.tier.starter',
+  1: 'saleNew.tier.popular',
+  2: 'saleNew.tier.large',
 };
 
 export default function SellShsScreen() {
+  const { t } = useTranslation();
   const { api } = useSession();
   const queryClient = useQueryClient();
   const { format: formatCurrency, symbol: currency } = useCurrency();
@@ -287,7 +290,9 @@ export default function SellShsScreen() {
         formatCurrency={formatCurrency}
         currency={currency}
         loading={sellMutation.isPending}
-        error={sellMutation.isError ? errorMessage(sellMutation.error) : null}
+        error={
+          sellMutation.isError ? errorMessage(sellMutation.error, t) : null
+        }
         onBack={() => setStep('plan')}
         onConfirm={() => sellMutation.mutate()}
       />
@@ -319,6 +324,7 @@ function CustomerStep({
   onPick: (c: Customer) => void;
   onBack: () => void;
 }) {
+  const { t } = useTranslation();
   const { api } = useSession();
   const [term, setTerm] = useState('');
 
@@ -352,8 +358,8 @@ function CustomerStep({
   return (
     <View style={styles.root}>
       <SecondaryHeader
-        title="Sell SHS"
-        subtitle="Step 1 of 4"
+        title={t('saleNew.pickCustomer.title')}
+        subtitle={t('saleNew.pickCustomer.step')}
         onBack={onBack}
       />
       <View style={styles.progressWrap}>
@@ -362,10 +368,10 @@ function CustomerStep({
 
       <View style={styles.searchBlock}>
         <Text variant="sectionLabel" tone="muted">
-          PICK A CUSTOMER
+          {t('saleNew.pickCustomer.label')}
         </Text>
         <TextField
-          placeholder="Search by name or phone…"
+          placeholder={t('saleNew.pickCustomer.search')}
           autoCapitalize="none"
           autoCorrect={false}
           value={term}
@@ -383,8 +389,8 @@ function CustomerStep({
           <Card>
             <Text variant="meta" tone="muted">
               {isSearching
-                ? 'No matches. Try a different search.'
-                : 'No customers yet. Register one first.'}
+                ? t('saleNew.pickCustomer.noMatches')
+                : t('saleNew.pickCustomer.noCustomers')}
             </Text>
           </Card>
         </View>
@@ -459,6 +465,7 @@ function UnitStep({
   onBack: () => void;
   formatCurrency: (n: number) => string;
 }) {
+  const { t } = useTranslation();
   const { api } = useSession();
   const insets = useSafeAreaInsets();
   const appliances = useQuery({
@@ -477,8 +484,8 @@ function UnitStep({
   return (
     <View style={styles.root}>
       <SecondaryHeader
-        title="Sell SHS"
-        subtitle="Step 2 of 4"
+        title={t('saleNew.pickSystem.title')}
+        subtitle={t('saleNew.pickSystem.step')}
         onBack={onBack}
       />
       <View style={styles.progressWrap}>
@@ -488,13 +495,13 @@ function UnitStep({
       <ScrollView contentContainerStyle={styles.unitContent}>
         <CustomerChip
           name={customerName}
-          meta={customerPhone(customer) ?? 'New customer'}
+          meta={customerPhone(customer) ?? t('saleNew.pickSystem.newCustomer')}
           onChange={onChangeCustomer}
           style={styles.unitChip}
         />
 
         <Text variant="sectionLabel" tone="muted" style={styles.unitSection}>
-          PICK A SYSTEM
+          {t('saleNew.pickSystem.label')}
         </Text>
 
         {appliances.isLoading ? (
@@ -504,8 +511,7 @@ function UnitStep({
         ) : items.length === 0 ? (
           <Card>
             <Text variant="meta" tone="muted">
-              No SHS units assigned to you. Ask your administrator to assign
-              one.
+              {t('saleNew.pickSystem.noUnits')}
             </Text>
           </Card>
         ) : (
@@ -513,8 +519,11 @@ function UnitStep({
             {items.map((a, idx) => {
               const selected = a.id === selectedId;
               const name =
-                a.appliance?.name ?? a.appliance_type?.name ?? 'SHS unit';
-              const hint = HINT_BY_INDEX[idx];
+                a.appliance?.name ??
+                a.appliance_type?.name ??
+                t('saleNew.pickSystem.shsUnit');
+              const hintKey = HINT_KEY_BY_INDEX[idx];
+              const hint = hintKey ? t(hintKey) : null;
               return (
                 <Pressable
                   key={a.id}
@@ -581,14 +590,14 @@ function UnitStep({
         ]}
       >
         <Button
-          label="Back"
+          label={t('saleNew.plan.back')}
           tone="ghost"
           onPress={onBack}
           style={styles.footerBack}
         />
         <Button
           tone="accent"
-          label="Payment plan"
+          label={t('saleNew.plan.title')}
           disabled={selectedId == null}
           onPress={onContinue}
           style={styles.footerPrimary}
@@ -649,11 +658,14 @@ function PlanStep({
   onBack: () => void;
   onContinue: () => void;
 }) {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { api } = useSession();
   const customerName = `${customer.name} ${customer.surname}`.trim();
   const unitName =
-    assignment.appliance?.name ?? assignment.appliance_type?.name ?? 'SHS unit';
+    assignment.appliance?.name ??
+    assignment.appliance_type?.name ??
+    t('saleNew.pickSystem.shsUnit');
 
   const applianceId = assignment.appliance?.id ?? null;
   const unassignedQuery = useQuery({
@@ -682,18 +694,21 @@ function PlanStep({
   }, [unassignedQuery.data]);
 
   const serialError = unassignedQuery.isError
-    ? 'Could not load unassigned units. Check your connection.'
+    ? t('saleNew.errors.serialLoad')
     : applianceId == null
-      ? 'This appliance is missing — contact your admin.'
+      ? t('saleNew.errors.applianceMissing')
       : !unassignedQuery.isLoading && serialOptions.length === 0
-        ? 'No unassigned units available for this appliance.'
+        ? t('saleNew.errors.noUnits')
         : undefined;
 
   return (
     <View style={styles.root}>
       <SecondaryHeader
-        title="Payment plan"
-        subtitle={`${customerName} · ${unitName}`}
+        title={t('saleNew.plan.title')}
+        subtitle={t('saleNew.planSubtitle', {
+          customer: customerName,
+          unit: unitName,
+        })}
         onBack={onBack}
       />
       <View style={styles.progressWrap}>
@@ -711,7 +726,7 @@ function PlanStep({
           <Card style={styles.summaryCard}>
             <View style={styles.summaryRow}>
               <Text variant="body" tone="muted">
-                Total
+                {t('saleNew.plan.total')}
               </Text>
               <Text variant="bodyEmphasis">
                 {formatCurrency(assignment.cost)}
@@ -719,7 +734,9 @@ function PlanStep({
             </View>
             <View style={styles.summaryRow}>
               <Text variant="body" tone="muted">
-                {isEaas ? 'Cash today' : 'Deposit today'}
+                {isEaas
+                  ? t('saleNew.plan.cashToday')
+                  : t('saleNew.plan.depositToday')}
               </Text>
               <Text
                 variant="screenTitle"
@@ -731,7 +748,7 @@ function PlanStep({
           </Card>
 
           <Text variant="sectionLabel" tone="muted" style={styles.planSection}>
-            HOW WILL THEY PAY?
+            {t('saleNew.plan.howWillTheyPay')}
           </Text>
 
           <View style={styles.planList}>
@@ -778,7 +795,7 @@ function PlanStep({
                       <View style={styles.planBody}>
                         <View style={styles.planTitleRow}>
                           <Text variant="bodyEmphasis" tone="primary">
-                            {p.label}
+                            {t(p.labelKey)}
                           </Text>
                           {isInstallment && cardMonthly > 0 ? (
                             <Text
@@ -788,12 +805,13 @@ function PlanStep({
                                 fontFamily: fonts.monoBold,
                               }}
                             >
-                              {formatCurrency(cardMonthly)} / month
+                              {formatCurrency(cardMonthly)}{' '}
+                              {t('saleNew.plan.perMonth')}
                             </Text>
                           ) : null}
                         </View>
                         <Text variant="meta" tone="muted">
-                          {p.description}
+                          {t(p.descriptionKey)}
                         </Text>
                       </View>
                     </View>
@@ -804,8 +822,8 @@ function PlanStep({
                       <View style={styles.customRow}>
                         <View style={styles.customField}>
                           <TextField
-                            label="Months"
-                            placeholder="6"
+                            label={t('saleNew.plan.months')}
+                            placeholder={t('saleNew.plan.monthsDefault')}
                             keyboardType="number-pad"
                             mono
                             value={customTenure}
@@ -814,8 +832,8 @@ function PlanStep({
                         </View>
                         <View style={styles.customField}>
                           <TextField
-                            label="Deposit today"
-                            placeholder="0"
+                            label={t('saleNew.plan.depositLabel')}
+                            placeholder={t('saleNew.plan.depositDefault')}
                             keyboardType="decimal-pad"
                             mono
                             value={customDeposit}
@@ -831,8 +849,8 @@ function PlanStep({
                       <View style={styles.customRow}>
                         <View style={styles.customField}>
                           <TextField
-                            label="Price / day"
-                            placeholder="0"
+                            label={t('saleNew.plan.pricePerDay')}
+                            placeholder={t('saleNew.plan.pricePerDayDefault')}
                             keyboardType="decimal-pad"
                             mono
                             value={eaasPricePerDay}
@@ -841,8 +859,8 @@ function PlanStep({
                         </View>
                         <View style={styles.customField}>
                           <TextField
-                            label="Min. top-up"
-                            placeholder="0"
+                            label={t('saleNew.plan.minTopUp')}
+                            placeholder={t('saleNew.plan.minTopUpDefault')}
                             keyboardType="decimal-pad"
                             mono
                             value={eaasMinTopUp}
@@ -853,8 +871,8 @@ function PlanStep({
                       <View style={styles.customRow}>
                         <View style={styles.customField}>
                           <TextField
-                            label="Down payment (optional)"
-                            placeholder="0"
+                            label={t('saleNew.plan.downPayment')}
+                            placeholder={t('saleNew.plan.downPaymentDefault')}
                             keyboardType="decimal-pad"
                             mono
                             value={eaasDownPayment}
@@ -871,17 +889,15 @@ function PlanStep({
 
           <Callout tone="info" style={styles.planCallout}>
             <Text variant="meta" tone="secondary">
-              {isEaas
-                ? 'Customer pays per day of usage. Service pauses when the balance runs out.'
-                : 'PAYG unlocks after each monthly payment. Customer receives SMS reminders before each due date.'}
+              {isEaas ? t('saleNew.plan.easHint') : t('saleNew.plan.paygHint')}
             </Text>
           </Callout>
 
           <Select<string>
-            label="Unit serial number"
-            placeholder="Pick an unassigned unit"
+            label={t('saleNew.plan.unitSerial')}
+            placeholder={t('saleNew.plan.pickUnassigned')}
             searchable
-            searchPlaceholder="Search by serial…"
+            searchPlaceholder={t('saleNew.plan.searchSerial')}
             options={serialOptions}
             value={deviceSerial || null}
             onChange={onChangeSerial}
@@ -900,7 +916,7 @@ function PlanStep({
           ]}
         >
           <Button
-            label="Back"
+            label={t('saleNew.plan.back')}
             tone="ghost"
             onPress={onBack}
             style={styles.footerBack}
@@ -910,9 +926,13 @@ function PlanStep({
             label={
               isEaas
                 ? downPayment > 0
-                  ? `Collect ${formatCurrency(downPayment)} cash`
-                  : 'Continue'
-                : `Collect ${formatCurrency(downPayment)} deposit`
+                  ? t('saleNew.plan.collectCash', {
+                      amount: formatCurrency(downPayment),
+                    })
+                  : t('saleNew.plan.continue')
+                : t('saleNew.plan.collectDeposit', {
+                    amount: formatCurrency(downPayment),
+                  })
             }
             onPress={onContinue}
             disabled={!canContinue}
@@ -961,17 +981,20 @@ function ConfirmStep({
   onBack: () => void;
   onConfirm: () => void;
 }) {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const customerName = `${customer.name} ${customer.surname}`.trim();
   const phone = customerPhone(customer);
   const unitName =
-    assignment.appliance?.name ?? assignment.appliance_type?.name ?? 'SHS unit';
+    assignment.appliance?.name ??
+    assignment.appliance_type?.name ??
+    t('saleNew.pickSystem.shsUnit');
 
   return (
     <View style={styles.root}>
       <SecondaryHeader
-        title="Confirm sale"
-        subtitle="Step 4 of 4"
+        title={t('saleNew.confirm.title')}
+        subtitle={t('saleNew.confirm.step')}
         onBack={onBack}
       />
       <View style={styles.progressWrap}>
@@ -981,7 +1004,9 @@ function ConfirmStep({
       <ScrollView contentContainerStyle={styles.confirmContent}>
         <View style={styles.confirmHero}>
           <Text variant="sectionLabel" tone="muted">
-            {isEaas ? 'CASH TODAY' : 'DEPOSIT TODAY'}
+            {isEaas
+              ? t('saleNew.confirm.labelCash')
+              : t('saleNew.confirm.labelDeposit')}
           </Text>
           <Text
             variant="heroNumber"
@@ -993,10 +1018,10 @@ function ConfirmStep({
           </Text>
           <Text variant="body" tone="secondary">
             {isEaas && downPayment === 0
-              ? 'Activation only — no cash collected'
+              ? t('saleNew.confirm.activationOnly')
               : currency
-                ? `${currency} · in cash`
-                : 'In cash'}
+                ? t('saleNew.confirm.inCashWith', { currency })
+                : t('saleNew.confirm.inCash')}
           </Text>
         </View>
 
@@ -1018,28 +1043,31 @@ function ConfirmStep({
               ) : null}
             </View>
           </View>
-          <DataRow label="Unit" value={unitName} />
+          <DataRow label={t('saleNew.confirm.unit')} value={unitName} />
           <DataRow
-            label="Plan"
+            label={t('saleNew.confirm.plan')}
             value={
               <Pill
-                label={plan.label}
+                label={t(plan.labelKey)}
                 tone="blue"
                 leading={<Feather name="zap" size={12} color={semantic.blue} />}
               />
             }
           />
-          <DataRow label="Total" value={formatCurrency(assignment.cost)} />
+          <DataRow
+            label={t('saleNew.confirm.total')}
+            value={formatCurrency(assignment.cost)}
+          />
           {isEaas ? (
             <>
               <DataRow
-                label="Price / day"
+                label={t('saleNew.confirm.pricePerDay')}
                 value={formatCurrency(eaasPricePerDay)}
                 mono
               />
               {eaasMinTopUp > 0 ? (
                 <DataRow
-                  label="Min. top-up"
+                  label={t('saleNew.confirm.minTopUp')}
                   value={formatCurrency(eaasMinTopUp)}
                   mono
                 />
@@ -1048,12 +1076,14 @@ function ConfirmStep({
           ) : tenure > 1 ? (
             <>
               <DataRow
-                label={`${tenure} monthly payments`}
-                value={`${formatCurrency(monthly)} / month`}
+                label={t('saleNew.confirm.monthlyPayments', { count: tenure })}
+                value={t('saleNew.confirm.monthlyAmount', {
+                  amount: formatCurrency(monthly),
+                })}
                 mono
               />
               <DataRow
-                label="First payment"
+                label={t('saleNew.confirm.firstPayment')}
                 value={toIsoDate(firstPaymentDate)}
                 mono
               />
@@ -1061,7 +1091,7 @@ function ConfirmStep({
           ) : null}
           {deviceSerial.trim() ? (
             <DataRow
-              label="Device serial"
+              label={t('saleNew.confirm.deviceSerial')}
               value={deviceSerial.trim()}
               mono
               last
@@ -1073,18 +1103,11 @@ function ConfirmStep({
 
         <Callout tone="warning" style={styles.confirmCallout}>
           <Text variant="meta" tone="secondary">
-            {isEaas && downPayment === 0 ? (
-              <>
-                Activating starts the energy service contract. This action is
-                final.
-              </>
-            ) : (
-              <>
-                Confirm only <Text variant="bodyStrong">after</Text> you&apos;ve
-                received the {isEaas ? 'cash' : 'deposit'}. This action is
-                final.
-              </>
-            )}
+            {isEaas && downPayment === 0
+              ? t('saleNew.confirm.warningEas')
+              : isEaas
+                ? t('saleNew.confirm.warningCash')
+                : t('saleNew.confirm.warningDeposit')}
           </Text>
         </Callout>
 
@@ -1103,7 +1126,7 @@ function ConfirmStep({
         ]}
       >
         <Button
-          label="Back"
+          label={t('saleNew.confirm.back')}
           tone="ghost"
           onPress={onBack}
           style={styles.footerBack}
@@ -1112,8 +1135,8 @@ function ConfirmStep({
           tone="success"
           label={
             isEaas && downPayment === 0
-              ? 'Activate energy service'
-              : 'Cash received — confirm'
+              ? t('saleNew.confirm.activate')
+              : t('saleNew.confirm.submit')
           }
           onPress={onConfirm}
           loading={loading}
@@ -1143,10 +1166,13 @@ function SuccessStep({
   onClose: () => void;
   onNext: () => void;
 }) {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const customerName = `${customer.name} ${customer.surname}`.trim();
   const unitName =
-    assignment.appliance?.name ?? assignment.appliance_type?.name ?? 'SHS unit';
+    assignment.appliance?.name ??
+    assignment.appliance_type?.name ??
+    t('saleNew.pickSystem.shsUnit');
 
   return (
     <View style={styles.root}>
@@ -1174,7 +1200,9 @@ function SuccessStep({
         <View style={styles.successHero}>
           <SuccessCheckmark />
           <Text variant="pageTitle" tone="success" style={styles.successTitle}>
-            {isEaas && downPayment === 0 ? 'Service activated' : 'SHS sold'}
+            {isEaas && downPayment === 0
+              ? t('saleNew.result.titleActivated')
+              : t('saleNew.result.titleSold')}
           </Text>
           <Text variant="body" tone="muted" style={styles.successSubtitle}>
             {customerName} · {unitName}
@@ -1183,9 +1211,11 @@ function SuccessStep({
 
         <ReceiptCard
           amount={formatCurrency(downPayment)}
-          currency={isEaas ? 'Cash' : 'Deposit'}
+          currency={
+            isEaas ? t('saleNew.result.cash') : t('saleNew.result.deposit')
+          }
           customerName={customerName}
-          reference={`Ref #${reference}`}
+          reference={t('saleNew.result.refLabel', { ref: reference })}
           style={styles.receipt}
         />
       </ScrollView>
@@ -1198,13 +1228,13 @@ function SuccessStep({
         ]}
       >
         <Button
-          label="Back to home"
+          label={t('saleNew.result.backHome')}
           tone="ghost"
           onPress={onClose}
           style={styles.footerBack}
         />
         <Button
-          label="Next sale"
+          label={t('saleNew.result.next')}
           onPress={onNext}
           style={styles.footerPrimary}
         />
@@ -1276,7 +1306,7 @@ function shortLabel(name: string): string {
   return m ? `${m[1]}W` : 'SHS';
 }
 
-function errorMessage(error: unknown): string {
+function errorMessage(error: unknown, t: TFunction): string {
   if (typeof error === 'object' && error !== null && 'response' in error) {
     const response = (
       error as {
@@ -1292,7 +1322,7 @@ function errorMessage(error: unknown): string {
     if (response?.data?.message) return response.data.message;
   }
   if (error instanceof Error) return error.message;
-  return 'Sale failed. Try again.';
+  return t('saleNew.failed');
 }
 
 const styles = StyleSheet.create({

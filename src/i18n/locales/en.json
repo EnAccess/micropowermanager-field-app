@@ -1,0 +1,546 @@
+{
+  "common": {
+    "cancel": "Cancel",
+    "save": "Save",
+    "loading": "Loading…",
+    "agent": "Agent",
+    "back": "Back",
+    "continue": "Continue",
+    "retry": "Retry",
+    "done": "Done",
+    "discard": "Discard",
+    "search": "Search…",
+    "select": "Select…",
+    "selectTitle": "Select",
+    "close": "Close",
+    "noOptions": "No options available.",
+    "selectNoMatches": "No matches.",
+    "noMatches": "No matches",
+    "tryDifferentSearch": "Try a different search.",
+    "tryDifferentFilter": "Try a different filter.",
+    "month_one": "month",
+    "month_other": "months"
+  },
+  "time": {
+    "justNow": "just now",
+    "minutesAgo": "{{count}} min ago",
+    "hoursAgo": "{{count}} hr ago",
+    "daysAgo": "{{count}} d ago"
+  },
+  "errors": {
+    "sessionExpired": "Session expired. Sign in again.",
+    "noPermission": "You don't have permission for this action.",
+    "notFound": "Not found on the server.",
+    "conflict": "Conflicting request. Pull to refresh and retry.",
+    "serverTrouble": "Server is having trouble. Try again in a moment.",
+    "noConnection": "No connection. Check your internet and retry."
+  },
+  "tabs": {
+    "home": "Home",
+    "customers": "Customers",
+    "sales": "Sales",
+    "payments": "Payments"
+  },
+  "home": {
+    "greeting": "Welcome, {{name}}",
+    "notifications": "Notifications",
+    "collectedToday": "COLLECTED TODAY",
+    "noPaymentsYet": "No payments yet",
+    "transactionCount_one": "{{count}} transaction",
+    "transactionCount_other": "{{count}} transactions",
+    "stat": {
+      "paymentsToday": "Payments today",
+      "cashToday": "Cash today",
+      "balance": "Balance"
+    },
+    "section": {
+      "yourDay": "YOUR DAY"
+    },
+    "emptyToday": "No activity yet. Tap the orange button to start collecting.",
+    "fab": {
+      "collect": "Collect payment",
+      "sell": "Sell SHS",
+      "register": "Register customer"
+    },
+    "shsDownPayment": "SHS down payment"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "sync": "Sync",
+    "syncStatus": {
+      "synced": "SYNCED",
+      "pending_one": "{{count}} pending",
+      "pending_other": "{{count}} pending",
+      "lastSynced": "Last synced {{when}}",
+      "allUpToDate": "all data up to date",
+      "never": "Not synced yet"
+    },
+    "signOut": "Sign out",
+    "signOutConfirm": {
+      "title": "Sign out?",
+      "message": "You'll need to sign in again to continue."
+    },
+    "version": "v{{version}} · build {{build}}",
+    "appName": "MicroPowerManager"
+  },
+  "language": {
+    "title": "Language",
+    "english": "English",
+    "french": "Français",
+    "arabic": "العربية",
+    "burmese": "မြန်မာ",
+    "portuguese": "Português"
+  },
+  "login": {
+    "title": "Welcome back",
+    "email": "Email",
+    "emailPlaceholder": "you@example.com",
+    "password": "Password",
+    "passwordPlaceholder": "••••••••",
+    "show": "Show",
+    "hide": "Hide",
+    "signIn": "Sign in",
+    "wrongServer": "Wrong server? ",
+    "change": "Change",
+    "errors": {
+      "invalidEmail": "Enter a valid email.",
+      "passwordRequired": "Password required.",
+      "generic": "Sign-in failed. Try again."
+    }
+  },
+  "environment": {
+    "demo": "Demo",
+    "demoSubtitle": "Explore with sample data. No setup.",
+    "cloud": "Cloud",
+    "cloudSubtitle": "Sign in to the MicroPowerManager cloud.",
+    "custom": "Custom",
+    "customSubtitle": "Self-hosted, local, or staging.",
+    "appName": "MicroPowerManager",
+    "title": "Connect your account",
+    "subtitle": "Choose where this app should talk to.",
+    "serverUrl": "Server URL",
+    "serverUrlPlaceholder": "https://mpm.example.com",
+    "urlError": "Enter a full URL starting with http:// or https://",
+    "saveError": "Unable to save environment."
+  },
+  "customersList": {
+    "title": "Customers",
+    "total": "total",
+    "search": "Search name or phone…",
+    "filters": {
+      "all": "All",
+      "withMeter": "With meter",
+      "withShs": "With SHS",
+      "registeredToday": "Registered today"
+    },
+    "empty": {
+      "noMatchesTitle": "No matches",
+      "noneTitle": "No customers yet",
+      "noMatchesBody": "Try a different search.",
+      "noFilterMatchesBody": "Try a different filter.",
+      "noneBody": "Register your first customer to get started.",
+      "registerCta": "Register customer"
+    },
+    "badge": {
+      "syncFailed": "SYNC FAILED",
+      "pendingSync": "PENDING SYNC",
+      "new": "NEW"
+    },
+    "discard": {
+      "title": "Discard local customer?",
+      "message": "{{name}} hasn't been sent to the server yet. Discarding deletes the local entry permanently.",
+      "cancel": "Cancel",
+      "confirm": "Discard",
+      "thisEntry": "this entry"
+    }
+  },
+  "salesList": {
+    "title": "Your sales",
+    "subtitleAll_one": "{{count}} system · all-time",
+    "subtitleAll_other": "{{count}} systems · all-time",
+    "filters": {
+      "all": "All {{count}}",
+      "inPayoff": "In payoff",
+      "paid": "Paid off"
+    },
+    "plan": "Plan",
+    "empty": {
+      "noneTitle": "No sales yet",
+      "filterTitle": "Nothing matches this filter",
+      "noneBody": "When you sell an SHS unit it will show up here.",
+      "filterBody": "Try a different filter.",
+      "sellCta": "Sell SHS"
+    },
+    "nextDue": "Next {{date}}",
+    "paid": "Paid",
+    "left": "Left",
+    "energyService": "Energy service",
+    "monthlyPlan": "{{count}}-month plan",
+    "installmentPlan": "Installment plan"
+  },
+  "paymentsList": {
+    "title": "Payments",
+    "summary": "{{count}} {{scope}} · {{amount}}",
+    "categories": {
+      "all": "All",
+      "meter": "Meter",
+      "installment": "Installment"
+    },
+    "scope": {
+      "today": "Today",
+      "week": "This week",
+      "all": "All time",
+      "todayShort": "today",
+      "weekShort": "this week",
+      "allShort": "all time"
+    },
+    "cash": "CASH",
+    "count": "COUNT",
+    "errorTitle": "Couldn't load payments",
+    "errorBody": "Pull down to retry.",
+    "noneTitle": "No payments yet",
+    "filterTitle": "Nothing matches this filter",
+    "noneBody": "Collect a payment from the home screen.",
+    "filterBody": "Try a different filter.",
+    "cta": "Collect a payment"
+  },
+  "customerNew": {
+    "title": "Register customer",
+    "step": "Step 1 of 2 · Identity",
+    "errors": {
+      "firstNameMin": "At least 2 characters.",
+      "surnameMin": "At least 2 characters.",
+      "phoneRequired": "Enter a phone number.",
+      "phoneInvalid": "Invalid phone number.",
+      "cityRequired": "Choose a village.",
+      "submitGeneric": "Could not register the customer. Try again."
+    },
+    "retryHint": "Last sync attempt failed: {{reason}}. Edit the details and save to try again.",
+    "noVillages": "Villages aren't loaded yet. Connect once to enable registration.",
+    "retry": "Retry",
+    "section": "WHO ARE YOU REGISTERING?",
+    "firstName": "First name",
+    "firstNamePlaceholder": "e.g. Fatuma",
+    "surname": "Surname",
+    "surnamePlaceholder": "e.g. Moshi",
+    "phone": "Phone",
+    "village": "Village",
+    "villagePlaceholder": "Choose a village",
+    "grid": "GRID",
+    "hint": "Meter / SHS setup happens after — you can register identity first and link a device later. Documents can be attached once the customer is saved.",
+    "saveLater": "Save & link later",
+    "continue": "Continue",
+    "successSavedLocally": "Saved locally",
+    "successRegistered": "Customer registered",
+    "offlineNote": "You're offline. We'll sync this customer to the server automatically when you're back online. Documents can be added once the customer reaches the server.",
+    "done": "Done",
+    "assignMeter": "Assign meter"
+  },
+  "customerDetail": {
+    "notFound": "Customer not found.",
+    "back": "Back",
+    "title": "Customer",
+    "devices": "DEVICES",
+    "paidYtd": "PAID YTD",
+    "since": "SINCE",
+    "addAssignMeter": "+ Assign meter",
+    "noDevicesYet": "No devices yet",
+    "noDevicesBody": "Assign a meter to start collecting payments.",
+    "assignMeter": "Assign meter",
+    "paid": "Paid",
+    "total": "Total",
+    "saleNumber": "Sale #{{id}}",
+    "serialCopied": "Serial copied",
+    "saleIdCopied": "Sale ID copied",
+    "energyService": "Energy service",
+    "monthlyPlan": "{{count}}-month plan",
+    "installmentPlan": "Installment plan",
+    "shsUnit": "SHS unit",
+    "meterName": "Meter",
+    "shsUnitName": "SHS unit",
+    "ebikeName": "E-bike",
+    "collectPayment": "Collect payment"
+  },
+  "addMeter": {
+    "errors": {
+      "manufacturer": "Choose a manufacturer.",
+      "meterType": "Choose a meter type.",
+      "meter": "Choose a meter.",
+      "tariff": "Choose a tariff.",
+      "connectionGroup": "Choose a connection group.",
+      "connectionType": "Choose a connection type.",
+      "invalidCustomer": "Invalid customer.",
+      "pickMeter": "Pick a meter from the list.",
+      "submitGeneric": "Could not attach the meter. Try again."
+    },
+    "assigned": "Meter assigned",
+    "backHome": "Back to home",
+    "title": "Assign meter",
+    "customerLabel": "Customer #{{id}}",
+    "heading": "Assign a meter",
+    "subheading": "Fill in the hardware and tariff details for this customer.",
+    "manufacturer": "Manufacturer",
+    "meterType": "Meter type",
+    "serial": "Serial number",
+    "noUnassigned": "No un-assigned meters match",
+    "selectMeter": "Select a meter…",
+    "pickFirst": "Choose manufacturer and meter type first",
+    "searchSerial": "Search serial number",
+    "tariff": "Tariff",
+    "connectionGroup": "Connection group",
+    "connectionType": "Connection type",
+    "online": "Online",
+    "offline": "Offline",
+    "location": {
+      "label": "Meter location",
+      "pending": "Capturing position…",
+      "captured": "Captured: {{coords}}",
+      "denied": "Skipped. Pick on map or retry if the meter is elsewhere.",
+      "pickOnMap": "Pick on map",
+      "retry": "Retry"
+    },
+    "submit": "Assign meter"
+  },
+  "paymentNew": {
+    "find": {
+      "errorEnter": "Enter the meter or SHS serial.",
+      "errorNotFound": "No device found with serial \"{{serial}}\".",
+      "errorGeneric": "Lookup failed. Try again.",
+      "title": "Collect payment",
+      "subtitle": "Find device",
+      "question": "Which device are you collecting for?",
+      "hint": "Enter the meter or SHS serial. We'll show the customer next.",
+      "label": "Device serial",
+      "placeholder": "e.g. MTR-000123",
+      "continue": "Continue"
+    },
+    "amount": {
+      "title": "Collect payment",
+      "step": "Step 1 of 3",
+      "label": "AMOUNT RECEIVED",
+      "belowMin": "Below minimum: ",
+      "minimum": "Minimum: ",
+      "next": "Review & confirm"
+    },
+    "confirm": {
+      "title": "Confirm payment",
+      "step": "Step 2 of 3",
+      "label": "YOU ARE COLLECTING",
+      "inCashWith": "{{currency}} · in cash",
+      "inCash": "In cash",
+      "for": "For",
+      "device": "Device",
+      "warning": "Confirm only after you've received cash from the customer. This action is final.",
+      "back": "Back",
+      "submit": "Cash received — confirm"
+    },
+    "result": {
+      "title": "Payment collected",
+      "receiptSent": "Receipt sent to {{phone}}",
+      "recorded": "Recorded successfully",
+      "backHome": "Back to home",
+      "next": "Next customer",
+      "refLabel": "Ref #{{ref}}"
+    },
+    "device": {
+      "energyMeter": "Energy (meter)",
+      "shs": "Solar home system",
+      "fallback": "Device",
+      "meterShort": "Meter",
+      "shsShort": "SHS"
+    },
+    "token": {
+      "generating": "GENERATING TOKEN",
+      "waiting": "Waiting for the device to issue a code…",
+      "none": "NO TOKEN ISSUED",
+      "noneBody": "The payment was recorded. If a token is sent later, the customer will receive it via SMS.",
+      "label": "TOKEN",
+      "readToCustomer": "Read this code to the customer.",
+      "copied": "Token copied"
+    },
+    "failed": "Payment failed. Try again."
+  },
+  "paymentDetail": {
+    "notFound": "Sale not found.",
+    "back": "Back",
+    "serialCopied": "Serial copied",
+    "title": "Payment",
+    "ref": "Ref #{{id}}",
+    "when": "When",
+    "for": "For",
+    "device": "Device",
+    "deviceLabel": "Device · {{type}}",
+    "noDevice": "No device assigned",
+    "dash": "—",
+    "sender": "Sender",
+    "reference": "Reference",
+    "customer": "CUSTOMER",
+    "shsHint": "SHS down payments aren't linked to the customer record on this screen yet — open the Customers tab to find them.",
+    "noCustomerSerial": "No customer matched serial {{serial}}.",
+    "noCustomer": "No customer linked.",
+    "meter": "Meter",
+    "shsUnit": "SHS unit",
+    "appliance": "Appliance"
+  },
+  "saleNew": {
+    "plans": {
+      "cash": {
+        "title": "Cash upfront",
+        "subtitle": "Customer pays the full price today."
+      },
+      "twelve": {
+        "title": "12-month PAYG",
+        "subtitle": "Active on each monthly payment."
+      },
+      "twentyFour": {
+        "title": "24-month PAYG",
+        "subtitle": "Lower monthly payment."
+      },
+      "custom": {
+        "title": "Custom plan",
+        "subtitle": "Set your own deposit and number of months."
+      },
+      "energy": {
+        "title": "Energy service",
+        "subtitle": "Pay-as-you-go top-ups. No fixed tenure."
+      }
+    },
+    "tier": {
+      "starter": "Starter",
+      "popular": "Most popular",
+      "large": "Large household"
+    },
+    "pickCustomer": {
+      "title": "Sell SHS",
+      "step": "Step 1 of 4",
+      "label": "PICK A CUSTOMER",
+      "search": "Search by name or phone…",
+      "noMatches": "No matches. Try a different search.",
+      "noCustomers": "No customers yet. Register one first."
+    },
+    "pickSystem": {
+      "title": "Sell SHS",
+      "step": "Step 2 of 4",
+      "newCustomer": "New customer",
+      "label": "PICK A SYSTEM",
+      "noUnits": "No SHS units assigned to you. Ask your administrator to assign one.",
+      "shsUnit": "SHS unit"
+    },
+    "plan": {
+      "back": "Back",
+      "title": "Payment plan",
+      "label": "Payment plan",
+      "total": "Total",
+      "cashToday": "Cash today",
+      "depositToday": "Deposit today",
+      "howWillTheyPay": "HOW WILL THEY PAY?",
+      "perMonth": "/ month",
+      "months": "Months",
+      "monthsDefault": "6",
+      "depositLabel": "Deposit today",
+      "depositDefault": "0",
+      "pricePerDay": "Price / day",
+      "pricePerDayDefault": "0",
+      "minTopUp": "Min. top-up",
+      "minTopUpDefault": "0",
+      "downPayment": "Down payment (optional)",
+      "downPaymentDefault": "0",
+      "easHint": "Customer pays per day of usage. Service pauses when the balance runs out.",
+      "paygHint": "PAYG unlocks after each monthly payment. Customer receives SMS reminders before each due date.",
+      "unitSerial": "Unit serial number",
+      "pickUnassigned": "Pick an unassigned unit",
+      "searchSerial": "Search by serial…",
+      "backStep": "Back",
+      "collectCash": "Collect {{amount}} cash",
+      "collectDeposit": "Collect {{amount}} deposit",
+      "continue": "Continue"
+    },
+    "confirm": {
+      "title": "Confirm sale",
+      "step": "Step 4 of 4",
+      "labelCash": "CASH TODAY",
+      "labelDeposit": "DEPOSIT TODAY",
+      "activationOnly": "Activation only — no cash collected",
+      "inCashWith": "{{currency}} · in cash",
+      "inCash": "In cash",
+      "unit": "Unit",
+      "plan": "Plan",
+      "total": "Total",
+      "pricePerDay": "Price / day",
+      "minTopUp": "Min. top-up",
+      "monthlyPayments_one": "{{count}} monthly payment",
+      "monthlyPayments_other": "{{count}} monthly payments",
+      "monthlyAmount": "{{amount}} / month",
+      "firstPayment": "First payment",
+      "deviceSerial": "Device serial",
+      "warningEas": "Activating starts the energy service contract. This action is final.",
+      "warningCash": "Confirm only after you've received the cash. This action is final.",
+      "warningDeposit": "Confirm only after you've received the deposit. This action is final.",
+      "back": "Back",
+      "activate": "Activate energy service",
+      "submit": "Cash received — confirm"
+    },
+    "result": {
+      "titleActivated": "Service activated",
+      "titleSold": "SHS sold",
+      "cash": "Cash",
+      "deposit": "Deposit",
+      "backHome": "Back to home",
+      "next": "Next sale",
+      "refLabel": "Ref #{{ref}}"
+    },
+    "errors": {
+      "serialLoad": "Could not load unassigned units. Check your connection.",
+      "applianceMissing": "This appliance is missing — contact your admin.",
+      "noUnits": "No unassigned units available for this appliance."
+    },
+    "planSubtitle": "{{customer}} · {{unit}}",
+    "failed": "Sale failed. Try again."
+  },
+  "saleDetail": {
+    "notFound": "Sale not found.",
+    "back": "Back",
+    "title": "Sale",
+    "customerFallback": "Customer",
+    "shsUnit": "SHS unit",
+    "serialCopied": "Serial copied",
+    "paid": "PAID",
+    "left": "LEFT",
+    "total": "TOTAL",
+    "fullyPaid": "Fully paid off",
+    "progress": "{{percent}}% paid · {{remaining}} remaining",
+    "plan": "PLAN",
+    "type": "Type",
+    "tenure": "Tenure",
+    "tenureMonths_one": "{{count}} month",
+    "tenureMonths_other": "{{count}} months",
+    "downPayment": "Down payment",
+    "monthly": "Monthly",
+    "monthlyValue": "{{amount}} / mo",
+    "firstPayment": "First payment",
+    "nextDue": "Next due",
+    "soldOn": "Sold on",
+    "device": "DEVICE",
+    "noSerial": "No serial recorded",
+    "schedule": "PAYMENT SCHEDULE",
+    "customer": "Customer",
+    "paidOff": "Paid off",
+    "collectPayment": "Collect payment",
+    "paidFull": "Paid {{amount}}",
+    "partial": "Partial — {{paid}} of {{total}}",
+    "due": "Due {{amount}}",
+    "energyService": "Energy service",
+    "monthlyPayg": "{{count}}-month PAYG",
+    "installment": "Installment",
+    "planFallback": "Plan",
+    "dueDash": "—"
+  },
+  "syncBanner": {
+    "offline": "Still offline — we'll sync the moment you're back on a network.",
+    "failedAndPending": "{{failed}} sync failed · {{pending}} pending",
+    "customer_one": "{{count}} customer pending sync",
+    "customer_other": "{{count}} customers pending sync",
+    "syncNow": "Sync now"
+  }
+}

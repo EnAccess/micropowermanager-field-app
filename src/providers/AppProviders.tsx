@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactNode, useMemo } from 'react';
 
 import { SessionProvider } from '@/auth/SessionContext';
+import { I18nProvider } from '@/i18n/I18nProvider';
 
 export function AppProviders({ children }: { children: ReactNode }) {
   const queryClient = useMemo(
@@ -16,7 +17,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <SessionProvider>{children}</SessionProvider>
+      <SessionProvider>
+        <I18nProvider>{children}</I18nProvider>
+      </SessionProvider>
     </QueryClientProvider>
   );
 }

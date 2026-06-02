@@ -1,0 +1,546 @@
+{
+  "common": {
+    "cancel": "ပယ်ဖျက်",
+    "save": "သိမ်းဆည်း",
+    "loading": "ဖွင့်နေသည်…",
+    "agent": "ကိုယ်စားလှယ်",
+    "back": "နောက်သို့",
+    "continue": "ဆက်လုပ်",
+    "retry": "ပြန်ကြိုးစား",
+    "done": "ပြီးပြီ",
+    "discard": "ပယ်ဖျက်",
+    "search": "ရှာဖွေ…",
+    "select": "ရွေး…",
+    "selectTitle": "ရွေးချယ်ပါ",
+    "close": "ပိတ်",
+    "noOptions": "ရွေးချယ်စရာ မရှိပါ။",
+    "selectNoMatches": "ရလဒ် မရှိပါ။",
+    "noMatches": "ရလဒ် မရှိပါ",
+    "tryDifferentSearch": "အခြားရှာဖွေမှု ကြိုးစားပါ။",
+    "tryDifferentFilter": "အခြားစစ်ထုတ်မှု ကြိုးစားပါ။",
+    "month_one": "လ",
+    "month_other": "လ"
+  },
+  "time": {
+    "justNow": "ယခုပင်",
+    "minutesAgo": "{{count}} မိနစ်က",
+    "hoursAgo": "{{count}} နာရီက",
+    "daysAgo": "{{count}} ရက်က"
+  },
+  "errors": {
+    "sessionExpired": "ဆက်ရှင် သက်တမ်းကုန်ပြီ။ ပြန်ဝင်ပါ။",
+    "noPermission": "ဤလုပ်ဆောင်ချက်အတွက် ခွင့်ပြုချက် မရှိပါ။",
+    "notFound": "ဆာဗာတွင် ရှာမတွေ့ပါ။",
+    "conflict": "တောင်းဆိုမှု ပဋိပက္ခ။ ဆွဲချ၍ ပြန်ကြိုးစားပါ။",
+    "serverTrouble": "ဆာဗာတွင် ပြဿနာရှိနေသည်။ ခဏကြာမှ ပြန်ကြိုးစားပါ။",
+    "noConnection": "ချိတ်ဆက်မှု မရှိပါ။ အင်တာနက်ကို စစ်ဆေး၍ ပြန်ကြိုးစားပါ။"
+  },
+  "tabs": {
+    "home": "ပင်မ",
+    "customers": "သုံးစွဲသူများ",
+    "sales": "ရောင်းချမှု",
+    "payments": "ငွေပေးချေမှု"
+  },
+  "home": {
+    "greeting": "မင်္ဂလာပါ {{name}}",
+    "notifications": "အသိပေးချက်များ",
+    "collectedToday": "ယနေ့ ကောက်ခံပြီး",
+    "noPaymentsYet": "ငွေပေးချေမှု မရှိသေးပါ",
+    "transactionCount_one": "{{count}} ငွေပေးချေမှု",
+    "transactionCount_other": "{{count}} ငွေပေးချေမှု",
+    "stat": {
+      "paymentsToday": "ယနေ့ ပေးချေမှု",
+      "cashToday": "ယနေ့ ငွေသား",
+      "balance": "လက်ကျန်"
+    },
+    "section": {
+      "yourDay": "သင်၏ နေ့"
+    },
+    "emptyToday": "လုပ်ဆောင်ချက် မရှိသေးပါ။ ကောက်ခံရန် လိမ္မော်ရောင် ခလုတ်ကို နှိပ်ပါ။",
+    "fab": {
+      "collect": "ငွေ ကောက်ခံ",
+      "sell": "SHS ရောင်း",
+      "register": "သုံးစွဲသူ စာရင်းသွင်း"
+    },
+    "shsDownPayment": "SHS စရံငွေ"
+  },
+  "settings": {
+    "title": "ဆက်တင်များ",
+    "language": "ဘာသာစကား",
+    "sync": "စင့်ခ်",
+    "syncStatus": {
+      "synced": "စင့်ခ်ပြီး",
+      "pending_one": "{{count}} ဆိုင်းငံ့ထား",
+      "pending_other": "{{count}} ဆိုင်းငံ့ထား",
+      "lastSynced": "နောက်ဆုံး စင့်ခ် {{when}}",
+      "allUpToDate": "ဒေတာ အားလုံး မွမ်းမံပြီး",
+      "never": "မစင့်ခ်ရသေးပါ"
+    },
+    "signOut": "ထွက်ရန်",
+    "signOutConfirm": {
+      "title": "ထွက်မလား?",
+      "message": "ဆက်လုပ်ရန် ပြန်ဝင်ရပါမည်။"
+    },
+    "version": "v{{version}} · build {{build}}",
+    "appName": "MicroPowerManager"
+  },
+  "language": {
+    "title": "ဘာသာစကား",
+    "english": "English",
+    "french": "Français",
+    "arabic": "العربية",
+    "burmese": "မြန်မာ",
+    "portuguese": "Português"
+  },
+  "login": {
+    "title": "ပြန်လည် ကြိုဆိုပါ၏",
+    "email": "အီးမေးလ်",
+    "emailPlaceholder": "you@example.com",
+    "password": "စကားဝှက်",
+    "passwordPlaceholder": "••••••••",
+    "show": "ပြ",
+    "hide": "ဖျောက်",
+    "signIn": "ဝင်ရန်",
+    "wrongServer": "ဆာဗာ မှားနေသလား? ",
+    "change": "ပြောင်း",
+    "errors": {
+      "invalidEmail": "မှန်ကန်သော အီးမေးလ်ကို ထည့်ပါ။",
+      "passwordRequired": "စကားဝှက် လိုအပ်သည်။",
+      "generic": "ဝင်ရောက်မှု မအောင်မြင်ပါ။ ပြန်ကြိုးစားပါ။"
+    }
+  },
+  "environment": {
+    "demo": "သရုပ်ပြ",
+    "demoSubtitle": "နမူနာဒေတာဖြင့် စူးစမ်းပါ။ စီစဉ်စရာမလို။",
+    "cloud": "Cloud",
+    "cloudSubtitle": "MicroPowerManager cloud သို့ ဝင်ပါ။",
+    "custom": "စိတ်ကြိုက်",
+    "customSubtitle": "ကိုယ်တိုင်လုပ်ဆောင်၊ ဒေသခံ သို့မဟုတ် staging။",
+    "appName": "MicroPowerManager",
+    "title": "သင့်အကောင့်ကို ချိတ်ဆက်ပါ",
+    "subtitle": "ဤအက်ပ်က မည်သည့်ဆာဗာဆီ ဆက်သွယ်ရမည်ကို ရွေးပါ။",
+    "serverUrl": "ဆာဗာ URL",
+    "serverUrlPlaceholder": "https://mpm.example.com",
+    "urlError": "http:// သို့မဟုတ် https:// နှင့် စသော URL အပြည့်ထည့်ပါ",
+    "saveError": "ပတ်ဝန်းကျင်ကို မသိမ်းနိုင်ပါ။"
+  },
+  "customersList": {
+    "title": "သုံးစွဲသူများ",
+    "total": "စုစုပေါင်း",
+    "search": "နာမည် သို့မဟုတ် ဖုန်းနံပါတ် ရှာ…",
+    "filters": {
+      "all": "အားလုံး",
+      "withMeter": "မီတာရှိ",
+      "withShs": "SHS ရှိ",
+      "registeredToday": "ယနေ့ မှတ်ပုံတင်"
+    },
+    "empty": {
+      "noMatchesTitle": "ရလဒ် မရှိပါ",
+      "noneTitle": "သုံးစွဲသူ မရှိသေးပါ",
+      "noMatchesBody": "အခြားရှာဖွေမှု ကြိုးစားပါ။",
+      "noFilterMatchesBody": "အခြားစစ်ထုတ်မှု ကြိုးစားပါ။",
+      "noneBody": "စတင်ရန် သင်၏ ပထမဆုံး သုံးစွဲသူကို မှတ်ပုံတင်ပါ။",
+      "registerCta": "သုံးစွဲသူ မှတ်ပုံတင်"
+    },
+    "badge": {
+      "syncFailed": "စင့်ခ်မအောင်",
+      "pendingSync": "ဆိုင်းငံ့ထား",
+      "new": "အသစ်"
+    },
+    "discard": {
+      "title": "ဒေသခံ သုံးစွဲသူကို ပယ်မလား?",
+      "message": "{{name}} ကို ဆာဗာသို့ မပို့ရသေးပါ။ ပယ်လျှင် ဒေသခံ မှတ်တမ်းကို အပြီးအပိုင် ဖျက်ပစ်ပါမည်။",
+      "cancel": "ပယ်ဖျက်",
+      "confirm": "ပယ်",
+      "thisEntry": "ဤမှတ်တမ်း"
+    }
+  },
+  "salesList": {
+    "title": "သင်၏ ရောင်းချမှု",
+    "subtitleAll_one": "{{count}} စနစ် · အချိန်အားလုံး",
+    "subtitleAll_other": "{{count}} စနစ်များ · အချိန်အားလုံး",
+    "filters": {
+      "all": "အားလုံး {{count}}",
+      "inPayoff": "ပေးဆပ်နေ",
+      "paid": "ပေးဆပ်ပြီး"
+    },
+    "plan": "အစီအစဉ်",
+    "empty": {
+      "noneTitle": "ရောင်းချမှု မရှိသေးပါ",
+      "filterTitle": "ဤစစ်ထုတ်မှုနှင့် ကိုက်ညီသည် မရှိပါ",
+      "noneBody": "SHS ယူနစ် ရောင်းသည့်အခါ ဤနေရာတွင် ပေါ်လာပါမည်။",
+      "filterBody": "အခြားစစ်ထုတ်မှု ကြိုးစားပါ။",
+      "sellCta": "SHS ရောင်း"
+    },
+    "nextDue": "နောက်ထပ် {{date}}",
+    "paid": "ပေးပြီး",
+    "left": "ကျန်",
+    "energyService": "စွမ်းအင် ဝန်ဆောင်မှု",
+    "monthlyPlan": "{{count}} လ အစီအစဉ်",
+    "installmentPlan": "အရစ်ကျ အစီအစဉ်"
+  },
+  "paymentsList": {
+    "title": "ငွေပေးချေမှု",
+    "summary": "{{count}} {{scope}} · {{amount}}",
+    "categories": {
+      "all": "အားလုံး",
+      "meter": "မီတာ",
+      "installment": "အရစ်ကျ"
+    },
+    "scope": {
+      "today": "ယနေ့",
+      "week": "ဤအပတ်",
+      "all": "အချိန်အားလုံး",
+      "todayShort": "ယနေ့",
+      "weekShort": "ဤအပတ်",
+      "allShort": "အချိန်အားလုံး"
+    },
+    "cash": "ငွေသား",
+    "count": "အရေအတွက်",
+    "errorTitle": "ငွေပေးချေမှုများ မဖွင့်နိုင်ပါ",
+    "errorBody": "ပြန်ကြိုးစားရန် အောက်သို့ ဆွဲချပါ။",
+    "noneTitle": "ငွေပေးချေမှု မရှိသေးပါ",
+    "filterTitle": "ဤစစ်ထုတ်မှုနှင့် ကိုက်ညီသည် မရှိပါ",
+    "noneBody": "ပင်မစာမျက်နှာမှ ငွေ ကောက်ခံပါ။",
+    "filterBody": "အခြားစစ်ထုတ်မှု ကြိုးစားပါ။",
+    "cta": "ငွေ ကောက်ခံ"
+  },
+  "customerNew": {
+    "title": "သုံးစွဲသူ မှတ်ပုံတင်",
+    "step": "အဆင့် 1 / 2 · ဝိသေသ",
+    "errors": {
+      "firstNameMin": "အနည်းဆုံး စာလုံး 2 လုံး။",
+      "surnameMin": "အနည်းဆုံး စာလုံး 2 လုံး။",
+      "phoneRequired": "ဖုန်းနံပါတ် ထည့်ပါ။",
+      "phoneInvalid": "ဖုန်းနံပါတ် မမှန်ပါ။",
+      "cityRequired": "ရွာ ရွေးပါ။",
+      "submitGeneric": "သုံးစွဲသူ မမှတ်ပုံတင်နိုင်ပါ။ ပြန်ကြိုးစားပါ။"
+    },
+    "retryHint": "နောက်ဆုံး စင့်ခ်မအောင်: {{reason}}။ အသေးစိတ်ကို ပြင်၍ ပြန်ကြိုးစားပါ။",
+    "noVillages": "ရွာများ မဖွင့်ရသေးပါ။ မှတ်ပုံတင်ရန် တစ်ကြိမ် ချိတ်ပါ။",
+    "retry": "ပြန်ကြိုးစား",
+    "section": "ဘယ်သူကို မှတ်ပုံတင်နေသနည်း?",
+    "firstName": "နာမည်",
+    "firstNamePlaceholder": "ဥပမာ Fatuma",
+    "surname": "မျိုးနွယ်နာမည်",
+    "surnamePlaceholder": "ဥပမာ Moshi",
+    "phone": "ဖုန်း",
+    "village": "ရွာ",
+    "villagePlaceholder": "ရွာ ရွေးပါ",
+    "grid": "ဂရစ်",
+    "hint": "မီတာ / SHS တပ်ဆင်မှု နောက်မှ ဖြစ်သည် — ဝိသေသကို ဦးစွာ မှတ်ပုံတင်၍ ပစ္စည်းကို နောက်မှ ချိတ်နိုင်သည်။ စာရွက်စာတမ်းများကို သုံးစွဲသူ သိမ်းပြီးနောက် ပူးတွဲနိုင်သည်။",
+    "saveLater": "သိမ်း၍ နောက်မှ ချိတ်",
+    "continue": "ဆက်လုပ်",
+    "successSavedLocally": "ဒေသခံတွင် သိမ်းပြီး",
+    "successRegistered": "သုံးစွဲသူ မှတ်ပုံတင်ပြီး",
+    "offlineNote": "သင် အော့ဖ်လိုင်း ဖြစ်နေသည်။ အွန်လိုင်း ပြန်ဖြစ်သည့်အခါ ဤသုံးစွဲသူကို အလိုအလျောက် စင့်ခ်ပါမည်။ စာရွက်စာတမ်းများကို သုံးစွဲသူ ဆာဗာသို့ ရောက်ပြီးနောက် ထည့်နိုင်သည်။",
+    "done": "ပြီးပြီ",
+    "assignMeter": "မီတာ သတ်မှတ်"
+  },
+  "customerDetail": {
+    "notFound": "သုံးစွဲသူ ရှာမတွေ့ပါ။",
+    "back": "နောက်သို့",
+    "title": "သုံးစွဲသူ",
+    "devices": "ပစ္စည်းများ",
+    "paidYtd": "ဤနှစ်တွင် ပေးထား",
+    "since": "မှစ၍",
+    "addAssignMeter": "+ မီတာ သတ်မှတ်",
+    "noDevicesYet": "ပစ္စည်း မရှိသေးပါ",
+    "noDevicesBody": "ငွေ ကောက်ခံစရန် မီတာ သတ်မှတ်ပါ။",
+    "assignMeter": "မီတာ သတ်မှတ်",
+    "paid": "ပေးပြီး",
+    "total": "စုစုပေါင်း",
+    "saleNumber": "ရောင်းချမှု #{{id}}",
+    "serialCopied": "ဆီရီရယ် ကူးပြီး",
+    "saleIdCopied": "ရောင်းချမှု ID ကူးပြီး",
+    "energyService": "စွမ်းအင် ဝန်ဆောင်မှု",
+    "monthlyPlan": "{{count}} လ အစီအစဉ်",
+    "installmentPlan": "အရစ်ကျ အစီအစဉ်",
+    "shsUnit": "SHS ယူနစ်",
+    "meterName": "မီတာ",
+    "shsUnitName": "SHS ယူနစ်",
+    "ebikeName": "လျှပ်စစ်စက်ဘီး",
+    "collectPayment": "ငွေ ကောက်ခံ"
+  },
+  "addMeter": {
+    "errors": {
+      "manufacturer": "ထုတ်လုပ်သူ ရွေးပါ။",
+      "meterType": "မီတာ အမျိုးအစား ရွေးပါ။",
+      "meter": "မီတာ ရွေးပါ။",
+      "tariff": "နှုန်း ရွေးပါ။",
+      "connectionGroup": "ချိတ်ဆက်မှု အုပ်စု ရွေးပါ။",
+      "connectionType": "ချိတ်ဆက်မှု အမျိုးအစား ရွေးပါ။",
+      "invalidCustomer": "သုံးစွဲသူ မမှန်ပါ။",
+      "pickMeter": "စာရင်းမှ မီတာ တစ်ခုကို ရွေးပါ။",
+      "submitGeneric": "မီတာကို မချိတ်နိုင်ပါ။ ပြန်ကြိုးစားပါ။"
+    },
+    "assigned": "မီတာ သတ်မှတ်ပြီး",
+    "backHome": "ပင်မသို့ ပြန်",
+    "title": "မီတာ သတ်မှတ်",
+    "customerLabel": "သုံးစွဲသူ #{{id}}",
+    "heading": "မီတာ သတ်မှတ်",
+    "subheading": "ဤသုံးစွဲသူအတွက် ဟာ့ဒ်ဝဲနှင့် နှုန်း အသေးစိတ်ကို ဖြည့်ပါ။",
+    "manufacturer": "ထုတ်လုပ်သူ",
+    "meterType": "မီတာ အမျိုးအစား",
+    "serial": "ဆီရီရယ် နံပါတ်",
+    "noUnassigned": "မသတ်မှတ်ရသေးသော မီတာ မရှိ",
+    "selectMeter": "မီတာ ရွေး…",
+    "pickFirst": "ထုတ်လုပ်သူနှင့် မီတာ အမျိုးအစားကို ဦးစွာ ရွေးပါ",
+    "searchSerial": "ဆီရီရယ် နံပါတ် ရှာ",
+    "tariff": "နှုန်း",
+    "connectionGroup": "ချိတ်ဆက်မှု အုပ်စု",
+    "connectionType": "ချိတ်ဆက်မှု အမျိုးအစား",
+    "online": "အွန်လိုင်း",
+    "offline": "အော့ဖ်လိုင်း",
+    "location": {
+      "label": "မီတာ တည်နေရာ",
+      "pending": "တည်နေရာ ဖမ်းနေသည်…",
+      "captured": "ဖမ်းပြီး: {{coords}}",
+      "denied": "ကျော်ပြီး။ မီတာ အခြားနေရာတွင် ရှိပါက မြေပုံပေါ်တွင် ရွေး၍ ပြန်ကြိုးစားပါ။",
+      "pickOnMap": "မြေပုံပေါ်တွင် ရွေး",
+      "retry": "ပြန်ကြိုးစား"
+    },
+    "submit": "မီတာ သတ်မှတ်"
+  },
+  "paymentNew": {
+    "find": {
+      "errorEnter": "မီတာ သို့မဟုတ် SHS ဆီရီရယ် ထည့်ပါ။",
+      "errorNotFound": "ဆီရီရယ် \"{{serial}}\" ဖြင့် ပစ္စည်း ရှာမတွေ့ပါ။",
+      "errorGeneric": "ရှာဖွေမှု မအောင်ပါ။ ပြန်ကြိုးစားပါ။",
+      "title": "ငွေ ကောက်ခံ",
+      "subtitle": "ပစ္စည်း ရှာ",
+      "question": "မည်သည့်ပစ္စည်းအတွက် ကောက်ခံနေသနည်း?",
+      "hint": "မီတာ သို့မဟုတ် SHS ဆီရီရယ် ထည့်ပါ။ နောက်တွင် သုံးစွဲသူကို ပြပါမည်။",
+      "label": "ပစ္စည်း ဆီရီရယ်",
+      "placeholder": "ဥပမာ MTR-000123",
+      "continue": "ဆက်လုပ်"
+    },
+    "amount": {
+      "title": "ငွေ ကောက်ခံ",
+      "step": "အဆင့် 1 / 3",
+      "label": "လက်ခံရရှိသော ပမာဏ",
+      "belowMin": "အနည်းဆုံးအောက်: ",
+      "minimum": "အနည်းဆုံး: ",
+      "next": "ပြန်ကြည့်၍ အတည်ပြု"
+    },
+    "confirm": {
+      "title": "ငွေပေးချေမှု အတည်ပြု",
+      "step": "အဆင့် 2 / 3",
+      "label": "သင် ကောက်ခံနေသည်",
+      "inCashWith": "{{currency}} · ငွေသား",
+      "inCash": "ငွေသား",
+      "for": "အတွက်",
+      "device": "ပစ္စည်း",
+      "warning": "သုံးစွဲသူထံမှ ငွေသား လက်ခံပြီးမှသာ အတည်ပြုပါ။ ဤလုပ်ဆောင်ချက် နောက်ဆုံးဖြစ်သည်။",
+      "back": "နောက်သို့",
+      "submit": "ငွေသား ရရှိပြီး — အတည်ပြု"
+    },
+    "result": {
+      "title": "ငွေ ကောက်ခံပြီး",
+      "receiptSent": "ပြေစာ {{phone}} ထံ ပို့ပြီး",
+      "recorded": "အောင်မြင်စွာ မှတ်တမ်းတင်ပြီး",
+      "backHome": "ပင်မသို့ ပြန်",
+      "next": "နောက် သုံးစွဲသူ",
+      "refLabel": "Ref #{{ref}}"
+    },
+    "device": {
+      "energyMeter": "စွမ်းအင် (မီတာ)",
+      "shs": "နေအိမ် ဆိုလာ စနစ်",
+      "fallback": "ပစ္စည်း",
+      "meterShort": "မီတာ",
+      "shsShort": "SHS"
+    },
+    "token": {
+      "generating": "တိုကင် ထုတ်ပေးနေ",
+      "waiting": "ပစ္စည်းမှ ကုဒ် ထုတ်ပေးရန် စောင့်နေ…",
+      "none": "တိုကင် မထုတ်ပေး",
+      "noneBody": "ငွေပေးချေမှု မှတ်တမ်းတင်ပြီးပါပြီ။ နောက်မှ တိုကင် ပို့လျှင် သုံးစွဲသူ SMS ဖြင့် လက်ခံရရှိမည်။",
+      "label": "တိုကင်",
+      "readToCustomer": "ဤကုဒ်ကို သုံးစွဲသူအား ဖတ်ပြပါ။",
+      "copied": "တိုကင် ကူးပြီး"
+    },
+    "failed": "ငွေပေးချေမှု မအောင်ပါ။ ပြန်ကြိုးစားပါ။"
+  },
+  "paymentDetail": {
+    "notFound": "ရောင်းချမှု ရှာမတွေ့ပါ။",
+    "back": "နောက်သို့",
+    "serialCopied": "ဆီရီရယ် ကူးပြီး",
+    "title": "ငွေပေးချေမှု",
+    "ref": "Ref #{{id}}",
+    "when": "မည်သည့်အချိန်",
+    "for": "အတွက်",
+    "device": "ပစ္စည်း",
+    "deviceLabel": "ပစ္စည်း · {{type}}",
+    "noDevice": "ပစ္စည်း မသတ်မှတ်ထား",
+    "dash": "—",
+    "sender": "ပို့သူ",
+    "reference": "Ref",
+    "customer": "သုံးစွဲသူ",
+    "shsHint": "SHS စရံငွေများသည် ဤစာမျက်နှာတွင် သုံးစွဲသူ မှတ်တမ်းနှင့် မချိတ်ဆက်ရသေးပါ — ရှာရန် သုံးစွဲသူများ tab ကို ဖွင့်ပါ။",
+    "noCustomerSerial": "ဆီရီရယ် {{serial}} နှင့် ကိုက်ညီသော သုံးစွဲသူ မရှိပါ။",
+    "noCustomer": "ချိတ်ဆက်ထားသော သုံးစွဲသူ မရှိပါ။",
+    "meter": "မီတာ",
+    "shsUnit": "SHS ယူနစ်",
+    "appliance": "ပစ္စည်း"
+  },
+  "saleNew": {
+    "plans": {
+      "cash": {
+        "title": "ငွေသား ပေး",
+        "subtitle": "သုံးစွဲသူသည် ယနေ့ စျေးအပြည့် ပေးသည်။"
+      },
+      "twelve": {
+        "title": "12 လ PAYG",
+        "subtitle": "လစဉ် ပေးချေမှုဖြင့် ဖွင့်သည်။"
+      },
+      "twentyFour": {
+        "title": "24 လ PAYG",
+        "subtitle": "လစဉ် ပေးချေမှု ပိုနည်း။"
+      },
+      "custom": {
+        "title": "စိတ်ကြိုက် အစီအစဉ်",
+        "subtitle": "သင်၏ ကိုယ်ပိုင် စရံငွေနှင့် လ အရေအတွက် သတ်မှတ်ပါ။"
+      },
+      "energy": {
+        "title": "စွမ်းအင် ဝန်ဆောင်မှု",
+        "subtitle": "သုံးသလောက် ပေး။ သတ်မှတ်ထားသော သက်တမ်း မရှိ။"
+      }
+    },
+    "tier": {
+      "starter": "အစဖြစ်",
+      "popular": "လူကြိုက်အများဆုံး",
+      "large": "မိသားစုကြီး"
+    },
+    "pickCustomer": {
+      "title": "SHS ရောင်း",
+      "step": "အဆင့် 1 / 4",
+      "label": "သုံးစွဲသူ ရွေး",
+      "search": "နာမည် သို့မဟုတ် ဖုန်း ရှာ…",
+      "noMatches": "ရလဒ် မရှိပါ။ အခြားရှာဖွေမှု ကြိုးစားပါ။",
+      "noCustomers": "သုံးစွဲသူ မရှိသေးပါ။ ဦးစွာ မှတ်ပုံတင်ပါ။"
+    },
+    "pickSystem": {
+      "title": "SHS ရောင်း",
+      "step": "အဆင့် 2 / 4",
+      "newCustomer": "သုံးစွဲသူ အသစ်",
+      "label": "စနစ် ရွေး",
+      "noUnits": "သင့်ထံ SHS ယူနစ် မသတ်မှတ်ထားပါ။ စီမံအုပ်ချုပ်သူထံ သတ်မှတ်ပေးရန် တောင်းပါ။",
+      "shsUnit": "SHS ယူနစ်"
+    },
+    "plan": {
+      "back": "နောက်သို့",
+      "title": "ပေးချေမှု အစီအစဉ်",
+      "label": "ပေးချေမှု အစီအစဉ်",
+      "total": "စုစုပေါင်း",
+      "cashToday": "ယနေ့ ငွေသား",
+      "depositToday": "ယနေ့ စရံငွေ",
+      "howWillTheyPay": "မည်ကဲ့သို့ ပေးချေမည်နည်း?",
+      "perMonth": "/ လ",
+      "months": "လ",
+      "monthsDefault": "6",
+      "depositLabel": "ယနေ့ စရံငွေ",
+      "depositDefault": "0",
+      "pricePerDay": "စျေး / ရက်",
+      "pricePerDayDefault": "0",
+      "minTopUp": "အနည်းဆုံး ဖြည့်ငွေ",
+      "minTopUpDefault": "0",
+      "downPayment": "စရံငွေ (မဖြစ်မနေ မဟုတ်)",
+      "downPaymentDefault": "0",
+      "easHint": "သုံးစွဲသူသည် တစ်နေ့ သုံးသလောက် ပေးသည်။ လက်ကျန် ကုန်သွားလျှင် ဝန်ဆောင်မှု ရပ်တန့်သည်။",
+      "paygHint": "လစဉ် ပေးချေမှု ပြီးတိုင်း PAYG ဖွင့်သည်။ နောက်ဆုံးရက်မတိုင်မီ SMS အသိပေးချက် ရရှိမည်။",
+      "unitSerial": "ယူနစ် ဆီရီရယ်",
+      "pickUnassigned": "မသတ်မှတ်ရသေးသော ယူနစ် ရွေး",
+      "searchSerial": "ဆီရီရယ် ဖြင့် ရှာ…",
+      "backStep": "နောက်သို့",
+      "collectCash": "{{amount}} ငွေသား ကောက်ခံ",
+      "collectDeposit": "{{amount}} စရံငွေ ကောက်ခံ",
+      "continue": "ဆက်လုပ်"
+    },
+    "confirm": {
+      "title": "ရောင်းချမှု အတည်ပြု",
+      "step": "အဆင့် 4 / 4",
+      "labelCash": "ယနေ့ ငွေသား",
+      "labelDeposit": "ယနေ့ စရံငွေ",
+      "activationOnly": "ဖွင့်ရုံသာ — ငွေသား မကောက်ခံ",
+      "inCashWith": "{{currency}} · ငွေသား",
+      "inCash": "ငွေသား",
+      "unit": "ယူနစ်",
+      "plan": "အစီအစဉ်",
+      "total": "စုစုပေါင်း",
+      "pricePerDay": "စျေး / ရက်",
+      "minTopUp": "အနည်းဆုံး ဖြည့်ငွေ",
+      "monthlyPayments_one": "{{count}} လစဉ် ပေးချေမှု",
+      "monthlyPayments_other": "{{count}} လစဉ် ပေးချေမှု",
+      "monthlyAmount": "{{amount}} / လ",
+      "firstPayment": "ပထမ ပေးချေမှု",
+      "deviceSerial": "ပစ္စည်း ဆီရီရယ်",
+      "warningEas": "ဖွင့်ခြင်းသည် စွမ်းအင် ဝန်ဆောင်မှု စာချုပ်ကို စတင်သည်။ ဤလုပ်ဆောင်ချက် နောက်ဆုံးဖြစ်သည်။",
+      "warningCash": "ငွေသား လက်ခံပြီးမှသာ အတည်ပြုပါ။ ဤလုပ်ဆောင်ချက် နောက်ဆုံးဖြစ်သည်။",
+      "warningDeposit": "စရံငွေ လက်ခံပြီးမှသာ အတည်ပြုပါ။ ဤလုပ်ဆောင်ချက် နောက်ဆုံးဖြစ်သည်။",
+      "back": "နောက်သို့",
+      "activate": "စွမ်းအင် ဝန်ဆောင်မှု ဖွင့်",
+      "submit": "ငွေသား ရရှိပြီး — အတည်ပြု"
+    },
+    "result": {
+      "titleActivated": "ဝန်ဆောင်မှု ဖွင့်ပြီး",
+      "titleSold": "SHS ရောင်းပြီး",
+      "cash": "ငွေသား",
+      "deposit": "စရံငွေ",
+      "backHome": "ပင်မသို့ ပြန်",
+      "next": "နောက် ရောင်းချမှု",
+      "refLabel": "Ref #{{ref}}"
+    },
+    "errors": {
+      "serialLoad": "မသတ်မှတ်ရသေးသော ယူနစ်များကို မဖွင့်နိုင်ပါ။ ချိတ်ဆက်မှု စစ်ဆေးပါ။",
+      "applianceMissing": "ဤပစ္စည်း ပျောက်နေသည် — admin ထံ ဆက်သွယ်ပါ။",
+      "noUnits": "ဤပစ္စည်းအတွက် မသတ်မှတ်ရသေးသော ယူနစ် မရှိပါ။"
+    },
+    "planSubtitle": "{{customer}} · {{unit}}",
+    "failed": "ရောင်းချမှု မအောင်ပါ။ ပြန်ကြိုးစားပါ။"
+  },
+  "saleDetail": {
+    "notFound": "ရောင်းချမှု ရှာမတွေ့ပါ။",
+    "back": "နောက်သို့",
+    "title": "ရောင်းချမှု",
+    "customerFallback": "သုံးစွဲသူ",
+    "shsUnit": "SHS ယူနစ်",
+    "serialCopied": "ဆီရီရယ် ကူးပြီး",
+    "paid": "ပေးပြီး",
+    "left": "ကျန်",
+    "total": "စုစုပေါင်း",
+    "fullyPaid": "အပြည့်ပေးပြီး",
+    "progress": "{{percent}}% ပေးပြီး · {{remaining}} ကျန်",
+    "plan": "အစီအစဉ်",
+    "type": "အမျိုးအစား",
+    "tenure": "သက်တမ်း",
+    "tenureMonths_one": "{{count}} လ",
+    "tenureMonths_other": "{{count}} လ",
+    "downPayment": "စရံငွေ",
+    "monthly": "လစဉ်",
+    "monthlyValue": "{{amount}} / လ",
+    "firstPayment": "ပထမ ပေးချေမှု",
+    "nextDue": "နောက်ထပ် ပေးရမည့်",
+    "soldOn": "ရောင်းသည့်နေ့",
+    "device": "ပစ္စည်း",
+    "noSerial": "ဆီရီရယ် မှတ်တမ်း မရှိ",
+    "schedule": "ပေးချေမှု အချိန်ဇယား",
+    "customer": "သုံးစွဲသူ",
+    "paidOff": "ပေးပြီး",
+    "collectPayment": "ငွေ ကောက်ခံ",
+    "paidFull": "{{amount}} ပေးပြီး",
+    "partial": "တစ်စိတ်တစ်ပိုင်း — {{total}} ၏ {{paid}}",
+    "due": "ပေးရန် {{amount}}",
+    "energyService": "စွမ်းအင် ဝန်ဆောင်မှု",
+    "monthlyPayg": "{{count}} လ PAYG",
+    "installment": "အရစ်ကျ",
+    "planFallback": "အစီအစဉ်",
+    "dueDash": "—"
+  },
+  "syncBanner": {
+    "offline": "အော့ဖ်လိုင်း ဖြစ်နေဆဲ — ကွန်ရက် ပြန်ရသည်နှင့် စင့်ခ်ပါမည်။",
+    "failedAndPending": "{{failed}} စင့်ခ်မအောင် · {{pending}} ဆိုင်းငံ့",
+    "customer_one": "သုံးစွဲသူ {{count}} ဦး စင့်ခ်ရန် ဆိုင်းငံ့",
+    "customer_other": "သုံးစွဲသူ {{count}} ဦး စင့်ခ်ရန် ဆိုင်းငံ့",
+    "syncNow": "ယခု စင့်ခ်"
+  }
+}

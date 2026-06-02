@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Clipboard from 'expo-clipboard';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   Platform,
@@ -11,6 +12,7 @@ import {
   ToastAndroid,
   View,
 } from 'react-native';
+import type { TFunction } from 'i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AgentTransaction } from '@/api/agent';
@@ -33,6 +35,7 @@ import {
 import { useCurrency } from '@/utils/useCurrency';
 
 export default function TransactionDetailScreen() {
+  const { t } = useTranslation();
   const params = useLocalSearchParams<{
     id: string;
     amount?: string;
@@ -66,7 +69,7 @@ export default function TransactionDetailScreen() {
     : Number(params.amount ?? 0);
   const rawSerial = (cachedTx?.message ?? params.message ?? '').trim();
   const serial = rawSerial && rawSerial !== '-' ? rawSerial : '';
-  const reference = `Ref #${params.id}`;
+  const reference = t('paymentDetail.ref', { id: params.id });
   const sender = cachedTx?.sender ?? params.sender ?? null;
   const createdAt = cachedTx?.created_at ?? params.created_at ?? null;
   const txType = cachedTx?.type ?? params.type ?? '';
@@ -92,7 +95,7 @@ export default function TransactionDetailScreen() {
     if (!serial) return;
     await Clipboard.setStringAsync(serial);
     if (Platform.OS === 'android') {
-      ToastAndroid.show('Serial copied', ToastAndroid.SHORT);
+      ToastAndroid.show(t('paymentDetail.serialCopied'), ToastAndroid.SHORT);
     }
   }
 
@@ -113,12 +116,13 @@ export default function TransactionDetailScreen() {
       : '');
   const phone = lookedUpCustomer ? primaryPhone(lookedUpCustomer) : null;
   const receiptCustomerName =
-    customerName || (isShs ? 'SHS down payment' : '—');
+    customerName ||
+    (isShs ? t('home.shsDownPayment') : t('paymentDetail.dash'));
 
   return (
     <View style={styles.root}>
       <SecondaryHeader
-        title="Payment"
+        title={t('paymentDetail.title')}
         subtitle={reference}
         onBack={() => router.back()}
       />
@@ -138,9 +142,12 @@ export default function TransactionDetailScreen() {
         />
 
         <Card padded={false} elevated style={styles.detailsCard}>
-          <DataRow label="When" value={formatDateTime(createdAt) ?? '—'} />
           <DataRow
-            label="For"
+            label={t('paymentDetail.when')}
+            value={formatDateTime(createdAt) ?? t('paymentDetail.dash')}
+          />
+          <DataRow
+            label={t('paymentDetail.for')}
             value={
               <Pill
                 label={typeLabel}
@@ -157,22 +164,31 @@ export default function TransactionDetailScreen() {
           />
           {serial ? (
             <DataRow
-              label="Device"
+              label={t('paymentDetail.device')}
               value={<MonoChip value={serial} onCopy={copySerial} />}
             />
           ) : (
             <DataRow
-              label="Device"
-              value={isShs ? 'No device assigned' : '—'}
+              label={t('paymentDetail.device')}
+              value={
+                isShs ? t('paymentDetail.noDevice') : t('paymentDetail.dash')
+              }
             />
           )}
-          {sender ? <DataRow label="Sender" value={sender} mono /> : null}
-          <DataRow label="Reference" value={reference} mono last />
+          {sender ? (
+            <DataRow label={t('paymentDetail.sender')} value={sender} mono />
+          ) : null}
+          <DataRow
+            label={t('paymentDetail.reference')}
+            value={reference}
+            mono
+            last
+          />
         </Card>
 
         <View style={styles.section}>
           <Text variant="sectionLabel" tone="muted" style={styles.sectionLabel}>
-            CUSTOMER
+            {t('paymentDetail.customer')}
           </Text>
 
           {customerName ? (
@@ -194,8 +210,12 @@ export default function TransactionDetailScreen() {
                   ) : null}
                   {lookupQuery.data?.device ? (
                     <Text variant="meta" tone="muted" numberOfLines={1}>
-                      Device ·{' '}
-                      {humanizeDeviceType(lookupQuery.data.device.device_type)}
+                      {t('paymentDetail.deviceLabel', {
+                        type: humanizeDeviceType(
+                          lookupQuery.data.device.device_type,
+                          t,
+                        ),
+                      })}
                     </Text>
                   ) : null}
                 </View>
@@ -208,24 +228,19 @@ export default function TransactionDetailScreen() {
           ) : isShs ? (
             <Card elevated>
               <Text variant="meta" tone="muted">
-                SHS down payments aren&apos;t linked to the customer record on
-                this screen yet — open the Customers tab to find them.
+                {t('paymentDetail.shsHint')}
               </Text>
             </Card>
           ) : serial ? (
             <Card elevated>
               <Text variant="meta" tone="muted">
-                No customer matched serial{' '}
-                <Text variant="mono" tone="muted">
-                  {serial}
-                </Text>
-                .
+                {t('paymentDetail.noCustomerSerial', { serial })}
               </Text>
             </Card>
           ) : (
             <Card elevated>
               <Text variant="meta" tone="muted">
-                No customer linked.
+                {t('paymentDetail.noCustomer')}
               </Text>
             </Card>
           )}
@@ -272,11 +287,12 @@ function primaryPhone(customer: Customer): string | null {
   );
 }
 
-function humanizeDeviceType(type: string): string {
-  const t = type.toLowerCase();
-  if (t.includes('meter')) return 'Meter';
-  if (t.includes('solar') || t.includes('shs')) return 'SHS unit';
-  if (t.includes('appliance')) return 'Appliance';
+function humanizeDeviceType(type: string, t: TFunction): string {
+  const lower = type.toLowerCase();
+  if (lower.includes('meter')) return t('paymentDetail.meter');
+  if (lower.includes('solar') || lower.includes('shs'))
+    return t('paymentDetail.shsUnit');
+  if (lower.includes('appliance')) return t('paymentDetail.appliance');
   return type;
 }
 

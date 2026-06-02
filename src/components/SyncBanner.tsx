@@ -1,4 +1,5 @@
 import { Feather } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
 import { semantic, spacing } from '@/theme';
@@ -20,15 +21,18 @@ export function SyncBanner({
   offline,
   onSyncNow,
 }: SyncBannerProps) {
+  const { t } = useTranslation();
   const total = pendingCount + failedCount;
   if (total === 0) return null;
 
-  const noun = total === 1 ? 'customer' : 'customers';
   const message = offline
-    ? `Still offline — we'll sync the moment you're back on a network.`
+    ? t('syncBanner.offline')
     : failedCount
-      ? `${failedCount} sync failed · ${pendingCount} pending`
-      : `${pendingCount} ${noun} pending sync`;
+      ? t('syncBanner.failedAndPending', {
+          failed: failedCount,
+          pending: pendingCount,
+        })
+      : t('syncBanner.customer', { count: pendingCount });
 
   return (
     <View
@@ -56,7 +60,7 @@ export function SyncBanner({
           <ActivityIndicator color={semantic.blue} size="small" />
         ) : (
           <Text variant="meta" tone="brand" style={styles.ctaLabel}>
-            Sync now
+            {t('syncBanner.syncNow')}
           </Text>
         )}
       </Pressable>

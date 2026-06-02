@@ -6,6 +6,7 @@ import {
 } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useCallback, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   Alert,
@@ -40,14 +41,15 @@ import { initials } from '@/utils/format';
 
 type FilterId = 'all' | 'meter' | 'shs' | 'today';
 
-const FILTERS: { id: FilterId; label: string }[] = [
-  { id: 'all', label: 'All' },
-  { id: 'meter', label: 'With meter' },
-  { id: 'shs', label: 'With SHS' },
-  { id: 'today', label: 'Registered today' },
+const FILTER_IDS: { id: FilterId; key: string }[] = [
+  { id: 'all', key: 'customersList.filters.all' },
+  { id: 'meter', key: 'customersList.filters.withMeter' },
+  { id: 'shs', key: 'customersList.filters.withShs' },
+  { id: 'today', key: 'customersList.filters.registeredToday' },
 ];
 
 export default function CustomersTab() {
+  const { t } = useTranslation();
   const { api } = useSession();
   const insets = useSafeAreaInsets();
   const [term, setTerm] = useState('');
@@ -153,9 +155,9 @@ export default function CustomersTab() {
     <View style={[styles.root, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <View style={styles.headerTitle}>
-          <Text variant="screenTitle">Customers</Text>
+          <Text variant="screenTitle">{t('customersList.title')}</Text>
           <Text variant="meta" tone="muted">
-            {counts[filter]} total
+            {counts[filter]} {t('customersList.total')}
           </Text>
         </View>
         <Pressable
@@ -169,7 +171,7 @@ export default function CustomersTab() {
 
       <View style={styles.searchBlock}>
         <TextField
-          placeholder="Search name or phone…"
+          placeholder={t('customersList.search')}
           autoCapitalize="none"
           autoCorrect={false}
           value={term}
@@ -186,13 +188,12 @@ export default function CustomersTab() {
       />
 
       <View style={styles.chipsRow}>
-        {FILTERS.map((f) => {
+        {FILTER_IDS.map((f) => {
           const active = filter === f.id;
-          const label = f.label;
           return (
             <Pill
               key={f.id}
-              label={label}
+              label={t(f.key)}
               tone="neutral"
               selected={active}
               onPress={() => setFilter(f.id)}
@@ -212,19 +213,19 @@ export default function CustomersTab() {
           </View>
           <Text variant="screenTitle" style={styles.emptyTitle}>
             {isSearching || filter !== 'all'
-              ? 'No matches'
-              : 'No customers yet'}
+              ? t('customersList.empty.noMatchesTitle')
+              : t('customersList.empty.noneTitle')}
           </Text>
           <Text variant="meta" tone="muted" style={styles.emptySubtitle}>
             {isSearching
-              ? 'Try a different search.'
+              ? t('customersList.empty.noMatchesBody')
               : filter !== 'all'
-                ? 'Try a different filter.'
-                : 'Register your first customer to get started.'}
+                ? t('customersList.empty.noFilterMatchesBody')
+                : t('customersList.empty.noneBody')}
           </Text>
           {!isSearching && filter === 'all' ? (
             <Button
-              label="Register customer"
+              label={t('customersList.empty.registerCta')}
               onPress={() => router.push('/(app)/customers/new')}
               style={styles.emptyCta}
             />
@@ -310,11 +311,12 @@ function CustomerRow({
   shsName: string | null;
   preferShs: boolean;
 }) {
+  const { t } = useTranslation();
   const phone = primaryPhone(customer);
   const pending = isPendingCustomer(customer);
   const meta = pending
     ? null
-    : describeMeta(customer, hasShs, shsName, preferShs);
+    : describeMeta(customer, hasShs, shsName, preferShs, t);
   const registeredToday = isToday(customer.created_at);
   const failed = pending && customer._outbox_status === 'failed';
 
@@ -349,11 +351,15 @@ function CustomerRow({
           </Text>
           {pending ? (
             <Pill
-              label={failed ? 'SYNC FAILED' : 'PENDING SYNC'}
+              label={
+                failed
+                  ? t('customersList.badge.syncFailed')
+                  : t('customersList.badge.pendingSync')
+              }
               tone={failed ? 'orange' : 'neutral'}
             />
           ) : registeredToday ? (
-            <Pill label="NEW" tone="blue" />
+            <Pill label={t('customersList.badge.new')} tone="blue" />
           ) : null}
         </View>
         <Text variant="meta" tone="muted" numberOfLines={1}>
@@ -381,6 +387,7 @@ function SwipeToDiscardRow({
   name: string;
   children: React.ReactNode;
 }) {
+  const { t } = useTranslation();
   const translateX = useRef(new Animated.Value(0)).current;
 
   const reset = useCallback(() => {
@@ -397,14 +404,18 @@ function SwipeToDiscardRow({
       useNativeDriver: true,
       bounciness: 4,
     }).start();
-    const displayName = name || 'this entry';
+    const displayName = name || t('customersList.discard.thisEntry');
     Alert.alert(
-      'Discard local customer?',
-      `${displayName} hasn't been sent to the server yet. Discarding deletes the local entry permanently.`,
+      t('customersList.discard.title'),
+      t('customersList.discard.message', { name: displayName }),
       [
-        { text: 'Cancel', style: 'cancel', onPress: reset },
         {
-          text: 'Discard',
+          text: t('customersList.discard.cancel'),
+          style: 'cancel',
+          onPress: reset,
+        },
+        {
+          text: t('customersList.discard.confirm'),
           style: 'destructive',
           onPress: () => {
             void removeOutboxEntry(localId);
@@ -413,7 +424,7 @@ function SwipeToDiscardRow({
       ],
       { cancelable: true, onDismiss: reset },
     );
-  }, [translateX, name, localId, reset]);
+  }, [translateX, name, localId, reset, t]);
 
   const panResponder = useMemo(
     () =>
@@ -438,7 +449,9 @@ function SwipeToDiscardRow({
     <View style={styles.swipeContainer}>
       <View style={styles.swipeAction} pointerEvents="none">
         <Feather name="trash-2" size={20} color={semantic.paper} />
-        <Text style={styles.swipeActionLabel}>Discard</Text>
+        <Text style={styles.swipeActionLabel}>
+          {t('customersList.discard.confirm')}
+        </Text>
       </View>
       <Animated.View
         style={[styles.swipeForeground, { transform: [{ translateX }] }]}
@@ -509,6 +522,7 @@ function describeMeta(
   hasShs: boolean,
   shsName: string | null,
   preferShs: boolean,
+  t: (key: string) => string,
 ): string {
   const shsDevice = customer.devices?.find((d) => isShs(d.device_type));
   const ownsShs = hasShs || !!shsDevice;
@@ -520,7 +534,7 @@ function describeMeta(
   const device = customer.devices?.[0];
   const labels: string[] = [];
   if (device) {
-    if (isMeter(device.device_type)) labels.push('Meter');
+    if (isMeter(device.device_type)) labels.push(t('paymentDetail.meter'));
     else if (isShs(device.device_type)) labels.push(shsLabel);
     else labels.push(device.device_type);
   }

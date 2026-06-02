@@ -12,6 +12,10 @@ export type Agent = {
     name?: string | null;
     surname?: string | null;
   } | null;
+  miniGrid?: {
+    id: number;
+    name: string;
+  } | null;
 };
 
 export function agentFullName(agent: Agent | null | undefined): string | null {

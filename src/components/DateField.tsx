@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { fonts, radii, semantic, spacing } from '@/theme';
+import { colors, radius, spacing } from '@/theme';
 import { Button } from './Button';
 import { Text } from './Text';
 
@@ -69,8 +69,8 @@ export function DateField({
   return (
     <View style={[styles.container, containerStyle]}>
       {label ? (
-        <Text variant="sectionLabel" tone="secondary" style={styles.label}>
-          {label.toUpperCase()}
+        <Text variant="label" tone="muted" style={styles.label}>
+          {label}
         </Text>
       ) : null}
       <Pressable
@@ -82,23 +82,19 @@ export function DateField({
           pressed ? styles.triggerPressed : null,
         ]}
       >
-        <Text
-          style={[
-            styles.triggerText,
-            { color: value ? semantic.ink : semantic.ink3 },
-          ]}
-          numberOfLines={1}
-        >
+        <Text variant="body" tone={value ? 'primary' : 'muted'}>
           {displayValue}
         </Text>
-        <Text style={styles.caret}>▾</Text>
+        <Text variant="body" tone="muted">
+          ▾
+        </Text>
       </Pressable>
       {error ? (
-        <Text variant="meta" tone="danger" style={styles.helper}>
+        <Text variant="caption" tone="danger" style={styles.helper}>
           {error}
         </Text>
       ) : helper ? (
-        <Text variant="meta" tone="muted" style={styles.helper}>
+        <Text variant="caption" tone="muted" style={styles.helper}>
           {helper}
         </Text>
       ) : null}
@@ -168,32 +164,22 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   label: {
-    marginBottom: 2,
+    letterSpacing: 0.3,
   },
   trigger: {
-    backgroundColor: semantic.paper,
-    borderRadius: radii.input,
-    borderWidth: 1.5,
-    borderColor: semantic.line2,
-    paddingHorizontal: spacing.md,
+    backgroundColor: colors.surface.raised,
+    borderRadius: radius.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border.subtle,
+    paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     minHeight: 48,
-    gap: spacing.sm,
-  },
-  triggerText: {
-    flex: 1,
-    fontFamily: fonts.sansRegular,
-    fontSize: 15,
-  },
-  caret: {
-    color: semantic.ink3,
-    fontSize: 16,
   },
   triggerError: {
-    borderColor: semantic.red,
+    borderColor: colors.status.danger,
   },
   triggerPressed: {
     opacity: 0.85,
@@ -203,12 +189,12 @@ const styles = StyleSheet.create({
   },
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(15,42,63,0.45)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
   sheet: {
-    backgroundColor: semantic.paper,
-    borderTopLeftRadius: radii.sheetTop,
-    borderTopRightRadius: radii.sheetTop,
+    backgroundColor: colors.surface.page,
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
     paddingBottom: spacing.lg,

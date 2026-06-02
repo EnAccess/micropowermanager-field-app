@@ -1,6 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -23,33 +24,34 @@ import { radii, semantic, spacing } from '@/theme';
 
 type Option = {
   kind: EnvironmentKind;
-  title: string;
-  description: string;
+  titleKey: string;
+  descriptionKey: string;
   icon: React.ComponentProps<typeof Feather>['name'];
 };
 
 const OPTIONS: Option[] = [
   {
     kind: 'demo',
-    title: 'Demo',
-    description: 'Explore with sample data. No setup.',
+    titleKey: 'environment.demo',
+    descriptionKey: 'environment.demoSubtitle',
     icon: 'play-circle',
   },
   {
     kind: 'cloud',
-    title: 'Cloud',
-    description: 'Sign in to the MicroPowerManager cloud.',
+    titleKey: 'environment.cloud',
+    descriptionKey: 'environment.cloudSubtitle',
     icon: 'cloud',
   },
   {
     kind: 'custom',
-    title: 'Custom',
-    description: 'Self-hosted, local, or staging.',
+    titleKey: 'environment.custom',
+    descriptionKey: 'environment.customSubtitle',
     icon: 'server',
   },
 ];
 
 export default function EnvironmentPicker() {
+  const { t } = useTranslation();
   const { setEnvironment } = useSession();
   const insets = useSafeAreaInsets();
   const [selected, setSelected] = useState<EnvironmentKind>('cloud');
@@ -66,7 +68,7 @@ export default function EnvironmentPicker() {
         await setEnvironment(cloudEnvironment());
       } else {
         if (!/^https?:\/\//i.test(customUrl.trim())) {
-          setError('Enter a full URL starting with http:// or https://');
+          setError(t('environment.urlError'));
           return;
         }
         await setEnvironment(customEnvironment(customUrl));
@@ -75,9 +77,7 @@ export default function EnvironmentPicker() {
       router.replace('/(auth)/login');
     } catch (caught) {
       setError(
-        caught instanceof Error
-          ? caught.message
-          : 'Unable to save environment.',
+        caught instanceof Error ? caught.message : t('environment.saveError'),
       );
     } finally {
       setSubmitting(false);
@@ -90,14 +90,14 @@ export default function EnvironmentPicker() {
         <View style={styles.lockup}>
           <Logo size={36} />
           <Text variant="screenTitle" tone="onNavy">
-            MicroPowerManager
+            {t('environment.appName')}
           </Text>
         </View>
         <Text variant="pageTitle" tone="onNavy" style={styles.title}>
-          Connect your account
+          {t('environment.title')}
         </Text>
         <Text variant="body" tone="onNavyMuted">
-          Choose where this app should talk to.
+          {t('environment.subtitle')}
         </Text>
       </GradientHero>
 
@@ -142,10 +142,10 @@ export default function EnvironmentPicker() {
                         variant="bodyEmphasis"
                         tone={isSelected ? 'brand' : 'primary'}
                       >
-                        {option.title}
+                        {t(option.titleKey)}
                       </Text>
                       <Text variant="meta" tone="muted">
-                        {option.description}
+                        {t(option.descriptionKey)}
                       </Text>
                     </View>
                     <View
@@ -161,8 +161,8 @@ export default function EnvironmentPicker() {
 
           {selected === 'custom' ? (
             <TextField
-              label="Server URL"
-              placeholder="https://mpm.example.com"
+              label={t('environment.serverUrl')}
+              placeholder={t('environment.serverUrlPlaceholder')}
               autoCapitalize="none"
               autoCorrect={false}
               keyboardType="url"
@@ -184,7 +184,7 @@ export default function EnvironmentPicker() {
           style={[styles.footer, { paddingBottom: insets.bottom + spacing.md }]}
         >
           <Button
-            label="Continue"
+            label={t('common.continue')}
             onPress={handleContinue}
             loading={submitting}
           />
