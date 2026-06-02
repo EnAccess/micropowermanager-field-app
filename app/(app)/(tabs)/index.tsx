@@ -69,9 +69,6 @@ const FAB_ACTIONS = [
   href: Href;
 }[];
 
-// TODO: fetch real notifications and show count in the bell icon badge.
-const hasUnreadNotifications = false;
-
 export default function Home() {
   const { t } = useTranslation();
   const { api, agent, refreshSession } = useSession();
@@ -164,22 +161,6 @@ export default function Home() {
               ) : null}
             </View>
             <View style={styles.heroActions}>
-              <Pressable
-                onPress={() => {
-                  // TODO: route to notifications screen once available.
-                }}
-                hitSlop={8}
-                accessibilityLabel={t('home.notifications')}
-                style={({ pressed }) => [
-                  styles.heroBtn,
-                  pressed && { opacity: 0.6 },
-                ]}
-              >
-                <Feather name="bell" size={18} color={semantic.paper} />
-                {hasUnreadNotifications ? (
-                  <View style={styles.unreadDot} />
-                ) : null}
-              </Pressable>
               <Pressable
                 onPress={() => router.push('/(app)/settings')}
                 hitSlop={8}
