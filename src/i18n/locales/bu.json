@@ -372,6 +372,7 @@
     "device": "ပစ္စည်း",
     "deviceLabel": "ပစ္စည်း · {{type}}",
     "noDevice": "ပစ္စည်း မသတ်မှတ်ထား",
+    "appliance": "ပစ္စည်း",
     "dash": "—",
     "sender": "ပို့သူ",
     "reference": "Ref",
@@ -391,15 +392,11 @@
       },
       "twelve": {
         "title": "12 လ PAYG",
-        "subtitle": "လစဉ် ပေးချေမှုဖြင့် ဖွင့်သည်။"
-      },
-      "twentyFour": {
-        "title": "24 လ PAYG",
-        "subtitle": "လစဉ် ပေးချေမှု ပိုနည်း။"
+        "subtitle": "ပေးချေမှုတိုင်းဖြင့် ဖွင့်သည်။"
       },
       "custom": {
         "title": "စိတ်ကြိုက် အစီအစဉ်",
-        "subtitle": "သင်၏ ကိုယ်ပိုင် စရံငွေနှင့် လ အရေအတွက် သတ်မှတ်ပါ။"
+        "subtitle": "သင်၏ ကိုယ်ပိုင် စရံငွေနှင့် အရစ်ကျ အရေအတွက် သတ်မှတ်ပါ။"
       },
       "energy": {
         "title": "စွမ်းအင် ဝန်ဆောင်မှု",
@@ -436,7 +433,12 @@
       "depositToday": "ယနေ့ စရံငွေ",
       "howWillTheyPay": "မည်ကဲ့သို့ ပေးချေမည်နည်း?",
       "perMonth": "/ လ",
+      "perWeek": "/ ပတ်",
+      "freqMonthly": "လစဉ်",
+      "freqWeekly": "အပတ်စဉ်",
+      "paygTitleWeek": "{{count}} ပတ် PAYG",
       "months": "လ",
+      "weeks": "ပတ်",
       "monthsDefault": "6",
       "depositLabel": "ယနေ့ စရံငွေ",
       "depositDefault": "0",
@@ -448,7 +450,10 @@
       "downPaymentDefault": "0",
       "easHint": "သုံးစွဲသူသည် တစ်နေ့ သုံးသလောက် ပေးသည်။ လက်ကျန် ကုန်သွားလျှင် ဝန်ဆောင်မှု ရပ်တန့်သည်။",
       "paygHint": "လစဉ် ပေးချေမှု ပြီးတိုင်း PAYG ဖွင့်သည်။ နောက်ဆုံးရက်မတိုင်မီ SMS အသိပေးချက် ရရှိမည်။",
+      "paygHintWeekly": "အပတ်စဉ် ပေးချေမှု ပြီးတိုင်း PAYG ဖွင့်သည်။ နောက်ဆုံးရက်မတိုင်မီ SMS အသိပေးချက် ရရှိမည်။",
+      "installmentHint": "နောက်ဆုံးရက်မတိုင်မီ SMS အသိပေးချက် ရရှိမည်။",
       "unitSerial": "ယူနစ် ဆီရီရယ်",
+      "unitSerialOptional": "ယူနစ် ဆီရီရယ် (မဖြစ်မနေ မဟုတ်)",
       "pickUnassigned": "မသတ်မှတ်ရသေးသော ယူနစ် ရွေး",
       "searchSerial": "ဆီရီရယ် ဖြင့် ရှာ…",
       "backStep": "နောက်သို့",
@@ -472,6 +477,9 @@
       "monthlyPayments_one": "{{count}} လစဉ် ပေးချေမှု",
       "monthlyPayments_other": "{{count}} လစဉ် ပေးချေမှု",
       "monthlyAmount": "{{amount}} / လ",
+      "weeklyPayments_one": "{{count}} အပတ်စဉ် ပေးချေမှု",
+      "weeklyPayments_other": "{{count}} အပတ်စဉ် ပေးချေမှု",
+      "weeklyAmount": "{{amount}} / ပတ်",
       "firstPayment": "ပထမ ပေးချေမှု",
       "deviceSerial": "ပစ္စည်း ဆီရီရယ်",
       "warningEas": "ဖွင့်ခြင်းသည် စွမ်းအင် ဝန်ဆောင်မှု စာချုပ်ကို စတင်သည်။ ဤလုပ်ဆောင်ချက် နောက်ဆုံးဖြစ်သည်။",
@@ -515,9 +523,13 @@
     "tenure": "သက်တမ်း",
     "tenureMonths_one": "{{count}} လ",
     "tenureMonths_other": "{{count}} လ",
+    "tenureWeeks_one": "{{count}} ပတ်",
+    "tenureWeeks_other": "{{count}} ပတ်",
     "downPayment": "စရံငွေ",
     "monthly": "လစဉ်",
     "monthlyValue": "{{amount}} / လ",
+    "weekly": "အပတ်စဉ်",
+    "weeklyValue": "{{amount}} / ပတ်",
     "firstPayment": "ပထမ ပေးချေမှု",
     "nextDue": "နောက်ထပ် ပေးရမည့်",
     "soldOn": "ရောင်းသည့်နေ့",
@@ -532,6 +544,7 @@
     "due": "ပေးရန် {{amount}}",
     "energyService": "စွမ်းအင် ဝန်ဆောင်မှု",
     "monthlyPayg": "{{count}} လ PAYG",
+    "weeklyPayg": "{{count}} ပတ် PAYG",
     "installment": "အရစ်ကျ",
     "planFallback": "အစီအစဉ်",
     "dueDash": "—"

@@ -31,6 +31,9 @@ import { initials } from '@/utils/format';
 import {
   humanizeTransactionType,
   isShsTransaction,
+  transactionApplianceName,
+  transactionPerson,
+  transactionSerial,
 } from '@/utils/transactionDisplay';
 import { useCurrency } from '@/utils/useCurrency';
 
@@ -47,6 +50,8 @@ export default function TransactionDetailScreen() {
     device_type?: string;
     person_id?: string;
     person_name?: string;
+    serial?: string;
+    appliance_name?: string;
   }>();
   const { api } = useSession();
   const insets = useSafeAreaInsets();
@@ -67,8 +72,13 @@ export default function TransactionDetailScreen() {
   const amount = cachedTx
     ? Number(cachedTx.amount ?? 0)
     : Number(params.amount ?? 0);
-  const rawSerial = (cachedTx?.message ?? params.message ?? '').trim();
-  const serial = rawSerial && rawSerial !== '-' ? rawSerial : '';
+  const cachedSerial = cachedTx ? transactionSerial(cachedTx) : null;
+  const paramSerial = (params.serial ?? params.message ?? '').trim();
+  const serial =
+    cachedSerial ?? (paramSerial && paramSerial !== '-' ? paramSerial : '');
+  const applianceName =
+    (cachedTx ? transactionApplianceName(cachedTx) : null) ??
+    (params.appliance_name?.trim() || null);
   const reference = t('paymentDetail.ref', { id: params.id });
   const sender = cachedTx?.sender ?? params.sender ?? null;
   const createdAt = cachedTx?.created_at ?? params.created_at ?? null;
@@ -86,8 +96,9 @@ export default function TransactionDetailScreen() {
   // The payload routed in from the list already has the customer name when
   // the agent endpoint surfaced it. If not, we *only* try the device-serial
   // lookup when there's actually a serial — SHS down payments don't have one.
+  const cachedPerson = cachedTx ? transactionPerson(cachedTx) : null;
   const passedPersonName =
-    `${cachedTx?.person?.name ?? ''} ${cachedTx?.person?.surname ?? ''}`.trim() ||
+    `${cachedPerson?.name ?? ''} ${cachedPerson?.surname ?? ''}`.trim() ||
     params.person_name?.trim() ||
     '';
 
@@ -166,6 +177,11 @@ export default function TransactionDetailScreen() {
             <DataRow
               label={t('paymentDetail.device')}
               value={<MonoChip value={serial} onCopy={copySerial} />}
+            />
+          ) : applianceName ? (
+            <DataRow
+              label={t('paymentDetail.appliance')}
+              value={applianceName}
             />
           ) : (
             <DataRow

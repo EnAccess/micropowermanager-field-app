@@ -18,6 +18,12 @@ export type AgentAssignedAppliance = {
     name: string;
     type?: string;
     category?: string;
+    appliance_type_id?: number;
+    appliance_type?: {
+      id: number;
+      name: string;
+      paygo_enabled?: boolean;
+    } | null;
     asset_type?: { id: number; name: string } | null;
   };
   appliance_type?: ApplianceType | null;
@@ -167,6 +173,7 @@ export type SellAppliancePayload = {
   person_id: number;
   agent_assigned_appliance_id: number;
   payment_type: AppliancePaymentType;
+  rate_type?: 'monthly' | 'weekly';
   down_payment?: number;
   tenure?: number;
   first_payment_date?: string;
@@ -246,10 +253,14 @@ export function saleCustomerPhone(sale: SoldAppliance): string | null {
   );
 }
 
+const APPLIANCE_TYPE_SHS = 1;
+const APPLIANCE_TYPE_E_BIKE = 2;
+
 export function isSolarHomeSystem(assignment: AgentAssignedAppliance): boolean {
   const descriptors = [
     assignment.appliance?.type,
     assignment.appliance?.category,
+    assignment.appliance?.appliance_type?.name,
     assignment.appliance?.asset_type?.name,
     assignment.appliance_type?.type,
     assignment.appliance_type?.category,
@@ -262,4 +273,23 @@ export function isSolarHomeSystem(assignment: AgentAssignedAppliance): boolean {
   return descriptors.some(
     (value) => value.includes('shs') || value.includes('solar'),
   );
+}
+
+export function isPaygoAppliance(assignment: AgentAssignedAppliance): boolean {
+  const paygoEnabled = assignment.appliance?.appliance_type?.paygo_enabled;
+  if (typeof paygoEnabled === 'boolean') return paygoEnabled;
+  return isSolarHomeSystem(assignment);
+}
+
+export function applianceDeviceType(
+  assignment: AgentAssignedAppliance,
+): UnassignedDeviceType | null {
+  switch (assignment.appliance?.appliance_type_id) {
+    case APPLIANCE_TYPE_SHS:
+      return 'solar_home_system';
+    case APPLIANCE_TYPE_E_BIKE:
+      return 'e_bike';
+    default:
+      return isSolarHomeSystem(assignment) ? 'solar_home_system' : null;
+  }
 }

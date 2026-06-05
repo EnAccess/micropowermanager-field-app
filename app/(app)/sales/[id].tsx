@@ -91,11 +91,12 @@ export default function SaleDetailScreen() {
   const isEnergyService = sale.payment_type === 'energy_service';
   const tenure = sale.tenure ?? 0;
   const downPayment = sale.down_payment ?? 0;
-  const monthlyEstimate =
+  const weekly = isWeeklySchedule(sale);
+  const installmentEstimate =
     !isEnergyService && tenure > 1
       ? Math.round(Math.max(0, cost - downPayment) / tenure)
       : 0;
-  const planLabel = describePlan(sale, t);
+  const planLabel = describePlan(sale, t, weekly);
   const applianceName = sale.appliance?.name ?? t('saleDetail.shsUnit');
   const nextDue = nextDueDate(sale);
 
@@ -216,7 +217,10 @@ export default function SaleDetailScreen() {
             {!isEnergyService && tenure > 0 ? (
               <DetailRow
                 label={t('saleDetail.tenure')}
-                value={t('saleDetail.tenureMonths', { count: tenure })}
+                value={t(
+                  weekly ? 'saleDetail.tenureWeeks' : 'saleDetail.tenureMonths',
+                  { count: tenure },
+                )}
               />
             ) : null}
             {downPayment > 0 ? (
@@ -226,12 +230,13 @@ export default function SaleDetailScreen() {
                 mono
               />
             ) : null}
-            {monthlyEstimate > 0 ? (
+            {installmentEstimate > 0 ? (
               <DetailRow
-                label={t('saleDetail.monthly')}
-                value={t('saleDetail.monthlyValue', {
-                  amount: formatCurrency(monthlyEstimate),
-                })}
+                label={t(weekly ? 'saleDetail.weekly' : 'saleDetail.monthly')}
+                value={t(
+                  weekly ? 'saleDetail.weeklyValue' : 'saleDetail.monthlyValue',
+                  { amount: formatCurrency(installmentEstimate) },
+                )}
                 mono
               />
             ) : null}
@@ -530,12 +535,28 @@ function findInCachedPages(
   return null;
 }
 
-function describePlan(sale: SoldAppliance, t: TFunction): string {
+function isWeeklySchedule(sale: SoldAppliance): boolean {
+  const dates = (sale.rates ?? [])
+    .map((r) => new Date(r.due_date).getTime())
+    .filter((t) => !Number.isNaN(t))
+    .sort((a, b) => a - b);
+  if (dates.length < 2) return false;
+  const gapDays = (dates[1] - dates[0]) / (1000 * 60 * 60 * 24);
+  return gapDays <= 10;
+}
+
+function describePlan(
+  sale: SoldAppliance,
+  t: TFunction,
+  weekly: boolean,
+): string {
   if (sale.payment_type === 'energy_service')
     return t('saleDetail.energyService');
   if (sale.payment_type === 'installment') {
     return sale.tenure
-      ? t('saleDetail.monthlyPayg', { count: sale.tenure })
+      ? t(weekly ? 'saleDetail.weeklyPayg' : 'saleDetail.monthlyPayg', {
+          count: sale.tenure,
+        })
       : t('saleDetail.installment');
   }
   return t('saleDetail.planFallback');

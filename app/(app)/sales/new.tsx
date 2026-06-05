@@ -23,10 +23,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
   AgentAssignedAppliance,
+  applianceDeviceType,
   AppliancePaymentType,
   fetchAgentAssignedAppliances,
   fetchUnassignedDevices,
-  isSolarHomeSystem,
+  isPaygoAppliance,
   sellAppliance,
 } from '@/api/appliances';
 import {
@@ -59,7 +60,9 @@ import { useCurrency } from '@/utils/useCurrency';
 
 type Step = 'customer' | 'unit' | 'plan' | 'confirm' | 'success';
 
-type PlanId = 'cash' | 'twelve' | 'twentyfour' | 'custom' | 'energy';
+type PlanId = 'cash' | 'twelve' | 'custom' | 'energy';
+
+type RateType = 'monthly' | 'weekly';
 
 type Plan = {
   id: PlanId;
@@ -82,13 +85,6 @@ const PLANS: Plan[] = [
     labelKey: 'saleNew.plans.twelve.title',
     descriptionKey: 'saleNew.plans.twelve.subtitle',
     tenure: 12,
-    downPaymentRatio: 0.1,
-  },
-  {
-    id: 'twentyfour',
-    labelKey: 'saleNew.plans.twentyFour.title',
-    descriptionKey: 'saleNew.plans.twentyFour.subtitle',
-    tenure: 24,
     downPaymentRatio: 0.1,
   },
   {
@@ -125,6 +121,7 @@ export default function SellShsScreen() {
     null,
   );
   const [planId, setPlanId] = useState<PlanId>('twelve');
+  const [rateType, setRateType] = useState<RateType>('monthly');
   const [customTenure, setCustomTenure] = useState('6');
   const [customDeposit, setCustomDeposit] = useState('');
   const [eaasPricePerDay, setEaasPricePerDay] = useState('');
@@ -148,13 +145,17 @@ export default function SellShsScreen() {
       ? Math.min(customDepositNum, cost)
       : Math.round(cost * plan.downPaymentRatio);
   const tenure = isEaas ? 0 : isCustom ? customTenureNum : plan.tenure;
+  const serialRequired = !!assignment && isPaygoAppliance(assignment);
+  const isWeekly = rateType === 'weekly';
   const remaining = Math.max(0, cost - downPayment);
-  const monthly = !isEaas && tenure > 1 ? Math.round(remaining / tenure) : 0;
+  const installmentAmount =
+    !isEaas && tenure > 1 ? Math.round(remaining / tenure) : 0;
   const firstPaymentDate = useMemo(() => {
     const d = new Date();
-    d.setMonth(d.getMonth() + 1);
+    if (isWeekly) d.setDate(d.getDate() + 7);
+    else d.setMonth(d.getMonth() + 1);
     return d;
-  }, []);
+  }, [isWeekly]);
 
   const sellMutation = useMutation({
     mutationFn: () =>
@@ -174,6 +175,7 @@ export default function SellShsScreen() {
             }
           : {
               tenure,
+              rate_type: rateType,
               first_payment_date: toIsoDate(firstPaymentDate),
             }),
         ...(deviceSerial.trim() ? { device_serial: deviceSerial.trim() } : {}),
@@ -198,6 +200,7 @@ export default function SellShsScreen() {
     setCustomer(null);
     setAssignment(null);
     setPlanId('twelve');
+    setRateType('monthly');
     setCustomTenure('6');
     setCustomDeposit('');
     setEaasPricePerDay('');
@@ -244,6 +247,8 @@ export default function SellShsScreen() {
         assignment={assignment}
         planId={planId}
         onPickPlan={setPlanId}
+        rateType={rateType}
+        onChangeRateType={setRateType}
         customTenure={customTenure}
         onChangeCustomTenure={setCustomTenure}
         customDeposit={customDeposit}
@@ -258,13 +263,13 @@ export default function SellShsScreen() {
         onChangeSerial={setDeviceSerial}
         downPayment={downPayment}
         tenure={tenure}
-        monthly={monthly}
+        installmentAmount={installmentAmount}
         isEaas={isEaas}
         canContinue={
           (isEaas
             ? eaasPricePerDayNum > 0
             : tenure >= 1 && (!isCustom || downPayment >= 0)) &&
-          deviceSerial.trim().length > 0
+          (!serialRequired || deviceSerial.trim().length > 0)
         }
         formatCurrency={formatCurrency}
         onBack={() => setStep('unit')}
@@ -280,8 +285,9 @@ export default function SellShsScreen() {
         assignment={assignment}
         plan={plan}
         tenure={tenure}
+        rateType={rateType}
         downPayment={downPayment}
-        monthly={monthly}
+        installmentAmount={installmentAmount}
         firstPaymentDate={firstPaymentDate}
         deviceSerial={deviceSerial}
         isEaas={isEaas}
@@ -474,10 +480,7 @@ function UnitStep({
     enabled: !!api,
   });
 
-  const items = useMemo(
-    () => (appliances.data ?? []).filter(isSolarHomeSystem),
-    [appliances.data],
-  );
+  const items = appliances.data ?? [];
 
   const customerName = `${customer.name} ${customer.surname}`.trim();
 
@@ -612,6 +615,8 @@ function PlanStep({
   assignment,
   planId,
   onPickPlan,
+  rateType,
+  onChangeRateType,
   customTenure,
   onChangeCustomTenure,
   customDeposit,
@@ -626,7 +631,7 @@ function PlanStep({
   onChangeSerial,
   downPayment,
   tenure,
-  monthly,
+  installmentAmount,
   isEaas,
   canContinue,
   formatCurrency,
@@ -637,6 +642,8 @@ function PlanStep({
   assignment: AgentAssignedAppliance;
   planId: PlanId;
   onPickPlan: (id: PlanId) => void;
+  rateType: RateType;
+  onChangeRateType: (v: RateType) => void;
   customTenure: string;
   onChangeCustomTenure: (v: string) => void;
   customDeposit: string;
@@ -651,7 +658,7 @@ function PlanStep({
   onChangeSerial: (v: string) => void;
   downPayment: number;
   tenure: number;
-  monthly: number;
+  installmentAmount: number;
   isEaas: boolean;
   canContinue: boolean;
   formatCurrency: (n: number) => string;
@@ -661,6 +668,10 @@ function PlanStep({
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { api } = useSession();
+  const isWeekly = rateType === 'weekly';
+  const perPeriod = isWeekly
+    ? t('saleNew.plan.perWeek')
+    : t('saleNew.plan.perMonth');
   const customerName = `${customer.name} ${customer.surname}`.trim();
   const unitName =
     assignment.appliance?.name ??
@@ -668,11 +679,13 @@ function PlanStep({
     t('saleNew.pickSystem.shsUnit');
 
   const applianceId = assignment.appliance?.id ?? null;
+  const deviceType = applianceDeviceType(assignment);
+  const serialRequired = isPaygoAppliance(assignment);
+  const showSerialPicker = deviceType != null;
   const unassignedQuery = useQuery({
-    queryKey: ['unassigned-devices', applianceId],
-    queryFn: () =>
-      fetchUnassignedDevices(api!, applianceId!, 'solar_home_system'),
-    enabled: !!api && applianceId != null,
+    queryKey: ['unassigned-devices', applianceId, deviceType],
+    queryFn: () => fetchUnassignedDevices(api!, applianceId!, deviceType!),
+    enabled: !!api && applianceId != null && deviceType != null,
   });
 
   const serialOptions = useMemo<SelectOption<string>[]>(() => {
@@ -697,7 +710,9 @@ function PlanStep({
     ? t('saleNew.errors.serialLoad')
     : applianceId == null
       ? t('saleNew.errors.applianceMissing')
-      : !unassignedQuery.isLoading && serialOptions.length === 0
+      : serialRequired &&
+          !unassignedQuery.isLoading &&
+          serialOptions.length === 0
         ? t('saleNew.errors.noUnits')
         : undefined;
 
@@ -751,22 +766,53 @@ function PlanStep({
             {t('saleNew.plan.howWillTheyPay')}
           </Text>
 
+          {planId === 'twelve' || planId === 'custom' ? (
+            <View style={styles.freqToggle}>
+              {(['monthly', 'weekly'] as RateType[]).map((value) => {
+                const active = rateType === value;
+                return (
+                  <Pressable
+                    key={value}
+                    onPress={() => onChangeRateType(value)}
+                    style={[
+                      styles.freqOption,
+                      active && styles.freqOptionActive,
+                    ]}
+                  >
+                    <Text
+                      variant="bodyEmphasis"
+                      style={{
+                        color: active ? semantic.blue : semantic.ink2,
+                      }}
+                    >
+                      {value === 'weekly'
+                        ? t('saleNew.plan.freqWeekly')
+                        : t('saleNew.plan.freqMonthly')}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          ) : null}
+
           <View style={styles.planList}>
             {PLANS.map((p) => {
               const selected = p.id === planId;
               const isCustom = p.id === 'custom';
 
-              // Custom card shows the live tenure / monthly the user has typed;
-              // preset cards show their built-in defaults.
               const cardTenure = isCustom ? tenure : p.tenure;
               const isInstallment = cardTenure > 1;
-              const cardMonthly = isInstallment
+              const cardInstallment = isInstallment
                 ? isCustom
-                  ? monthly
+                  ? installmentAmount
                   : Math.round(
                       (assignment.cost * (1 - p.downPaymentRatio)) / p.tenure,
                     )
                 : 0;
+              const cardTitle =
+                p.id === 'twelve' && isWeekly
+                  ? t('saleNew.plan.paygTitleWeek', { count: p.tenure })
+                  : t(p.labelKey);
 
               return (
                 <View key={p.id} style={styles.planItem}>
@@ -795,9 +841,9 @@ function PlanStep({
                       <View style={styles.planBody}>
                         <View style={styles.planTitleRow}>
                           <Text variant="bodyEmphasis" tone="primary">
-                            {t(p.labelKey)}
+                            {cardTitle}
                           </Text>
-                          {isInstallment && cardMonthly > 0 ? (
+                          {isInstallment && cardInstallment > 0 ? (
                             <Text
                               variant="mono"
                               style={{
@@ -805,8 +851,7 @@ function PlanStep({
                                 fontFamily: fonts.monoBold,
                               }}
                             >
-                              {formatCurrency(cardMonthly)}{' '}
-                              {t('saleNew.plan.perMonth')}
+                              {formatCurrency(cardInstallment)} {perPeriod}
                             </Text>
                           ) : null}
                         </View>
@@ -822,7 +867,11 @@ function PlanStep({
                       <View style={styles.customRow}>
                         <View style={styles.customField}>
                           <TextField
-                            label={t('saleNew.plan.months')}
+                            label={
+                              isWeekly
+                                ? t('saleNew.plan.weeks')
+                                : t('saleNew.plan.months')
+                            }
                             placeholder={t('saleNew.plan.monthsDefault')}
                             keyboardType="number-pad"
                             mono
@@ -889,23 +938,35 @@ function PlanStep({
 
           <Callout tone="info" style={styles.planCallout}>
             <Text variant="meta" tone="secondary">
-              {isEaas ? t('saleNew.plan.easHint') : t('saleNew.plan.paygHint')}
+              {isEaas
+                ? t('saleNew.plan.easHint')
+                : !serialRequired
+                  ? t('saleNew.plan.installmentHint')
+                  : isWeekly
+                    ? t('saleNew.plan.paygHintWeekly')
+                    : t('saleNew.plan.paygHint')}
             </Text>
           </Callout>
 
-          <Select<string>
-            label={t('saleNew.plan.unitSerial')}
-            placeholder={t('saleNew.plan.pickUnassigned')}
-            searchable
-            searchPlaceholder={t('saleNew.plan.searchSerial')}
-            options={serialOptions}
-            value={deviceSerial || null}
-            onChange={onChangeSerial}
-            loading={unassignedQuery.isLoading}
-            error={serialError}
-            disabled={serialOptions.length === 0}
-            containerStyle={styles.planSerial}
-          />
+          {showSerialPicker ? (
+            <Select<string>
+              label={
+                serialRequired
+                  ? t('saleNew.plan.unitSerial')
+                  : t('saleNew.plan.unitSerialOptional')
+              }
+              placeholder={t('saleNew.plan.pickUnassigned')}
+              searchable
+              searchPlaceholder={t('saleNew.plan.searchSerial')}
+              options={serialOptions}
+              value={deviceSerial || null}
+              onChange={onChangeSerial}
+              loading={unassignedQuery.isLoading}
+              error={serialError}
+              disabled={serialOptions.length === 0}
+              containerStyle={styles.planSerial}
+            />
+          ) : null}
         </ScrollView>
 
         <View
@@ -949,8 +1010,9 @@ function ConfirmStep({
   assignment,
   plan,
   tenure,
+  rateType,
   downPayment,
-  monthly,
+  installmentAmount,
   firstPaymentDate,
   deviceSerial,
   isEaas,
@@ -967,8 +1029,9 @@ function ConfirmStep({
   assignment: AgentAssignedAppliance;
   plan: Plan;
   tenure: number;
+  rateType: RateType;
   downPayment: number;
-  monthly: number;
+  installmentAmount: number;
   firstPaymentDate: Date;
   deviceSerial: string;
   isEaas: boolean;
@@ -1076,10 +1139,18 @@ function ConfirmStep({
           ) : tenure > 1 ? (
             <>
               <DataRow
-                label={t('saleNew.confirm.monthlyPayments', { count: tenure })}
-                value={t('saleNew.confirm.monthlyAmount', {
-                  amount: formatCurrency(monthly),
-                })}
+                label={t(
+                  rateType === 'weekly'
+                    ? 'saleNew.confirm.weeklyPayments'
+                    : 'saleNew.confirm.monthlyPayments',
+                  { count: tenure },
+                )}
+                value={t(
+                  rateType === 'weekly'
+                    ? 'saleNew.confirm.weeklyAmount'
+                    : 'saleNew.confirm.monthlyAmount',
+                  { amount: formatCurrency(installmentAmount) },
+                )}
                 mono
               />
               <DataRow
@@ -1507,6 +1578,28 @@ const styles = StyleSheet.create({
   },
   planSection: {
     marginTop: spacing.md,
+  },
+  freqToggle: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    backgroundColor: semantic.paper,
+    borderRadius: radii.card,
+    borderWidth: 1.5,
+    borderColor: semantic.line2,
+    padding: 3,
+    marginBottom: spacing.md,
+  },
+  freqOption: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+    borderRadius: radii.card - 3,
+    borderWidth: 1.5,
+    borderColor: 'transparent',
+  },
+  freqOptionActive: {
+    backgroundColor: semantic.bgSoft,
+    borderColor: semantic.blue,
   },
   planList: {
     gap: spacing.md,

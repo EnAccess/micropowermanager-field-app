@@ -1,5 +1,11 @@
 import { AxiosInstance } from 'axios';
 
+export type TransactionPerson = {
+  id: number;
+  name?: string | null;
+  surname?: string | null;
+};
+
 export type AgentTransaction = {
   id: number;
   amount: number;
@@ -9,10 +15,16 @@ export type AgentTransaction = {
   created_at: string;
   original_transaction_type?: string | null;
   original_transaction_id?: number | null;
-  person?: {
+  person?: TransactionPerson | null;
+  device?: {
     id: number;
-    name?: string | null;
-    surname?: string | null;
+    device_serial?: string | null;
+    person?: TransactionPerson | null;
+  } | null;
+  non_paygo_appliance?: {
+    id: number;
+    person?: TransactionPerson | null;
+    appliance?: { id: number; name: string } | null;
   } | null;
   device_type?: string | null;
   payment_type?: string | null;

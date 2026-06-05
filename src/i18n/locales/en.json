@@ -372,6 +372,7 @@
     "device": "Device",
     "deviceLabel": "Device · {{type}}",
     "noDevice": "No device assigned",
+    "appliance": "Appliance",
     "dash": "—",
     "sender": "Sender",
     "reference": "Reference",
@@ -391,15 +392,11 @@
       },
       "twelve": {
         "title": "12-month PAYG",
-        "subtitle": "Active on each monthly payment."
-      },
-      "twentyFour": {
-        "title": "24-month PAYG",
-        "subtitle": "Lower monthly payment."
+        "subtitle": "Active on each payment."
       },
       "custom": {
         "title": "Custom plan",
-        "subtitle": "Set your own deposit and number of months."
+        "subtitle": "Set your own deposit and number of installments."
       },
       "energy": {
         "title": "Energy service",
@@ -436,7 +433,12 @@
       "depositToday": "Deposit today",
       "howWillTheyPay": "HOW WILL THEY PAY?",
       "perMonth": "/ month",
+      "perWeek": "/ week",
+      "freqMonthly": "Monthly",
+      "freqWeekly": "Weekly",
+      "paygTitleWeek": "{{count}}-week PAYG",
       "months": "Months",
+      "weeks": "Weeks",
       "monthsDefault": "6",
       "depositLabel": "Deposit today",
       "depositDefault": "0",
@@ -448,7 +450,10 @@
       "downPaymentDefault": "0",
       "easHint": "Customer pays per day of usage. Service pauses when the balance runs out.",
       "paygHint": "PAYG unlocks after each monthly payment. Customer receives SMS reminders before each due date.",
+      "paygHintWeekly": "PAYG unlocks after each weekly payment. Customer receives SMS reminders before each due date.",
+      "installmentHint": "Customer receives SMS reminders before each due date.",
       "unitSerial": "Unit serial number",
+      "unitSerialOptional": "Unit serial number (optional)",
       "pickUnassigned": "Pick an unassigned unit",
       "searchSerial": "Search by serial…",
       "backStep": "Back",
@@ -472,6 +477,9 @@
       "monthlyPayments_one": "{{count}} monthly payment",
       "monthlyPayments_other": "{{count}} monthly payments",
       "monthlyAmount": "{{amount}} / month",
+      "weeklyPayments_one": "{{count}} weekly payment",
+      "weeklyPayments_other": "{{count}} weekly payments",
+      "weeklyAmount": "{{amount}} / week",
       "firstPayment": "First payment",
       "deviceSerial": "Device serial",
       "warningEas": "Activating starts the energy service contract. This action is final.",
@@ -515,9 +523,13 @@
     "tenure": "Tenure",
     "tenureMonths_one": "{{count}} month",
     "tenureMonths_other": "{{count}} months",
+    "tenureWeeks_one": "{{count}} week",
+    "tenureWeeks_other": "{{count}} weeks",
     "downPayment": "Down payment",
     "monthly": "Monthly",
     "monthlyValue": "{{amount}} / mo",
+    "weekly": "Weekly",
+    "weeklyValue": "{{amount}} / wk",
     "firstPayment": "First payment",
     "nextDue": "Next due",
     "soldOn": "Sold on",
@@ -532,6 +544,7 @@
     "due": "Due {{amount}}",
     "energyService": "Energy service",
     "monthlyPayg": "{{count}}-month PAYG",
+    "weeklyPayg": "{{count}}-week PAYG",
     "installment": "Installment",
     "planFallback": "Plan",
     "dueDash": "—"

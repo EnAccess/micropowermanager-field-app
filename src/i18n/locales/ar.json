@@ -372,6 +372,7 @@
     "device": "الجهاز",
     "deviceLabel": "الجهاز · {{type}}",
     "noDevice": "لم يُسند جهاز",
+    "appliance": "جهاز",
     "dash": "—",
     "sender": "المُرسِل",
     "reference": "المرجع",
@@ -391,15 +392,11 @@
       },
       "twelve": {
         "title": "PAYG لمدة 12 شهرًا",
-        "subtitle": "يُفعَّل عند كل دفعة شهرية."
-      },
-      "twentyFour": {
-        "title": "PAYG لمدة 24 شهرًا",
-        "subtitle": "دفعة شهرية أقل."
+        "subtitle": "يُفعَّل عند كل دفعة."
       },
       "custom": {
         "title": "خطة مخصصة",
-        "subtitle": "حدد إيداعك وعدد الأشهر بنفسك."
+        "subtitle": "حدد إيداعك وعدد الأقساط بنفسك."
       },
       "energy": {
         "title": "خدمة الطاقة",
@@ -436,7 +433,12 @@
       "depositToday": "إيداع اليوم",
       "howWillTheyPay": "كيف سيدفعون؟",
       "perMonth": "/ شهر",
+      "perWeek": "/ أسبوع",
+      "freqMonthly": "شهري",
+      "freqWeekly": "أسبوعي",
+      "paygTitleWeek": "PAYG لمدة {{count}} أسبوعًا",
       "months": "أشهر",
+      "weeks": "أسابيع",
       "monthsDefault": "6",
       "depositLabel": "إيداع اليوم",
       "depositDefault": "0",
@@ -448,7 +450,10 @@
       "downPaymentDefault": "0",
       "easHint": "يدفع العميل لكل يوم استخدام. تتوقف الخدمة عند نفاد الرصيد.",
       "paygHint": "PAYG يُفتح بعد كل دفعة شهرية. يتلقى العميل تذكيرات SMS قبل كل موعد استحقاق.",
+      "paygHintWeekly": "PAYG يُفتح بعد كل دفعة أسبوعية. يتلقى العميل تذكيرات SMS قبل كل موعد استحقاق.",
+      "installmentHint": "يتلقى العميل تذكيرات SMS قبل كل موعد استحقاق.",
       "unitSerial": "الرقم التسلسلي للوحدة",
+      "unitSerialOptional": "الرقم التسلسلي للوحدة (اختياري)",
       "pickUnassigned": "اختر وحدة غير مُسندة",
       "searchSerial": "ابحث بالرقم التسلسلي…",
       "backStep": "رجوع",
@@ -472,6 +477,9 @@
       "monthlyPayments_one": "{{count}} دفعة شهرية",
       "monthlyPayments_other": "{{count}} دفعات شهرية",
       "monthlyAmount": "{{amount}} / شهر",
+      "weeklyPayments_one": "{{count}} دفعة أسبوعية",
+      "weeklyPayments_other": "{{count}} دفعات أسبوعية",
+      "weeklyAmount": "{{amount}} / أسبوع",
       "firstPayment": "الدفعة الأولى",
       "deviceSerial": "الرقم التسلسلي للجهاز",
       "warningEas": "التفعيل يبدأ عقد خدمة الطاقة. هذا الإجراء نهائي.",
@@ -515,9 +523,13 @@
     "tenure": "المدة",
     "tenureMonths_one": "{{count}} شهر",
     "tenureMonths_other": "{{count}} أشهر",
+    "tenureWeeks_one": "{{count}} أسبوع",
+    "tenureWeeks_other": "{{count}} أسابيع",
     "downPayment": "إيداع",
     "monthly": "شهري",
     "monthlyValue": "{{amount}} / شهر",
+    "weekly": "أسبوعي",
+    "weeklyValue": "{{amount}} / أسبوع",
     "firstPayment": "الدفعة الأولى",
     "nextDue": "الاستحقاق التالي",
     "soldOn": "بيع في",
@@ -532,6 +544,7 @@
     "due": "مستحق {{amount}}",
     "energyService": "خدمة الطاقة",
     "monthlyPayg": "PAYG لمدة {{count}} شهر",
+    "weeklyPayg": "PAYG لمدة {{count}} أسبوع",
     "installment": "قسط",
     "planFallback": "خطة",
     "dueDash": "—"

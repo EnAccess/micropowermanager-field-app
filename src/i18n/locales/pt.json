@@ -372,6 +372,7 @@
     "device": "Aparelho",
     "deviceLabel": "Aparelho · {{type}}",
     "noDevice": "Sem aparelho atribuído",
+    "appliance": "Aparelho",
     "dash": "—",
     "sender": "Remetente",
     "reference": "Referência",
@@ -391,15 +392,11 @@
       },
       "twelve": {
         "title": "PAYG 12 meses",
-        "subtitle": "Ativo a cada pagamento mensal."
-      },
-      "twentyFour": {
-        "title": "PAYG 24 meses",
-        "subtitle": "Pagamento mensal mais baixo."
+        "subtitle": "Ativo a cada pagamento."
       },
       "custom": {
         "title": "Plano personalizado",
-        "subtitle": "Defina o seu próprio depósito e número de meses."
+        "subtitle": "Defina o seu próprio depósito e número de prestações."
       },
       "energy": {
         "title": "Serviço de energia",
@@ -436,7 +433,12 @@
       "depositToday": "Depósito hoje",
       "howWillTheyPay": "COMO IRÁ PAGAR?",
       "perMonth": "/ mês",
+      "perWeek": "/ semana",
+      "freqMonthly": "Mensal",
+      "freqWeekly": "Semanal",
+      "paygTitleWeek": "PAYG {{count}} semanas",
       "months": "Meses",
+      "weeks": "Semanas",
       "monthsDefault": "6",
       "depositLabel": "Depósito hoje",
       "depositDefault": "0",
@@ -448,7 +450,10 @@
       "downPaymentDefault": "0",
       "easHint": "O cliente paga por dia de uso. O serviço pausa quando o saldo termina.",
       "paygHint": "PAYG desbloqueia após cada pagamento mensal. O cliente recebe lembretes SMS antes de cada vencimento.",
+      "paygHintWeekly": "PAYG desbloqueia após cada pagamento semanal. O cliente recebe lembretes SMS antes de cada vencimento.",
+      "installmentHint": "O cliente recebe lembretes SMS antes de cada vencimento.",
       "unitSerial": "Número de série da unidade",
+      "unitSerialOptional": "Número de série da unidade (opcional)",
       "pickUnassigned": "Escolher uma unidade não atribuída",
       "searchSerial": "Pesquisar por número de série…",
       "backStep": "Voltar",
@@ -472,6 +477,9 @@
       "monthlyPayments_one": "{{count}} pagamento mensal",
       "monthlyPayments_other": "{{count}} pagamentos mensais",
       "monthlyAmount": "{{amount}} / mês",
+      "weeklyPayments_one": "{{count}} pagamento semanal",
+      "weeklyPayments_other": "{{count}} pagamentos semanais",
+      "weeklyAmount": "{{amount}} / semana",
       "firstPayment": "Primeiro pagamento",
       "deviceSerial": "Número de série",
       "warningEas": "A ativação inicia o contrato de serviço de energia. Esta ação é final.",
@@ -515,9 +523,13 @@
     "tenure": "Prazo",
     "tenureMonths_one": "{{count}} mês",
     "tenureMonths_other": "{{count}} meses",
+    "tenureWeeks_one": "{{count}} semana",
+    "tenureWeeks_other": "{{count}} semanas",
     "downPayment": "Depósito",
     "monthly": "Mensal",
     "monthlyValue": "{{amount}} / mês",
+    "weekly": "Semanal",
+    "weeklyValue": "{{amount}} / sem.",
     "firstPayment": "Primeiro pagamento",
     "nextDue": "Próximo vencimento",
     "soldOn": "Vendido em",
@@ -532,6 +544,7 @@
     "due": "Devido {{amount}}",
     "energyService": "Serviço de energia",
     "monthlyPayg": "PAYG {{count}} meses",
+    "weeklyPayg": "PAYG {{count}} semanas",
     "installment": "Prestação",
     "planFallback": "Plano",
     "dueDash": "—"

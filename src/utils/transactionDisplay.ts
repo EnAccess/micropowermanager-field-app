@@ -1,22 +1,39 @@
-import { AgentTransaction } from '@/api/agent';
+import { AgentTransaction, TransactionPerson } from '@/api/agent';
 
 /**
  * Some transaction endpoints (e.g. SHS down payments) come back without a
  * device serial. The agent endpoint also returns "-" as a placeholder for
- * unknown serials. Treat those as "no serial".
+ * unknown serials. Non-PAYGO appliance sales carry the appliance_person id in
+ * `message` rather than a serial, so they aren't a serial either.
  */
 export function transactionSerial(
-  tx: Pick<AgentTransaction, 'message'>,
+  tx: Pick<AgentTransaction, 'message' | 'device' | 'non_paygo_appliance'>,
 ): string | null {
+  if (tx.non_paygo_appliance && !tx.device) return null;
   const value = tx.message?.trim();
   if (!value || value === '-') return null;
   return value;
 }
 
-export function transactionPersonName(
-  tx: Pick<AgentTransaction, 'person'>,
+export function transactionPerson(
+  tx: Pick<AgentTransaction, 'person' | 'device' | 'non_paygo_appliance'>,
+): TransactionPerson | null {
+  return (
+    tx.person ?? tx.device?.person ?? tx.non_paygo_appliance?.person ?? null
+  );
+}
+
+export function transactionApplianceName(
+  tx: Pick<AgentTransaction, 'non_paygo_appliance'>,
 ): string | null {
-  const person = tx.person;
+  const name = tx.non_paygo_appliance?.appliance?.name?.trim();
+  return name ? name : null;
+}
+
+export function transactionPersonName(
+  tx: Pick<AgentTransaction, 'person' | 'device' | 'non_paygo_appliance'>,
+): string | null {
+  const person = transactionPerson(tx);
   if (!person) return null;
   const name = `${person.name ?? ''} ${person.surname ?? ''}`.trim();
   return name.length > 0 ? name : null;
