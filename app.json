@@ -3,7 +3,7 @@
     "name": "MPM Field App",
     "slug": "micropowermanager-field-app",
     "scheme": "mpmfieldapp",
-    "version": "0.0.8",
+    "version": "0.0.9",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
