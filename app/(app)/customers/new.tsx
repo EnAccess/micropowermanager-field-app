@@ -1,12 +1,13 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import {
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   View,
@@ -19,7 +20,7 @@ import {
   validatePhoneNumberLength,
 } from 'libphonenumber-js';
 
-import { Customer, registerCustomer } from '@/api/customer';
+import { Customer, Gender, registerCustomer } from '@/api/customer';
 import { City, fetchCities } from '@/api/referenceData';
 import { readCachedCities, writeCachedCities } from '@/storage/citiesCache';
 import { useSession } from '@/auth/SessionContext';
@@ -27,7 +28,10 @@ import { fetchOnline, useNetworkStatus } from '@/auth/useNetworkStatus';
 import {
   Button,
   Callout,
+  Card,
+  DateField,
   DocumentSection,
+  LocationPickerSheet,
   PhoneField,
   ProgressSteps,
   SecondaryHeader,
@@ -35,6 +39,7 @@ import {
   SuccessCheckmark,
   Text,
   TextField,
+  toIsoDate,
 } from '@/components';
 import {
   enqueueRegisterCustomer,
@@ -43,7 +48,13 @@ import {
 } from '@/storage/outbox';
 import { useRegisterCustomerOutbox } from '@/storage/useOutbox';
 import { fonts, radii, semantic, spacing } from '@/theme';
-import { captureGeoPoint, formatGeoPoint } from '@/utils/location';
+import {
+  GeoPoint,
+  captureGeoPoint,
+  formatGeoPoint,
+  parseGeoPoint,
+  reverseGeocode,
+} from '@/utils/location';
 import { z } from 'zod';
 
 function buildSchema(t: TFunction) {
@@ -69,7 +80,21 @@ function buildSchema(t: TFunction) {
         }
       }),
     city_id: z.number({ error: t('customerNew.errors.cityRequired') }),
+    birth_date: z
+      .date()
+      .max(new Date(), t('customerNew.errors.birthDateFuture'))
+      .optional(),
+    gender: z.enum(['male', 'female', 'non-binary']).optional(),
+    street: z.string().trim().optional(),
   });
+}
+
+function buildGenderOptions(t: TFunction): { value: Gender; label: string }[] {
+  return [
+    { value: 'male', label: t('customerNew.genderMale') },
+    { value: 'female', label: t('customerNew.genderFemale') },
+    { value: 'non-binary', label: t('customerNew.genderNonBinary') },
+  ];
 }
 
 type RegisterForm = {
@@ -77,6 +102,9 @@ type RegisterForm = {
   surname: string;
   phone: string;
   city_id: number;
+  birth_date?: Date;
+  gender?: Gender;
+  street?: string;
 };
 
 type Step = 'form' | 'success';
@@ -103,19 +131,12 @@ export default function RegisterCustomerScreen() {
   const [pendingLocal, setPendingLocal] =
     useState<RegisterCustomerOutboxEntry | null>(null);
   const [continueAfterSave, setContinueAfterSave] = useState(false);
-  const geoPointsRef = useRef<string | null>(null);
-
-  // Silent, non-blocking GPS capture (no UI for permission status).
-  useEffect(() => {
-    let cancelled = false;
-    void captureGeoPoint().then((point) => {
-      if (cancelled) return;
-      geoPointsRef.current = formatGeoPoint(point);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const [geoPoints, setGeoPoints] = useState<string | null>(null);
+  const [locationStatus, setLocationStatus] = useState<
+    'pending' | 'captured' | 'denied'
+  >('pending');
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const hasCaptured = useRef(false);
 
   const cities = useCachedCities(api, agent?.id ?? null);
 
@@ -132,6 +153,8 @@ export default function RegisterCustomerScreen() {
     control,
     handleSubmit,
     reset: resetForm,
+    setValue,
+    getValues,
     formState: { errors },
   } = useForm<RegisterForm>({
     resolver: zodResolver(schema),
@@ -141,8 +164,48 @@ export default function RegisterCustomerScreen() {
       surname: '',
       phone: '',
       city_id: undefined as unknown as number,
+      birth_date: undefined,
+      gender: undefined,
+      street: '',
     },
   });
+
+  const maybeFillStreetFromPoint = useCallback(
+    async (point: GeoPoint) => {
+      if ((getValues('street') ?? '').trim().length > 0) return;
+      const street = await reverseGeocode(point);
+      if (!street) return;
+      if ((getValues('street') ?? '').trim().length > 0) return;
+      setValue('street', street, { shouldDirty: false });
+    },
+    [getValues, setValue],
+  );
+
+  const applyPoint = useCallback(
+    (point: GeoPoint) => {
+      const formatted = formatGeoPoint(point);
+      setGeoPoints(formatted);
+      setLocationStatus(formatted ? 'captured' : 'denied');
+      void maybeFillStreetFromPoint(point);
+    },
+    [maybeFillStreetFromPoint],
+  );
+
+  useEffect(() => {
+    if (hasCaptured.current) return;
+    hasCaptured.current = true;
+    void captureGeoPoint().then((point) => {
+      if (point) applyPoint(point);
+      else setLocationStatus('denied');
+    });
+  }, [applyPoint]);
+
+  async function retryLocation() {
+    setLocationStatus('pending');
+    const point = await captureGeoPoint();
+    if (point) applyPoint(point);
+    else setLocationStatus('denied');
+  }
 
   // Prefill from a failed outbox entry when the user navigated here to retry.
   useEffect(() => {
@@ -152,9 +215,15 @@ export default function RegisterCustomerScreen() {
       surname: retryEntry.payload.surname,
       phone: retryEntry.payload.phone,
       city_id: retryEntry.payload.city_id,
+      birth_date: retryEntry.payload.birth_date
+        ? new Date(`${retryEntry.payload.birth_date}T00:00:00`)
+        : undefined,
+      gender: retryEntry.payload.gender ?? undefined,
+      street: retryEntry.payload.street ?? '',
     });
     if (retryEntry.payload.geo_points) {
-      geoPointsRef.current = retryEntry.payload.geo_points;
+      setGeoPoints(retryEntry.payload.geo_points);
+      setLocationStatus('captured');
     }
   }, [retryEntry, resetForm]);
 
@@ -164,7 +233,16 @@ export default function RegisterCustomerScreen() {
 
   const registerMutation = useMutation<RegisterResult, unknown, RegisterForm>({
     mutationFn: async (payload) => {
-      const fullPayload = { ...payload, geo_points: geoPointsRef.current };
+      const fullPayload = {
+        name: payload.name,
+        surname: payload.surname,
+        phone: payload.phone,
+        city_id: payload.city_id,
+        birth_date: payload.birth_date ? toIsoDate(payload.birth_date) : null,
+        gender: payload.gender ?? null,
+        street: payload.street?.trim() || null,
+        geo_points: geoPoints,
+      };
       // Pre-flight: re-check connectivity here rather than trusting the cached
       // hook state, which can be stale on first render. If we're definitely
       // offline we skip the request entirely and queue immediately.
@@ -230,25 +308,40 @@ export default function RegisterCustomerScreen() {
   }
 
   return (
-    <FormStep
-      control={control}
-      errors={errors}
-      cities={scopedCities}
-      citiesLoading={cities.loading}
-      citiesUnavailable={cities.unavailable}
-      onRetryCities={() => void cities.refetch()}
-      gridLabel={agent?.mini_grid_id ? `#${agent.mini_grid_id}` : '—'}
-      busy={registerMutation.isPending}
-      retryHint={retryEntry?.last_error?.message ?? null}
-      error={
-        registerMutation.isError
-          ? mutationErrorMessage(registerMutation.error, t)
-          : null
-      }
-      onContinue={submit('continue')}
-      onSaveLinkLater={submit('save')}
-      onBack={() => router.back()}
-    />
+    <>
+      <FormStep
+        control={control}
+        errors={errors}
+        cities={scopedCities}
+        citiesLoading={cities.loading}
+        citiesUnavailable={cities.unavailable}
+        onRetryCities={() => void cities.refetch()}
+        gridLabel={agent?.mini_grid_id ? `#${agent.mini_grid_id}` : '—'}
+        busy={registerMutation.isPending}
+        retryHint={retryEntry?.last_error?.message ?? null}
+        error={
+          registerMutation.isError
+            ? mutationErrorMessage(registerMutation.error, t)
+            : null
+        }
+        geoPoints={geoPoints}
+        locationStatus={locationStatus}
+        onPickLocation={() => setPickerOpen(true)}
+        onRetryLocation={retryLocation}
+        onContinue={submit('continue')}
+        onSaveLinkLater={submit('save')}
+        onBack={() => router.back()}
+      />
+      <LocationPickerSheet
+        visible={pickerOpen}
+        initial={parseGeoPoint(geoPoints)}
+        onClose={() => setPickerOpen(false)}
+        onConfirm={(point) => {
+          applyPoint(point);
+          setPickerOpen(false);
+        }}
+      />
+    </>
   );
 }
 
@@ -324,6 +417,10 @@ function FormStep({
   busy,
   retryHint,
   error,
+  geoPoints,
+  locationStatus,
+  onPickLocation,
+  onRetryLocation,
   onContinue,
   onSaveLinkLater,
   onBack,
@@ -338,11 +435,16 @@ function FormStep({
   busy: boolean;
   retryHint: string | null;
   error: string | null;
+  geoPoints: string | null;
+  locationStatus: 'pending' | 'captured' | 'denied';
+  onPickLocation: () => void;
+  onRetryLocation: () => void;
   onContinue: () => void;
   onSaveLinkLater: () => void;
   onBack: () => void;
 }) {
   const { t } = useTranslation();
+  const genderOptions = useMemo(() => buildGenderOptions(t), [t]);
   const insets = useSafeAreaInsets();
 
   return (
@@ -436,6 +538,41 @@ function FormStep({
             />
 
             <View style={styles.row}>
+              <View style={styles.flex}>
+                <Controller
+                  control={control}
+                  name="birth_date"
+                  render={({ field: { value, onChange } }) => (
+                    <DateField
+                      label={t('customerNew.birthDate')}
+                      placeholder={t('customerNew.fieldOptional')}
+                      value={value ?? null}
+                      onChange={onChange}
+                      maximumDate={new Date()}
+                      error={errors.birth_date?.message}
+                    />
+                  )}
+                />
+              </View>
+              <View style={styles.flex}>
+                <Controller
+                  control={control}
+                  name="gender"
+                  render={({ field: { value, onChange } }) => (
+                    <Select
+                      label={t('customerNew.gender')}
+                      placeholder={t('customerNew.fieldOptional')}
+                      value={value ?? null}
+                      onChange={onChange}
+                      options={genderOptions}
+                      error={errors.gender?.message}
+                    />
+                  )}
+                />
+              </View>
+            </View>
+
+            <View style={styles.row}>
               <View style={styles.cellVillage}>
                 <Controller
                   control={control}
@@ -470,6 +607,51 @@ function FormStep({
               </View>
             </View>
           </View>
+
+          <Card style={styles.locationCard}>
+            <View style={styles.locationRow}>
+              <View style={styles.locationBody}>
+                <Text variant="label">{t('customerNew.addressTitle')}</Text>
+                <Text variant="caption" tone="muted">
+                  {locationStatus === 'pending' &&
+                    t('customerNew.addressCapturing')}
+                  {locationStatus === 'captured' &&
+                    geoPoints &&
+                    t('customerNew.addressCaptured', { coords: geoPoints })}
+                  {locationStatus === 'denied' &&
+                    t('customerNew.addressDenied')}
+                </Text>
+              </View>
+              <View style={styles.locationActions}>
+                <Pressable onPress={onPickLocation} hitSlop={8}>
+                  <Text variant="label" tone="brand">
+                    {t('customerNew.pickOnMap')}
+                  </Text>
+                </Pressable>
+                <Pressable onPress={onRetryLocation} hitSlop={8}>
+                  <Text variant="label" tone="brand">
+                    {t('customerNew.retry')}
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+            <Controller
+              control={control}
+              name="street"
+              render={({ field: { value, onChange, onBlur } }) => (
+                <TextField
+                  label={t('customerNew.street')}
+                  placeholder={t('customerNew.streetPlaceholder')}
+                  value={value ?? ''}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  autoCapitalize="words"
+                  error={errors.street?.message}
+                  containerStyle={styles.streetField}
+                />
+              )}
+            />
+          </Card>
 
           <Callout tone="info" style={styles.callout}>
             <Text variant="meta" tone="secondary">
@@ -669,6 +851,27 @@ const styles = StyleSheet.create({
     fontFamily: fonts.ptBold,
     color: semantic.ink2,
     fontSize: 15,
+  },
+  locationCard: {
+    marginTop: spacing.xs,
+    padding: spacing.md,
+  },
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.md,
+  },
+  locationBody: {
+    flex: 1,
+    gap: spacing.xs,
+  },
+  locationActions: {
+    alignItems: 'flex-end',
+    gap: spacing.sm,
+  },
+  streetField: {
+    marginTop: spacing.md,
   },
   callout: {
     marginTop: spacing.xs,

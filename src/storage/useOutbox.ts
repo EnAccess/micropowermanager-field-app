@@ -47,6 +47,7 @@ export function outboxAsCustomers(
         id: pendingIdFor(entry.local_id),
         phone: entry.payload.phone,
         email: null,
+        street: entry.payload.street ?? null,
         city_id: entry.payload.city_id,
         is_primary: 1,
       },

@@ -4,6 +4,7 @@ export type CustomerAddress = {
   id: number;
   phone: string | null;
   email: string | null;
+  street: string | null;
   city_id: number | null;
   is_primary: number;
   city?: { id: number; name: string } | null;
@@ -36,6 +37,7 @@ export type RegisterCustomerPayload = {
   city_id: number;
   birth_date?: string | null;
   gender?: Gender | null;
+  street?: string | null;
   geo_points?: string | null;
 };
 

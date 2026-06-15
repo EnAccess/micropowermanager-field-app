@@ -38,3 +38,22 @@ export function parseGeoPoint(
   if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
   return { latitude, longitude };
 }
+
+export async function reverseGeocode(point: GeoPoint): Promise<string | null> {
+  try {
+    const results = await Location.reverseGeocodeAsync({
+      latitude: point.latitude,
+      longitude: point.longitude,
+    });
+    if (!results.length) return null;
+    const first = results[0];
+    const streetName = first.street ?? first.name ?? first.district ?? '';
+    if (!streetName) return null;
+    const composed = first.streetNumber
+      ? `${first.streetNumber} ${streetName}`
+      : streetName;
+    return composed.trim() || null;
+  } catch {
+    return null;
+  }
+}
