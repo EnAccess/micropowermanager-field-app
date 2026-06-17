@@ -48,6 +48,7 @@ import {
   TextField,
 } from '@/components';
 import { fonts, radii, semantic, spacing } from '@/theme';
+import { extractServerError as errorMessage } from '@/utils/errorMessage';
 import { useCurrency } from '@/utils/useCurrency';
 
 type Step = 'find' | 'amount' | 'confirm' | 'success';
@@ -122,7 +123,7 @@ export default function CollectPaymentScreen() {
         queryKey: ['agent-transactions-list'],
       });
     },
-    onError: (e) => setSubmitError(errorMessage(e, t)),
+    onError: (e) => setSubmitError(errorMessage(e, t, 'paymentNew.failed')),
   });
 
   const amountValue = Number(amountStr) || 0;
@@ -909,59 +910,6 @@ function formatAmount(raw: string): string {
   const n = Number(raw);
   if (!Number.isFinite(n)) return raw;
   return new Intl.NumberFormat('en-US').format(n);
-}
-
-function errorMessage(
-  error: unknown,
-  t: TFunction,
-  fallbackKey = 'paymentNew.failed',
-): string {
-  const fallback = t(fallbackKey);
-  if (error == null) return fallback;
-
-  if (typeof error === 'object' && 'response' in error) {
-    const response = (
-      error as {
-        response?: {
-          status?: number;
-          data?: {
-            message?: string;
-            errors?: Record<string, string[]>;
-            data?: { message?: string };
-          };
-        };
-      }
-    ).response;
-
-    const validationFirst = response?.data?.errors
-      ? Object.values(response.data.errors).flat()[0]
-      : undefined;
-    if (validationFirst) return validationFirst;
-    if (response?.data?.data?.message) return response.data.data.message;
-    if (response?.data?.message) return response.data.message;
-
-    const status = response?.status;
-    if (status === 401) return t('errors.sessionExpired');
-    if (status === 403) return t('errors.noPermission');
-    if (status === 404) return t('errors.notFound');
-    if (status === 409) return t('errors.conflict');
-    if (typeof status === 'number' && status >= 500) {
-      return t('errors.serverTrouble');
-    }
-  }
-
-  if (typeof error === 'object' && 'message' in error) {
-    const msg = (error as { message?: unknown }).message;
-    if (typeof msg === 'string') {
-      const lower = msg.toLowerCase();
-      if (lower.includes('network') || lower.includes('timeout')) {
-        return t('errors.noConnection');
-      }
-      if (msg.length > 0) return msg;
-    }
-  }
-
-  return fallback;
 }
 
 const styles = StyleSheet.create({

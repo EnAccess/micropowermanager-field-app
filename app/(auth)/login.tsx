@@ -18,6 +18,7 @@ import { useSession } from '@/auth/SessionContext';
 import { Button, GradientHero, Logo, Text, TextField } from '@/components';
 import { environmentHost } from '@/config/environments';
 import { fonts, radii, semantic, spacing } from '@/theme';
+import { extractServerError } from '@/utils/errorMessage';
 
 type LoginForm = { email: string; password: string };
 
@@ -50,7 +51,7 @@ export default function LoginScreen() {
     try {
       await login(values);
     } catch (caught) {
-      setSubmitError(errorMessage(caught, t('login.errors.generic')));
+      setSubmitError(extractServerError(caught, t, 'login.errors.generic'));
     }
   });
 
@@ -171,16 +172,6 @@ export default function LoginScreen() {
       </KeyboardAvoidingView>
     </View>
   );
-}
-
-function errorMessage(caught: unknown, fallback: string): string {
-  if (typeof caught === 'object' && caught !== null && 'response' in caught) {
-    const response = (caught as { response?: { data?: { message?: string } } })
-      .response;
-    if (response?.data?.message) return response.data.message;
-  }
-  if (caught instanceof Error) return caught.message;
-  return fallback;
 }
 
 const styles = StyleSheet.create({

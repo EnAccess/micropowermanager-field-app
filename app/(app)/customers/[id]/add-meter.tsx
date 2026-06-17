@@ -35,6 +35,7 @@ import {
   formatGeoPoint,
   parseGeoPoint,
 } from '@/utils/location';
+import { extractServerError as mutationErrorMessage } from '@/utils/errorMessage';
 import { formatCurrency } from '@/utils/format';
 
 function buildSchema(t: TFunction) {
@@ -400,7 +401,11 @@ export default function AddMeterScreen() {
 
         {assignMutation.isError ? (
           <Text variant="caption" tone="danger" style={styles.error}>
-            {mutationErrorMessage(assignMutation.error, t)}
+            {mutationErrorMessage(
+              assignMutation.error,
+              t,
+              'addMeter.errors.submitGeneric',
+            )}
           </Text>
         ) : null}
 
@@ -413,25 +418,6 @@ export default function AddMeterScreen() {
       </Screen>
     </View>
   );
-}
-
-function mutationErrorMessage(error: unknown, t: TFunction): string {
-  if (typeof error === 'object' && error !== null && 'response' in error) {
-    const response = (
-      error as {
-        response?: {
-          data?: { message?: string; errors?: Record<string, string[]> };
-        };
-      }
-    ).response;
-    const firstFieldError = response?.data?.errors
-      ? Object.values(response.data.errors).flat()[0]
-      : undefined;
-    if (firstFieldError) return firstFieldError;
-    if (response?.data?.message) return response.data.message;
-  }
-  if (error instanceof Error) return error.message;
-  return t('addMeter.errors.submitGeneric');
 }
 
 const styles = StyleSheet.create({

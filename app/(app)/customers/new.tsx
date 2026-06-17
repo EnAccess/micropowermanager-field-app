@@ -48,6 +48,7 @@ import {
 } from '@/storage/outbox';
 import { useRegisterCustomerOutbox } from '@/storage/useOutbox';
 import { fonts, radii, semantic, spacing } from '@/theme';
+import { extractServerError as mutationErrorMessage } from '@/utils/errorMessage';
 import {
   GeoPoint,
   captureGeoPoint,
@@ -321,7 +322,11 @@ export default function RegisterCustomerScreen() {
         retryHint={retryEntry?.last_error?.message ?? null}
         error={
           registerMutation.isError
-            ? mutationErrorMessage(registerMutation.error, t)
+            ? mutationErrorMessage(
+                registerMutation.error,
+                t,
+                'customerNew.errors.submitGeneric',
+              )
             : null
         }
         geoPoints={geoPoints}
@@ -782,25 +787,6 @@ function isNetworkError(error: unknown): boolean {
   if ('response' in e && e.response !== undefined) return false;
   if (e.code === 'ERR_NETWORK' || e.code === 'ECONNABORTED') return true;
   return true;
-}
-
-function mutationErrorMessage(error: unknown, t: TFunction): string {
-  if (typeof error === 'object' && error !== null && 'response' in error) {
-    const response = (
-      error as {
-        response?: {
-          data?: { message?: string; errors?: Record<string, string[]> };
-        };
-      }
-    ).response;
-    const fieldError = response?.data?.errors
-      ? Object.values(response.data.errors).flat()[0]
-      : undefined;
-    if (fieldError) return fieldError;
-    if (response?.data?.message) return response.data.message;
-  }
-  if (error instanceof Error) return error.message;
-  return t('customerNew.errors.submitGeneric');
 }
 
 const styles = StyleSheet.create({

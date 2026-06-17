@@ -18,7 +18,6 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import type { TFunction } from 'i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
@@ -55,6 +54,7 @@ import {
   toIsoDate,
 } from '@/components';
 import { fonts, radii, semantic, spacing } from '@/theme';
+import { extractServerError as errorMessage } from '@/utils/errorMessage';
 import { initials } from '@/utils/format';
 import { useCurrency } from '@/utils/useCurrency';
 
@@ -297,7 +297,9 @@ export default function SellShsScreen() {
         currency={currency}
         loading={sellMutation.isPending}
         error={
-          sellMutation.isError ? errorMessage(sellMutation.error, t) : null
+          sellMutation.isError
+            ? errorMessage(sellMutation.error, t, 'saleNew.failed')
+            : null
         }
         onBack={() => setStep('plan')}
         onConfirm={() => sellMutation.mutate()}
@@ -1375,25 +1377,6 @@ function customerPhone(customer: Customer): string | null {
 function shortLabel(name: string): string {
   const m = name.match(/(\d+)\s*W/i);
   return m ? `${m[1]}W` : 'SHS';
-}
-
-function errorMessage(error: unknown, t: TFunction): string {
-  if (typeof error === 'object' && error !== null && 'response' in error) {
-    const response = (
-      error as {
-        response?: {
-          data?: { message?: string; errors?: Record<string, string[]> };
-        };
-      }
-    ).response;
-    const fieldError = response?.data?.errors
-      ? Object.values(response.data.errors).flat()[0]
-      : undefined;
-    if (fieldError) return fieldError;
-    if (response?.data?.message) return response.data.message;
-  }
-  if (error instanceof Error) return error.message;
-  return t('saleNew.failed');
 }
 
 const styles = StyleSheet.create({
