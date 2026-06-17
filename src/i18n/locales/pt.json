@@ -59,7 +59,7 @@
     "emptyToday": "Sem atividade ainda. Toque no botão laranja para começar a cobrar.",
     "fab": {
       "collect": "Receber pagamento",
-      "sell": "Vender SHS",
+      "sell": "Vender SSD",
       "register": "Registar cliente"
     },
     "shsDownPayment": "Entrada SHS"
@@ -170,7 +170,7 @@
       "filterTitle": "Nada corresponde a este filtro",
       "noneBody": "Quando vender uma unidade SHS aparecerá aqui.",
       "filterBody": "Tente outro filtro.",
-      "sellCta": "Vender SHS"
+      "sellCta": "Vender SSD"
     },
     "nextDue": "Próximo {{date}}",
     "paid": "Pago",
@@ -423,7 +423,7 @@
       "large": "Grande agregado"
     },
     "pickCustomer": {
-      "title": "Vender SHS",
+      "title": "Vender SSD",
       "step": "Passo 1 de 4",
       "label": "ESCOLHER UM CLIENTE",
       "search": "Pesquisar por nome ou telefone…",
@@ -431,7 +431,7 @@
       "noCustomers": "Ainda sem clientes. Registe um primeiro."
     },
     "pickSystem": {
-      "title": "Vender SHS",
+      "title": "Vender SSD",
       "step": "Passo 2 de 4",
       "newCustomer": "Novo cliente",
       "label": "ESCOLHER UM SISTEMA",
