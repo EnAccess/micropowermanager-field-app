@@ -19,6 +19,8 @@ export type CustomerDocument = {
   updated_at?: string;
 };
 
+export const QUESTIONNAIRE_DOC_TYPE = 'questionnaire';
+
 export const MAX_DOCS_PER_CUSTOMER = 3;
 export const MAX_DOC_BYTES = 5 * 1024 * 1024;
 export const ACCEPTED_DOC_MIME_TYPES = [
@@ -127,6 +129,18 @@ export async function deleteCustomerDocument(
   documentId: number,
 ): Promise<void> {
   await client.delete(`/app/agents/customers/documents/${documentId}`);
+}
+
+export async function updateCustomerDocument(
+  client: AxiosInstance,
+  documentId: number,
+  additionalJson: Record<string, string>,
+): Promise<CustomerDocument> {
+  const { data } = await client.patch<{ data: CustomerDocument }>(
+    `/app/agents/customers/documents/${documentId}`,
+    { additional_json: additionalJson },
+  );
+  return data.data;
 }
 
 /**

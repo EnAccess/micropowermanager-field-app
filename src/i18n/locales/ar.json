@@ -1,4 +1,16 @@
 {
+  "documents": {
+    "questions": {
+      "title": "أسئلة التسجيل",
+      "answerPlaceholder": "بدون إجابة",
+      "addedSection": "مضافة",
+      "questionPlaceholder": "سؤال",
+      "answerFieldPlaceholder": "إجابة",
+      "addQuestion": "إضافة سؤال",
+      "empty": "لا توجد أسئلة بعد. أضف سؤالاً أدناه أو عيّنها عبر الويب.",
+      "saveError": "تعذّر الحفظ"
+    }
+  },
   "common": {
     "cancel": "إلغاء",
     "save": "حفظ",

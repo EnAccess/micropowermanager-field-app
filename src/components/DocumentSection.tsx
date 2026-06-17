@@ -5,10 +5,14 @@ import * as ImagePicker from 'expo-image-picker';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   View,
 } from 'react-native';
@@ -19,9 +23,11 @@ import {
   DocumentAsset,
   MAX_DOCS_PER_CUSTOMER,
   MAX_DOC_BYTES,
+  QUESTIONNAIRE_DOC_TYPE,
   deleteCustomerDocument,
   downloadCustomerDocument,
   listCustomerDocuments,
+  updateCustomerDocument,
   uploadCustomerDocument,
 } from '@/api/customerDocuments';
 import { useSession } from '@/auth/SessionContext';
@@ -32,6 +38,7 @@ import { Button } from './Button';
 import { Callout } from './Callout';
 import { Pill } from './Pill';
 import { Text } from './Text';
+import { TextField } from './TextField';
 
 type DocumentSectionProps = {
   customerId: number;
@@ -51,11 +58,13 @@ export function DocumentSection({
   customerId,
   showTitle = true,
 }: DocumentSectionProps) {
+  const { t } = useTranslation();
   const { api, environment } = useSession();
   const queryClient = useQueryClient();
   const [pending, setPending] = useState<PendingPick>(null);
   const [busy, setBusy] = useState<'camera' | 'file' | null>(null);
   const [previewingId, setPreviewingId] = useState<number | null>(null);
+  const [editingDoc, setEditingDoc] = useState<CustomerDocument | null>(null);
 
   const documentsQuery = useQuery({
     queryKey: ['customer-documents', customerId],
@@ -83,6 +92,23 @@ export function DocumentSection({
     },
     onError: (err) => {
       Alert.alert('Upload failed', extractError(err));
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: (input: {
+      documentId: number;
+      additionalJson: Record<string, string>;
+    }) => updateCustomerDocument(api!, input.documentId, input.additionalJson),
+    onSuccess: (updated) => {
+      queryClient.setQueryData<CustomerDocument[]>(
+        ['customer-documents', customerId],
+        (prev) => (prev ?? []).map((d) => (d.id === updated.id ? updated : d)),
+      );
+      setEditingDoc(null);
+    },
+    onError: (err) => {
+      Alert.alert(t('documents.questions.saveError'), extractError(err));
     },
   });
 
@@ -267,6 +293,7 @@ export function DocumentSection({
               }
               previewing={previewingId === doc.id}
               onPreview={() => handlePreview(doc)}
+              onEditInfo={() => setEditingDoc(doc)}
               onDelete={() =>
                 confirmDelete(doc, () => deleteMutation.mutate(doc.id))
               }
@@ -335,8 +362,200 @@ export function DocumentSection({
           style={styles.sheetCancel}
         />
       </BottomSheet>
+
+      <BottomSheet
+        visible={!!editingDoc}
+        onDismiss={() => {
+          if (!updateMutation.isPending) setEditingDoc(null);
+        }}
+      >
+        {editingDoc ? (
+          <DocumentInfoEditor
+            doc={editingDoc}
+            saving={updateMutation.isPending}
+            onCancel={() => setEditingDoc(null)}
+            onSave={(additionalJson) =>
+              updateMutation.mutate({
+                documentId: editingDoc.id,
+                additionalJson,
+              })
+            }
+          />
+        ) : null}
+      </BottomSheet>
     </View>
   );
+}
+
+type InfoRow = { key: string; value: string };
+
+function DocumentInfoEditor({
+  doc,
+  saving,
+  onCancel,
+  onSave,
+}: {
+  doc: CustomerDocument;
+  saving: boolean;
+  onCancel: () => void;
+  onSave: (additionalJson: Record<string, string>) => void;
+}) {
+  const { t } = useTranslation();
+  const initial = (doc.additional_json ?? {}) as Record<string, unknown>;
+  const serverKeys = Object.keys(initial);
+  const [answers, setAnswers] = useState<Record<string, string>>(() => {
+    const seed: Record<string, string> = {};
+    for (const key of serverKeys) {
+      seed[key] = stringifyValue(initial[key]);
+    }
+    return seed;
+  });
+  const [custom, setCustom] = useState<InfoRow[]>([]);
+
+  function handleSave() {
+    const out: Record<string, string> = {};
+    for (const key of serverKeys) {
+      out[key] = (answers[key] ?? '').trim();
+    }
+    for (const row of custom) {
+      const key = row.key.trim();
+      const value = row.value.trim();
+      if (key && value) out[key] = value;
+    }
+    onSave(out);
+  }
+
+  const hasQuestions = serverKeys.length > 0 || custom.length > 0;
+
+  return (
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <Text variant="screenTitle" style={styles.sheetTitle}>
+        {t('documents.questions.title')}
+      </Text>
+      <Text
+        variant="meta"
+        tone="muted"
+        style={styles.sheetSubtitle}
+        numberOfLines={1}
+      >
+        {doc.original_name}
+      </Text>
+      <ScrollView
+        style={styles.editorScroll}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.editorFields}>
+          {serverKeys.map((key) => (
+            <TextField
+              key={key}
+              label={questionLabel(key)}
+              value={answers[key] ?? ''}
+              onChangeText={(text) =>
+                setAnswers((prev) => ({ ...prev, [key]: text }))
+              }
+              placeholder={t('documents.questions.answerPlaceholder')}
+            />
+          ))}
+
+          {custom.length > 0 ? (
+            <Text
+              variant="sectionLabel"
+              tone="muted"
+              style={styles.customLabel}
+            >
+              {t('documents.questions.addedSection')}
+            </Text>
+          ) : null}
+          {custom.map((row, index) => (
+            <View key={index} style={styles.customRow}>
+              <View style={styles.customInputs}>
+                <TextField
+                  value={row.key}
+                  onChangeText={(text) =>
+                    setCustom((prev) =>
+                      prev.map((r, i) =>
+                        i === index ? { ...r, key: text } : r,
+                      ),
+                    )
+                  }
+                  placeholder={t('documents.questions.questionPlaceholder')}
+                  autoCapitalize="none"
+                  containerStyle={styles.customInput}
+                />
+                <TextField
+                  value={row.value}
+                  onChangeText={(text) =>
+                    setCustom((prev) =>
+                      prev.map((r, i) =>
+                        i === index ? { ...r, value: text } : r,
+                      ),
+                    )
+                  }
+                  placeholder={t('documents.questions.answerFieldPlaceholder')}
+                  containerStyle={styles.customInput}
+                />
+              </View>
+              <Pressable
+                onPress={() =>
+                  setCustom((prev) => prev.filter((_, i) => i !== index))
+                }
+                hitSlop={8}
+                style={styles.customRemove}
+              >
+                <Feather name="x" size={18} color={semantic.red} />
+              </Pressable>
+            </View>
+          ))}
+
+          {!hasQuestions ? (
+            <Text variant="meta" tone="muted">
+              {t('documents.questions.empty')}
+            </Text>
+          ) : null}
+
+          <Pressable
+            onPress={() =>
+              setCustom((prev) => [...prev, { key: '', value: '' }])
+            }
+            style={({ pressed }) => [
+              styles.addCustom,
+              pressed && styles.typeOptionPressed,
+            ]}
+          >
+            <Feather name="plus" size={16} color={semantic.blue} />
+            <Text variant="bodyEmphasis" style={styles.addCustomLabel}>
+              {t('documents.questions.addQuestion')}
+            </Text>
+          </Pressable>
+        </View>
+      </ScrollView>
+      <Button
+        label={t('common.save')}
+        onPress={handleSave}
+        loading={saving}
+        style={styles.editorSave}
+      />
+      <Button
+        tone="ghost"
+        label={t('common.cancel')}
+        onPress={onCancel}
+        disabled={saving}
+        style={styles.editorCancel}
+      />
+    </KeyboardAvoidingView>
+  );
+}
+
+function stringifyValue(value: unknown): string {
+  if (value == null) return '';
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return String(value);
+  }
+  return JSON.stringify(value);
 }
 
 function UploadTile({
@@ -377,65 +596,105 @@ function DocumentRow({
   deleting,
   previewing,
   onPreview,
+  onEditInfo,
   onDelete,
 }: {
   doc: CustomerDocument;
   deleting: boolean;
   previewing: boolean;
   onPreview: () => void;
+  onEditInfo: () => void;
   onDelete: () => void;
 }) {
+  const { t } = useTranslation();
   const isPdf = doc.mime_type === 'application/pdf';
   const rowBusy = deleting || previewing;
+  const isQuestionnaire = doc.type === QUESTIONNAIRE_DOC_TYPE;
+  const questionCount = isQuestionnaire
+    ? Object.keys(doc.additional_json ?? {}).length
+    : 0;
   return (
-    <Pressable
-      onPress={onPreview}
-      disabled={rowBusy}
-      style={({ pressed }) => [
-        styles.row,
-        pressed && !rowBusy && { opacity: 0.85 },
-      ]}
-    >
-      <View style={styles.rowIcon}>
-        {previewing ? (
-          <ActivityIndicator color={semantic.blue} />
-        ) : (
-          <Feather
-            name={isPdf ? 'file-text' : 'file'}
-            size={20}
-            color={semantic.blue}
-          />
-        )}
-      </View>
-      <View style={styles.rowBody}>
-        <Text variant="bodyEmphasis" numberOfLines={1}>
-          {doc.original_name}
-        </Text>
-        <View style={styles.rowMeta}>
-          <Pill label={typeLabel(doc.type)} tone="blue" />
-          <Text variant="meta" tone="muted">
-            {formatBytes(doc.file_size)}
-          </Text>
+    <View style={styles.row}>
+      <View style={styles.rowTop}>
+        <Pressable
+          onPress={onPreview}
+          disabled={rowBusy}
+          style={({ pressed }) => [
+            styles.rowMain,
+            pressed && !rowBusy && { opacity: 0.85 },
+          ]}
+        >
+          <View style={styles.rowIcon}>
+            {previewing ? (
+              <ActivityIndicator color={semantic.blue} />
+            ) : (
+              <Feather
+                name={isPdf ? 'file-text' : 'file'}
+                size={20}
+                color={semantic.blue}
+              />
+            )}
+          </View>
+          <View style={styles.rowBody}>
+            <Text variant="bodyEmphasis" numberOfLines={1}>
+              {doc.original_name}
+            </Text>
+            <View style={styles.rowMeta}>
+              <Pill label={typeLabel(doc.type)} tone="blue" />
+              <Text variant="meta" tone="muted">
+                {formatBytes(doc.file_size)}
+              </Text>
+            </View>
+          </View>
+        </Pressable>
+        <View style={styles.rowActions}>
+          <Pressable
+            onPress={onDelete}
+            disabled={rowBusy}
+            hitSlop={8}
+            style={({ pressed }) => [
+              styles.iconBtn,
+              pressed && !rowBusy && { opacity: 0.6 },
+              rowBusy && { opacity: 0.4 },
+            ]}
+          >
+            {deleting ? (
+              <ActivityIndicator color={semantic.red} size="small" />
+            ) : (
+              <Feather name="trash-2" size={18} color={semantic.red} />
+            )}
+          </Pressable>
         </View>
       </View>
-      <Pressable
-        onPress={onDelete}
-        disabled={rowBusy}
-        hitSlop={8}
-        style={({ pressed }) => [
-          styles.deleteBtn,
-          pressed && !rowBusy && { opacity: 0.6 },
-          rowBusy && { opacity: 0.4 },
-        ]}
-      >
-        {deleting ? (
-          <ActivityIndicator color={semantic.red} size="small" />
-        ) : (
-          <Feather name="trash-2" size={18} color={semantic.red} />
-        )}
-      </Pressable>
-    </Pressable>
+      {isQuestionnaire ? (
+        <Pressable
+          onPress={onEditInfo}
+          disabled={rowBusy}
+          style={({ pressed }) => [
+            styles.questionsButton,
+            pressed && !rowBusy && { opacity: 0.7 },
+          ]}
+        >
+          <Feather name="clipboard" size={16} color={semantic.blue} />
+          <Text variant="bodyEmphasis" style={styles.questionsButtonLabel}>
+            {t('documents.questions.title')}
+          </Text>
+          {questionCount > 0 ? (
+            <View style={styles.questionsCount}>
+              <Text variant="meta" style={styles.questionsCountLabel}>
+                {questionCount}
+              </Text>
+            </View>
+          ) : null}
+          <Feather name="chevron-right" size={18} color={semantic.ink3} />
+        </Pressable>
+      ) : null}
+    </View>
   );
+}
+
+function questionLabel(key: string): string {
+  return key.replace(/_/g, ' ');
 }
 
 function confirmDelete(doc: CustomerDocument, onConfirm: () => void) {
@@ -536,14 +795,28 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
     backgroundColor: semantic.paper,
     borderRadius: radii.card,
     borderWidth: 1,
     borderColor: semantic.line,
     padding: spacing.md,
+    gap: spacing.sm,
+  },
+  rowTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  rowMain: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  rowActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
   },
   rowIcon: {
     width: 40,
@@ -562,12 +835,38 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
   },
-  deleteBtn: {
+  iconBtn: {
     width: 36,
     height: 36,
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  questionsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.xs,
+    paddingTop: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: semantic.line,
+  },
+  questionsButtonLabel: {
+    flex: 1,
+    color: semantic.blue,
+  },
+  questionsCount: {
+    minWidth: 20,
+    height: 20,
+    paddingHorizontal: 6,
+    borderRadius: 10,
+    backgroundColor: semantic.bgSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  questionsCountLabel: {
+    color: semantic.ink2,
+    fontFamily: fonts.ptBold,
   },
   tileRow: {
     flexDirection: 'row',
@@ -620,5 +919,54 @@ const styles = StyleSheet.create({
   },
   sheetCancel: {
     marginTop: spacing.md,
+  },
+  editorScroll: {
+    maxHeight: 380,
+  },
+  editorFields: {
+    gap: spacing.md,
+    paddingBottom: spacing.sm,
+  },
+  customLabel: {
+    marginTop: spacing.xs,
+  },
+  customRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  customInputs: {
+    flex: 1,
+    gap: spacing.xs,
+  },
+  customInput: {
+    flex: 1,
+  },
+  customRemove: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addCustom: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: spacing.sm,
+    borderRadius: radii.input,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    borderColor: semantic.line2,
+  },
+  addCustomLabel: {
+    color: semantic.blue,
+  },
+  editorSave: {
+    marginTop: spacing.md,
+  },
+  editorCancel: {
+    marginTop: spacing.sm,
   },
 });

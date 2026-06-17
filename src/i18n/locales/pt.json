@@ -1,4 +1,16 @@
 {
+  "documents": {
+    "questions": {
+      "title": "Perguntas de integração",
+      "answerPlaceholder": "Sem resposta",
+      "addedSection": "ADICIONADO",
+      "questionPlaceholder": "Pergunta",
+      "answerFieldPlaceholder": "Resposta",
+      "addQuestion": "Adicionar pergunta",
+      "empty": "Ainda não há perguntas. Adicione uma abaixo ou defina-as na web.",
+      "saveError": "Não foi possível guardar"
+    }
+  },
   "common": {
     "cancel": "Cancelar",
     "save": "Guardar",

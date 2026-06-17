@@ -1,4 +1,16 @@
 {
+  "documents": {
+    "questions": {
+      "title": "မှတ်ပုံတင်ခြင်း မေးခွန်းများ",
+      "answerPlaceholder": "မဖြေရသေးပါ",
+      "addedSection": "ထည့်သွင်းထားသည်",
+      "questionPlaceholder": "မေးခွန်း",
+      "answerFieldPlaceholder": "အဖြေ",
+      "addQuestion": "မေးခွန်း ထည့်ရန်",
+      "empty": "မေးခွန်းများ မရှိသေးပါ။ အောက်တွင် တစ်ခုထည့်ပါ သို့မဟုတ် ဝက်ဘ်တွင် သတ်မှတ်ပါ။",
+      "saveError": "သိမ်းဆည်း၍ မရပါ"
+    }
+  },
   "common": {
     "cancel": "ပယ်ဖျက်",
     "save": "သိမ်းဆည်း",
