@@ -1,4 +1,16 @@
 {
+  "documents": {
+    "questions": {
+      "title": "Onboarding questions",
+      "answerPlaceholder": "Not answered",
+      "addedSection": "ADDED",
+      "questionPlaceholder": "Question",
+      "answerFieldPlaceholder": "Answer",
+      "addQuestion": "Add question",
+      "empty": "No questions yet. Add one below, or set them on the web.",
+      "saveError": "Could not save"
+    }
+  },
   "common": {
     "cancel": "Cancel",
     "save": "Save",

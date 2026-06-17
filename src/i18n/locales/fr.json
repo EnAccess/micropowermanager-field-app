@@ -1,4 +1,16 @@
 {
+  "documents": {
+    "questions": {
+      "title": "Questions d'intégration",
+      "answerPlaceholder": "Sans réponse",
+      "addedSection": "AJOUTÉ",
+      "questionPlaceholder": "Question",
+      "answerFieldPlaceholder": "Réponse",
+      "addQuestion": "Ajouter une question",
+      "empty": "Aucune question pour le moment. Ajoutez-en une ci-dessous ou définissez-les sur le web.",
+      "saveError": "Impossible d'enregistrer"
+    }
+  },
   "common": {
     "cancel": "Annuler",
     "save": "Enregistrer",
