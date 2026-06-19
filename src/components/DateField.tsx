@@ -1,7 +1,7 @@
 import DateTimePicker, {
   DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import {
   Modal,
   Platform,
@@ -48,12 +48,15 @@ export function DateField({
     setOpen(true);
   }
 
-  function handleAndroidChange(event: DateTimePickerEvent, next?: Date) {
-    setOpen(false);
-    if (event.type === 'set' && next) {
-      onChange(next);
-    }
-  }
+  const handleAndroidChange = useCallback(
+    (event: DateTimePickerEvent, next?: Date) => {
+      setOpen(false);
+      if (event.type === 'set' && next) {
+        onChange(next);
+      }
+    },
+    [onChange],
+  );
 
   function handleIosChange(_: DateTimePickerEvent, next?: Date) {
     if (next) setDraft(next);
