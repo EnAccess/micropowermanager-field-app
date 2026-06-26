@@ -52,6 +52,7 @@ import {
   Text,
   TextField,
   toIsoDate,
+  useToast,
 } from '@/components';
 import { fonts, radii, semantic, spacing } from '@/theme';
 import { extractServerError as errorMessage } from '@/utils/errorMessage';
@@ -111,6 +112,7 @@ const HINT_KEY_BY_INDEX: Record<number, string> = {
 
 export default function SellShsScreen() {
   const { t } = useTranslation();
+  const toast = useToast();
   const { api } = useSession();
   const queryClient = useQueryClient();
   const { format: formatCurrency, symbol: currency } = useCurrency();
@@ -192,6 +194,9 @@ export default function SellShsScreen() {
         queryKey: ['agent-transactions-list'],
       });
       await queryClient.invalidateQueries({ queryKey: ['sold-appliances'] });
+    },
+    onError: (err) => {
+      toast.showError(errorMessage(err, t('saleNew.failed')));
     },
   });
 
@@ -296,11 +301,6 @@ export default function SellShsScreen() {
         formatCurrency={formatCurrency}
         currency={currency}
         loading={sellMutation.isPending}
-        error={
-          sellMutation.isError
-            ? errorMessage(sellMutation.error, t, 'saleNew.failed')
-            : null
-        }
         onBack={() => setStep('plan')}
         onConfirm={() => sellMutation.mutate()}
       />
@@ -1023,7 +1023,6 @@ function ConfirmStep({
   formatCurrency,
   currency,
   loading,
-  error,
   onBack,
   onConfirm,
 }: {
@@ -1042,7 +1041,6 @@ function ConfirmStep({
   formatCurrency: (n: number) => string;
   currency: string | null;
   loading: boolean;
-  error: string | null;
   onBack: () => void;
   onConfirm: () => void;
 }) {
@@ -1183,12 +1181,6 @@ function ConfirmStep({
                 : t('saleNew.confirm.warningDeposit')}
           </Text>
         </Callout>
-
-        {error ? (
-          <Text variant="meta" tone="danger" style={styles.confirmError}>
-            {error}
-          </Text>
-        ) : null}
       </ScrollView>
 
       <View
@@ -1704,9 +1696,6 @@ const styles = StyleSheet.create({
     height: 0,
   },
   confirmCallout: {
-    marginHorizontal: spacing.lg,
-  },
-  confirmError: {
     marginHorizontal: spacing.lg,
   },
 

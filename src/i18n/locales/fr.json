@@ -39,14 +39,6 @@
     "hoursAgo": "il y a {{count}} h",
     "daysAgo": "il y a {{count}} j"
   },
-  "errors": {
-    "sessionExpired": "Session expirée. Reconnectez-vous.",
-    "noPermission": "Vous n'avez pas la permission pour cette action.",
-    "notFound": "Introuvable sur le serveur.",
-    "conflict": "Requête conflictuelle. Tirez pour rafraîchir et réessayer.",
-    "serverTrouble": "Le serveur a des soucis. Réessayez dans un instant.",
-    "noConnection": "Pas de connexion. Vérifiez Internet et réessayez."
-  },
   "tabs": {
     "home": "Accueil",
     "customers": "Clients",

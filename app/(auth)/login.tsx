@@ -15,7 +15,14 @@ import {
 import { z } from 'zod';
 
 import { useSession } from '@/auth/SessionContext';
-import { Button, GradientHero, Logo, Text, TextField } from '@/components';
+import {
+  Button,
+  GradientHero,
+  Logo,
+  Text,
+  TextField,
+  useToast,
+} from '@/components';
 import { environmentHost } from '@/config/environments';
 import { fonts, radii, semantic, spacing } from '@/theme';
 import { extractServerError } from '@/utils/errorMessage';
@@ -25,7 +32,7 @@ type LoginForm = { email: string; password: string };
 export default function LoginScreen() {
   const { t } = useTranslation();
   const { environment, login } = useSession();
-  const [submitError, setSubmitError] = useState<string | null>(null);
+  const toast = useToast();
   const [showPassword, setShowPassword] = useState(false);
 
   const schema = useMemo(
@@ -47,11 +54,10 @@ export default function LoginScreen() {
   });
 
   const onSubmit = handleSubmit(async (values) => {
-    setSubmitError(null);
     try {
       await login(values);
     } catch (caught) {
-      setSubmitError(extractServerError(caught, t, 'login.errors.generic'));
+      toast.showError(extractServerError(caught, t('login.errors.generic')));
     }
   });
 
@@ -141,12 +147,6 @@ export default function LoginScreen() {
             />
           </View>
 
-          {submitError ? (
-            <Text variant="meta" tone="danger" style={styles.submitError}>
-              {submitError}
-            </Text>
-          ) : null}
-
           <View style={styles.cta}>
             <Button
               label={t('login.signIn')}
@@ -231,9 +231,6 @@ const styles = StyleSheet.create({
   },
   fields: {
     gap: spacing.md,
-  },
-  submitError: {
-    marginTop: spacing.md,
   },
   cta: {
     marginTop: spacing.xl,

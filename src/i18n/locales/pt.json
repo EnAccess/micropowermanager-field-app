@@ -39,14 +39,6 @@
     "hoursAgo": "há {{count}} h",
     "daysAgo": "há {{count}} d"
   },
-  "errors": {
-    "sessionExpired": "Sessão expirada. Inicie sessão novamente.",
-    "noPermission": "Não tem permissão para esta ação.",
-    "notFound": "Não encontrado no servidor.",
-    "conflict": "Pedido em conflito. Puxe para atualizar e tente novamente.",
-    "serverTrouble": "O servidor está com problemas. Tente novamente em instantes.",
-    "noConnection": "Sem ligação. Verifique a sua Internet e tente novamente."
-  },
   "tabs": {
     "home": "Início",
     "customers": "Clientes",

@@ -27,6 +27,7 @@ import {
   Screen,
   Select,
   Text,
+  useToast,
 } from '@/components';
 import { colors, radius, spacing } from '@/theme';
 import {
@@ -64,6 +65,7 @@ type AssignMeterForm = {
 
 export default function AddMeterScreen() {
   const { t } = useTranslation();
+  const toast = useToast();
   const { id } = useLocalSearchParams<{ id: string }>();
   const customerId = Number(id);
   const { api } = useSession();
@@ -159,6 +161,11 @@ export default function AddMeterScreen() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['available-meters'] });
       setDone(true);
+    },
+    onError: (err) => {
+      toast.showError(
+        mutationErrorMessage(err, t('addMeter.errors.submitGeneric')),
+      );
     },
   });
 
@@ -399,16 +406,6 @@ export default function AddMeterScreen() {
           }}
         />
 
-        {assignMutation.isError ? (
-          <Text variant="caption" tone="danger" style={styles.error}>
-            {mutationErrorMessage(
-              assignMutation.error,
-              t,
-              'addMeter.errors.submitGeneric',
-            )}
-          </Text>
-        ) : null}
-
         <Button
           label={t('addMeter.submit')}
           onPress={onSubmit}
@@ -452,9 +449,6 @@ const styles = StyleSheet.create({
   locationActions: {
     alignItems: 'flex-end',
     gap: spacing.sm,
-  },
-  error: {
-    marginTop: spacing.md,
   },
   cta: {
     marginTop: spacing.xl,

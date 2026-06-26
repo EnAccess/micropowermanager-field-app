@@ -46,6 +46,7 @@ import {
   SuccessCheckmark,
   Text,
   TextField,
+  useToast,
 } from '@/components';
 import { fonts, radii, semantic, spacing } from '@/theme';
 import { extractServerError as errorMessage } from '@/utils/errorMessage';
@@ -55,6 +56,7 @@ type Step = 'find' | 'amount' | 'confirm' | 'success';
 
 export default function CollectPaymentScreen() {
   const { t } = useTranslation();
+  const toast = useToast();
   const { api } = useSession();
   const queryClient = useQueryClient();
   const { symbol: currency } = useCurrency();
@@ -66,7 +68,6 @@ export default function CollectPaymentScreen() {
   const [lookup, setLookup] = useState<DeviceLookup | null>(null);
   const [lookupError, setLookupError] = useState<string | null>(null);
   const [amountStr, setAmountStr] = useState('');
-  const [submitError, setSubmitError] = useState<string | null>(null);
   const [transactionRef, setTransactionRef] = useState<string | null>(null);
   const [transactionId, setTransactionId] = useState<number | null>(null);
   const [autoLookupAttempted, setAutoLookupAttempted] = useState(false);
@@ -123,7 +124,7 @@ export default function CollectPaymentScreen() {
         queryKey: ['agent-transactions-list'],
       });
     },
-    onError: (e) => setSubmitError(errorMessage(e, t, 'paymentNew.failed')),
+    onError: (e) => toast.showError(errorMessage(e, t('paymentNew.failed'))),
   });
 
   const amountValue = Number(amountStr) || 0;
@@ -148,7 +149,7 @@ export default function CollectPaymentScreen() {
           );
         }
       } catch (e) {
-        setLookupError(errorMessage(e, t, 'paymentNew.find.errorGeneric'));
+        setLookupError(errorMessage(e, t('paymentNew.find.errorGeneric')));
       }
     })();
   }, [api, prefilledSerial, autoLookupAttempted, lookupMutation, t]);
@@ -159,7 +160,6 @@ export default function CollectPaymentScreen() {
     setLookup(null);
     setLookupError(null);
     setAmountStr('');
-    setSubmitError(null);
     setTransactionRef(null);
     setTransactionId(null);
     submitMutation.reset();
@@ -182,7 +182,7 @@ export default function CollectPaymentScreen() {
       setLookup(match);
       setStep('amount');
     } catch (e) {
-      setLookupError(errorMessage(e, t, 'paymentNew.find.errorGeneric'));
+      setLookupError(errorMessage(e, t('paymentNew.find.errorGeneric')));
     }
   }
 
@@ -227,7 +227,6 @@ export default function CollectPaymentScreen() {
         onChangeCustomer={() => setStep('find')}
         onContinue={() => {
           if (amountValue <= 0 || belowMinimum) return;
-          setSubmitError(null);
           setStep('confirm');
         }}
         onBack={() => setStep('find')}
@@ -245,7 +244,6 @@ export default function CollectPaymentScreen() {
         onBack={() => setStep('amount')}
         onConfirm={() => submitMutation.mutate()}
         loading={submitMutation.isPending}
-        error={submitError}
       />
     );
   }
@@ -442,7 +440,6 @@ function ConfirmStep({
   onBack,
   onConfirm,
   loading,
-  error,
 }: {
   lookup: DeviceLookup;
   amount: number;
@@ -451,7 +448,6 @@ function ConfirmStep({
   onBack: () => void;
   onConfirm: () => void;
   loading: boolean;
-  error: string | null;
 }) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
@@ -546,12 +542,6 @@ function ConfirmStep({
               {t('paymentNew.confirm.warning')}
             </Text>
           </Callout>
-
-          {error ? (
-            <Text variant="meta" tone="danger" style={styles.confirmError}>
-              {error}
-            </Text>
-          ) : null}
         </View>
       </Screen>
 
@@ -1037,9 +1027,6 @@ const styles = StyleSheet.create({
   },
   confirmCallout: {
     marginTop: 0,
-  },
-  confirmError: {
-    marginTop: spacing.sm,
   },
 
   /* Success */

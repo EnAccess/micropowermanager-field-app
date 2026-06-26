@@ -40,6 +40,7 @@ import {
   Text,
   TextField,
   toIsoDate,
+  useToast,
 } from '@/components';
 import {
   enqueueRegisterCustomer,
@@ -112,6 +113,7 @@ type Step = 'form' | 'success';
 
 export default function RegisterCustomerScreen() {
   const { t } = useTranslation();
+  const toast = useToast();
   const { api, agent } = useSession();
   const queryClient = useQueryClient();
   const schema = useMemo(() => buildSchema(t), [t]);
@@ -286,6 +288,11 @@ export default function RegisterCustomerScreen() {
       }
       setStep('success');
     },
+    onError: (err) => {
+      toast.showError(
+        mutationErrorMessage(err, t('customerNew.errors.submitGeneric')),
+      );
+    },
   });
 
   const submit = (intent: 'continue' | 'save') =>
@@ -320,15 +327,6 @@ export default function RegisterCustomerScreen() {
         gridLabel={agent?.mini_grid_id ? `#${agent.mini_grid_id}` : '—'}
         busy={registerMutation.isPending}
         retryHint={retryEntry?.last_error?.message ?? null}
-        error={
-          registerMutation.isError
-            ? mutationErrorMessage(
-                registerMutation.error,
-                t,
-                'customerNew.errors.submitGeneric',
-              )
-            : null
-        }
         geoPoints={geoPoints}
         locationStatus={locationStatus}
         onPickLocation={() => setPickerOpen(true)}
@@ -421,7 +419,6 @@ function FormStep({
   gridLabel,
   busy,
   retryHint,
-  error,
   geoPoints,
   locationStatus,
   onPickLocation,
@@ -439,7 +436,6 @@ function FormStep({
   gridLabel: string;
   busy: boolean;
   retryHint: string | null;
-  error: string | null;
   geoPoints: string | null;
   locationStatus: 'pending' | 'captured' | 'denied';
   onPickLocation: () => void;
@@ -663,12 +659,6 @@ function FormStep({
               {t('customerNew.hint')}
             </Text>
           </Callout>
-
-          {error ? (
-            <Text variant="meta" tone="danger" style={styles.error}>
-              {error}
-            </Text>
-          ) : null}
         </ScrollView>
 
         <View
@@ -860,9 +850,6 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   callout: {
-    marginTop: spacing.xs,
-  },
-  error: {
     marginTop: spacing.xs,
   },
   footer: {

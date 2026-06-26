@@ -33,5 +33,6 @@ export { SuccessCheckmark } from './SuccessCheckmark';
 export { SyncBanner } from './SyncBanner';
 export { Text } from './Text';
 export { TextField } from './TextField';
+export { ToastProvider, useToast } from './Toast';
 export { Timeline } from './Timeline';
 export type { TimelineDotTone, TimelineItem } from './Timeline';

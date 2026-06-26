@@ -39,14 +39,6 @@
     "hoursAgo": "{{count}} hr ago",
     "daysAgo": "{{count}} d ago"
   },
-  "errors": {
-    "sessionExpired": "Session expired. Sign in again.",
-    "noPermission": "You don't have permission for this action.",
-    "notFound": "Not found on the server.",
-    "conflict": "Conflicting request. Pull to refresh and retry.",
-    "serverTrouble": "Server is having trouble. Try again in a moment.",
-    "noConnection": "No connection. Check your internet and retry."
-  },
   "tabs": {
     "home": "Home",
     "customers": "Customers",
