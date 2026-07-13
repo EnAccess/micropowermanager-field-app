@@ -29,6 +29,11 @@ import { extractServerError } from '@/utils/errorMessage';
 
 type LoginForm = { email: string; password: string };
 
+const DEMO_CREDENTIALS: LoginForm = {
+  email: 'demo_company_agent@example.com',
+  password: '123123',
+};
+
 export default function LoginScreen() {
   const { t } = useTranslation();
   const { environment, login } = useSession();
@@ -50,7 +55,10 @@ export default function LoginScreen() {
     formState: { errors, isSubmitting },
   } = useForm<LoginForm>({
     resolver: zodResolver(schema),
-    defaultValues: { email: '', password: '' },
+    defaultValues:
+      environment?.kind === 'demo'
+        ? DEMO_CREDENTIALS
+        : { email: '', password: '' },
   });
 
   const onSubmit = handleSubmit(async (values) => {
@@ -111,7 +119,7 @@ export default function LoginScreen() {
                   autoCapitalize="none"
                   autoCorrect={false}
                   keyboardType="email-address"
-                  value={value}
+                  defaultValue={value}
                   onChangeText={onChange}
                   onBlur={onBlur}
                   error={errors.email?.message}
@@ -128,7 +136,7 @@ export default function LoginScreen() {
                   secureTextEntry={!showPassword}
                   autoCapitalize="none"
                   autoCorrect={false}
-                  value={value}
+                  defaultValue={value}
                   onChangeText={onChange}
                   onBlur={onBlur}
                   error={errors.password?.message}
