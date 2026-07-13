@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Privacy Policy — MPM Field App</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #ffffff;
+        --fg: #1a222c;
+        --muted: #5a6570;
+        --accent: #1d6fb8;
+        --border: #e2e7ec;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #14181d;
+          --fg: #e6ebf0;
+          --muted: #9aa5b0;
+          --accent: #6ab0e8;
+          --border: #2b333c;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+          'Helvetica Neue', Arial, sans-serif;
+        line-height: 1.65;
+      }
+      main {
+        max-width: 46rem;
+        margin: 0 auto;
+        padding: 3rem 1.25rem 5rem;
+      }
+      h1 {
+        font-size: 2rem;
+        line-height: 1.2;
+        margin: 0 0 0.25rem;
+      }
+      .meta {
+        color: var(--muted);
+        margin: 0 0 2.5rem;
+      }
+      h2 {
+        font-size: 1.3rem;
+        margin: 2.5rem 0 0.75rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border);
+      }
+      a {
+        color: var(--accent);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1rem 0;
+      }
+      th,
+      td {
+        text-align: left;
+        vertical-align: top;
+        padding: 0.5rem 0.75rem 0.5rem 0;
+        border-bottom: 1px solid var(--border);
+      }
+      th {
+        color: var(--muted);
+        font-weight: 600;
+      }
+      ul {
+        padding-left: 1.25rem;
+      }
+      li {
+        margin: 0.35rem 0;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Privacy Policy</h1>
+      <p class="meta">
+        MPM Field App &middot; Published by the EnAccess Foundation &middot;
+        Effective 9 July 2026
+      </p>
+
+      <p>
+        The MPM Field App is a mobile application for field agents of energy
+        service providers that use
+        <a href="https://micropowermanager.io">MicroPowerManager</a> to manage
+        mini-grid customers, meters, and payments. The app is free and open
+        source; its complete source code is available at
+        <a href="https://github.com/EnAccess/micropowermanager-field-app"
+          >github.com/EnAccess/micropowermanager-field-app</a
+        >.
+      </p>
+      <p>
+        This policy explains what data the app handles, where that data goes,
+        and who is responsible for it.
+      </p>
+
+      <h2>The short version</h2>
+      <ul>
+        <li>
+          The app sends data only to the MicroPowerManager server that you or
+          your organization select — nowhere else.
+        </li>
+        <li>
+          If your organization uses the MicroPowerManager Cloud, EnAccess hosts
+          that data on your organization&rsquo;s behalf; if your organization
+          runs its own server, EnAccess never receives any data.
+        </li>
+        <li>
+          The app contains no advertising, no analytics, and no tracking of any
+          kind.
+        </li>
+        <li>
+          Your organization (the energy service provider you work for) controls
+          the data and is responsible for it.
+        </li>
+      </ul>
+
+      <h2>Data the app handles</h2>
+      <p>
+        The app is a data-collection tool operated by trained field agents. In
+        the course of normal use it handles:
+      </p>
+      <ul>
+        <li>
+          <strong>Agent account data</strong> — the email address and password
+          you use to sign in to your organization&rsquo;s MicroPowerManager
+          server.
+        </li>
+        <li>
+          <strong>Customer records</strong> — names, phone numbers, addresses,
+          and registration questionnaire answers that agents enter when
+          registering customers.
+        </li>
+        <li>
+          <strong>Location data</strong> — the device&rsquo;s GPS position, used
+          to geotag customers and meters registered in the field. Location is
+          captured only while the app is in use.
+        </li>
+        <li>
+          <strong>Photos and documents</strong> — pictures taken with the camera
+          or selected from the photo library, used to attach documents such as
+          signed contracts to a customer record.
+        </li>
+        <li>
+          <strong>Payment records</strong> — payment and transaction entries
+          recorded for customers.
+        </li>
+      </ul>
+
+      <h2>Where the data goes</h2>
+      <p>
+        All data entered in the app is transmitted over HTTPS to exactly one
+        destination: the MicroPowerManager server selected at sign-in. This is
+        either the MicroPowerManager Cloud service, the public demo server, or a
+        server hosted by your own organization.
+      </p>
+      <p>
+        In all cases, your organization determines how the data is used, how
+        long it is retained, and who can access it, and remains responsible for
+        it as the data controller.
+      </p>
+      <p>
+        EnAccess operates the MicroPowerManager Cloud and the demo server. When
+        your organization uses one of these, EnAccess stores the collected data
+        on your organization&rsquo;s behalf, acting as a data processor, and
+        does not use it for any purpose other than providing the service. When
+        your organization hosts its own MicroPowerManager server, EnAccess has
+        no access to the data at all.
+      </p>
+
+      <h2>Data stored on the device</h2>
+      <p>
+        The app is designed to work offline. Records you create without an
+        internet connection are stored on the device and uploaded automatically
+        when connectivity returns. Reference data (such as city lists) is cached
+        locally to speed up the app. Sign-in credentials are stored in the
+        operating system&rsquo;s encrypted secure storage. All locally stored
+        data is removed when the app is uninstalled.
+      </p>
+
+      <h2>Third-party services</h2>
+      <p>
+        When you open the map to pick a location, the app loads map tiles from
+        <a href="https://www.openstreetmap.org">OpenStreetMap</a> and the
+        Leaflet map library from the unpkg.com content delivery network. Those
+        services receive your device&rsquo;s IP address and the map area being
+        viewed, as is inherent to loading any web content. No other third-party
+        service is contacted, and no data is sold or shared for advertising or
+        marketing purposes.
+      </p>
+
+      <h2>App permissions</h2>
+      <table>
+        <tr>
+          <th>Permission</th>
+          <th>Why the app asks for it</th>
+        </tr>
+        <tr>
+          <td>Location</td>
+          <td>To geotag customers and meters you register in the field.</td>
+        </tr>
+        <tr>
+          <td>Camera</td>
+          <td>
+            To capture customer documents, such as signed contracts, and attach
+            them to a customer record.
+          </td>
+        </tr>
+        <tr>
+          <td>Photos</td>
+          <td>
+            To attach an existing photo of a document to a customer record.
+          </td>
+        </tr>
+      </table>
+      <p>
+        Each permission is requested only when the corresponding feature is
+        first used, and the app remains usable if a permission is declined.
+      </p>
+
+      <h2>Your rights and data deletion</h2>
+      <p>
+        Because customer data is held by the energy service provider operating
+        the MicroPowerManager server, requests to access, correct, or delete
+        personal data should be directed to that provider. If you are a
+        customer, contact your energy service provider. If you are a field
+        agent, contact your employer. Uninstalling the app removes all data
+        stored on the device itself.
+      </p>
+
+      <h2>Children</h2>
+      <p>
+        The app is a professional tool for field agents and is not directed at
+        children.
+      </p>
+
+      <h2>Changes to this policy</h2>
+      <p>
+        If the app&rsquo;s data practices change, this page will be updated and
+        the effective date above revised. The history of this document is
+        publicly available in the app&rsquo;s source repository.
+      </p>
+
+      <h2>Contact</h2>
+      <p>
+        The app is published by the EnAccess Foundation (<a
+          href="https://enaccess.org"
+          >enaccess.org</a
+        >). For questions about this policy or the app, open an issue at
+        <a href="https://github.com/EnAccess/micropowermanager-field-app/issues"
+          >github.com/EnAccess/micropowermanager-field-app/issues</a
+        >
+        or reach EnAccess through the contact options on its website.
+      </p>
+    </main>
+  </body>
+</html>

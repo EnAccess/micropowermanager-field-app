@@ -1,14 +1,15 @@
 {
   "expo": {
     "name": "MPM Field App",
-    "slug": "micropowermanager-field-app",
+    "slug": "mpm-field-app",
     "scheme": "mpmfieldapp",
     "version": "0.0.10",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": false,
+      "bundleIdentifier": "org.enaccess.mpmfieldapp"
     },
     "android": {
       "adaptiveIcon": {
@@ -20,7 +21,7 @@
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION"
       ],
-      "package": "com.anonymous.micropowermanagerfieldapp"
+      "package": "org.enaccess.micropowermanagerfieldapp"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -53,6 +54,12 @@
       "expo-document-picker",
       "@react-native-community/datetimepicker",
       "expo-localization"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "78f17596-5e7a-4d00-8f76-be2f555443df"
+      }
+    }
   }
 }
