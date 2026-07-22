@@ -53,7 +53,8 @@
       ],
       "expo-document-picker",
       "@react-native-community/datetimepicker",
-      "expo-localization"
+      "expo-localization",
+      "expo-font"
     ],
     "extra": {
       "router": {},
