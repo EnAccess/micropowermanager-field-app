@@ -44,6 +44,7 @@
     "i18next": "^26.2.0",
     "libphonenumber-js": "^1.12.42",
     "react": "19.1.0",
+    "react-dom": "19.1.0",
     "react-hook-form": "^7.73.1",
     "react-i18next": "^17.0.8",
     "react-native": "0.81.5",
