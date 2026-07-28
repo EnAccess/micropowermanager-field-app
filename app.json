@@ -9,7 +9,7 @@
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "org.enaccess.mpmfieldapp"
+      "bundleIdentifier": "io.micropowermanager.fieldapp"
     },
     "android": {
       "adaptiveIcon": {
@@ -21,7 +21,7 @@
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION"
       ],
-      "package": "org.enaccess.micropowermanagerfieldapp"
+      "package": "io.micropowermanager.fieldapp"
     },
     "web": {
       "favicon": "./assets/favicon.png"
