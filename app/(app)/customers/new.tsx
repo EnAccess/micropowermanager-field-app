@@ -549,6 +549,7 @@ function FormStep({
                       placeholder={t('customerNew.fieldOptional')}
                       value={value ?? null}
                       onChange={onChange}
+                      minimumDate={new Date(1900, 0, 1)}
                       maximumDate={new Date()}
                       error={errors.birth_date?.message}
                     />
