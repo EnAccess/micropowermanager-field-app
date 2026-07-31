@@ -41,17 +41,18 @@ jobs:
 
       - name: Resolve APK name
         id: version
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
-          VERSION="${{ github.event.release.tag_name }}"
-          if [ -z "$VERSION" ]; then
-            VERSION="v$(node -p "require('./package.json').version")"
-          fi
-          APK_NAME="micropowermanager-field-app-$VERSION-release.apk"
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "apk_name=$APK_NAME" >> $GITHUB_OUTPUT
+          set -euo pipefail
+          VERSION="${RELEASE_TAG:-v$(jq -r .version package.json)}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "apk_name=micropowermanager-field-app-$VERSION-release.apk" >> "$GITHUB_OUTPUT"
 
       - name: Rename APK
-        run: mv android/app/build/outputs/apk/release/app-release.apk "${{ steps.version.outputs.apk_name }}"
+        env:
+          APK_NAME: ${{ steps.version.outputs.apk_name }}
+        run: mv android/app/build/outputs/apk/release/app-release.apk "$APK_NAME"
 
       - name: Add APK to Github Release
         if: github.event_name == 'release'
@@ -59,3 +60,87 @@ jobs:
         with:
           files: |
             ${{ steps.version.outputs.apk_name }}
+
+  eas-aab:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Resolve app version
+        id: version
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          set -euo pipefail
+          VERSION="${RELEASE_TAG:-v$(jq -r .version package.json)}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "app_version=${VERSION#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve EAS production build
+        id: build
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          APP_VERSION: ${{ steps.version.outputs.app_version }}
+        run: |
+          set -euo pipefail
+          eas build:list \
+            --platform android \
+            --status finished \
+            --distribution store \
+            --build-profile production \
+            --app-version "$APP_VERSION" \
+            --limit 1 --json --non-interactive > "$RUNNER_TEMP/builds.json"
+
+          jq -r --arg version "$VERSION" '
+            (.[0] // error("no finished EAS production build for app version \($version)")) as $b
+            | ($b.artifacts.applicationArchiveUrl // error("build \($b.id) has no application archive")) as $url
+            | "id=\($b.id)",
+              "commit=\($b.gitCommitHash)",
+              "url=\($url)",
+              "aab_name=micropowermanager-field-app-\($version)-vc\($b.appBuildVersion).aab"
+          ' "$RUNNER_TEMP/builds.json" >> "$GITHUB_OUTPUT"
+
+      - name: Download AAB
+        env:
+          BUILD_ID: ${{ steps.build.outputs.id }}
+          COMMIT: ${{ steps.build.outputs.commit }}
+          AAB_NAME: ${{ steps.build.outputs.aab_name }}
+          URL: ${{ steps.build.outputs.url }}
+        run: |
+          set -euo pipefail
+          curl -fsSL -o "$AAB_NAME" "$URL"
+          {
+            echo "### EAS production build"
+            echo ""
+            echo "- Build ID: \`$BUILD_ID\`"
+            echo "- Commit: \`$COMMIT\`"
+            echo "- Artifact: \`$AAB_NAME\`"
+            echo "- SHA-256: \`$(sha256sum "$AAB_NAME" | cut -d' ' -f1)\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload AAB as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.build.outputs.aab_name }}
+          path: ${{ steps.build.outputs.aab_name }}
+          if-no-files-found: error
+
+      - name: Add AAB to Github Release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ${{ steps.build.outputs.aab_name }}
