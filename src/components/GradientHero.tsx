@@ -51,12 +51,7 @@ export function GradientHero({
     >
       {burst ? (
         <View style={styles.burstWrapper} pointerEvents="none">
-          <Burst
-            size={220}
-            color={burstColor}
-            opacity={burstOpacity}
-            rotation={45}
-          />
+          <Burst size={220} color={burstColor} opacity={burstOpacity} />
         </View>
       ) : null}
       <View style={styles.content}>{children}</View>
@@ -71,7 +66,7 @@ const styles = StyleSheet.create({
   },
   burstWrapper: {
     position: 'absolute',
-    top: -40,
+    top: 0,
     right: -60,
   },
   content: {

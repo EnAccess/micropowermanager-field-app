@@ -17,12 +17,7 @@ export function BrandHero({ title, subtitle }: BrandHeroProps) {
   return (
     <View style={[styles.root, { paddingTop: insets.top + spacing.xl }]}>
       <View style={styles.burstWrapper} pointerEvents="none">
-        <Burst
-          size={220}
-          color={colors.brand.accent}
-          opacity={0.18}
-          rotation={45}
-        />
+        <Burst size={220} color={colors.brand.accent} opacity={0.18} />
       </View>
       <View style={styles.content}>
         <View style={styles.lockup}>
@@ -53,7 +48,7 @@ const styles = StyleSheet.create({
   },
   burstWrapper: {
     position: 'absolute',
-    top: -40,
+    top: 0,
     right: -60,
   },
   content: {
