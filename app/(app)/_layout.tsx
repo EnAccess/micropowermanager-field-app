@@ -13,5 +13,12 @@ export default function AppLayout() {
     return <Redirect href="/(auth)/environment" />;
   }
 
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen
+        name="customers/[id]/onboarding"
+        options={{ gestureEnabled: false }}
+      />
+    </Stack>
+  );
 }

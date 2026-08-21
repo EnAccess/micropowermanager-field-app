@@ -1,15 +1,29 @@
 {
-  "documents": {
-    "questions": {
-      "title": "Questions d'intégration",
-      "answerPlaceholder": "Sans réponse",
-      "addedSection": "AJOUTÉ",
-      "questionPlaceholder": "Question",
-      "answerFieldPlaceholder": "Réponse",
-      "addQuestion": "Ajouter une question",
-      "empty": "Aucune question pour le moment. Ajoutez-en une ci-dessous ou définissez-les sur le web.",
-      "saveError": "Impossible d'enregistrer"
-    }
+  "onboarding": {
+    "sectionLabel": "INTÉGRATION",
+    "title": "Questions d'intégration",
+    "noAnswers": "Aucune réponse pour le moment",
+    "unanswered": "{{n}} sans réponse",
+    "allAnswered": "Toutes les questions sont répondues",
+    "empty": "Aucune question pour le moment",
+    "emptyBody": "Ajoutez les questions que vous posez au client, ou définissez-les sur le web.",
+    "newQuestion": "NOUVELLE QUESTION",
+    "questionPlaceholder": "Question",
+    "answerPlaceholder": "Réponse",
+    "addQuestion": "Ajouter une question",
+    "saved": "Réponses enregistrées",
+    "saveError": "Impossible d'enregistrer",
+    "saveRetry": "Vérifiez votre connexion et réessayez.",
+    "duplicate": "« {{question}} » est déjà dans la liste.",
+    "missingQuestion": "Chaque réponse a besoin d'une question. Renseignez la question ou supprimez la ligne.",
+    "removeTitle": "Supprimer la question ?",
+    "removeBody": "« {{question}} » et sa réponse seront supprimés lors de l'enregistrement.",
+    "remove": "Supprimer",
+    "discardTitle": "Abandonner les modifications ?",
+    "discardBody": "Vos réponses n'ont pas encore été enregistrées.",
+    "keepEditing": "Continuer l'édition",
+    "maxTitle": "Limite atteinte",
+    "maxBody": "Un client peut avoir au maximum {{n}} questions."
   },
   "common": {
     "cancel": "Annuler",
@@ -399,8 +413,7 @@
     "noCustomerSerial": "Aucun client correspond au numéro de série {{serial}}.",
     "noCustomer": "Aucun client lié.",
     "meter": "Compteur",
-    "shsUnit": "Unité SHS",
-    "appliance": "Appareil"
+    "shsUnit": "Unité SHS"
   },
   "saleNew": {
     "plans": {

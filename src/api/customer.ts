@@ -28,7 +28,27 @@ export type Customer = {
   created_at?: string;
   addresses?: CustomerAddress[];
   devices?: CustomerDevice[];
+  onboarding_json?: Record<string, string | null> | null;
 };
+
+export type OnboardingAnswer = {
+  question: string;
+  answer: string | null;
+};
+
+export const MAX_ONBOARDING_ANSWERS = 50;
+
+export async function updateCustomerOnboarding(
+  client: AxiosInstance,
+  customerId: number,
+  answers: OnboardingAnswer[],
+): Promise<Customer> {
+  const { data } = await client.put<{ data: Customer }>(
+    `/app/agents/customers/${customerId}/onboarding`,
+    { answers },
+  );
+  return data.data;
+}
 
 export type RegisterCustomerPayload = {
   name: string;

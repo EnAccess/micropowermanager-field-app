@@ -1,15 +1,29 @@
 {
-  "documents": {
-    "questions": {
-      "title": "Onboarding questions",
-      "answerPlaceholder": "Not answered",
-      "addedSection": "ADDED",
-      "questionPlaceholder": "Question",
-      "answerFieldPlaceholder": "Answer",
-      "addQuestion": "Add question",
-      "empty": "No questions yet. Add one below, or set them on the web.",
-      "saveError": "Could not save"
-    }
+  "onboarding": {
+    "sectionLabel": "ONBOARDING",
+    "title": "Onboarding questions",
+    "noAnswers": "No answers yet",
+    "unanswered": "{{n}} still unanswered",
+    "allAnswered": "All questions answered",
+    "empty": "No questions yet",
+    "emptyBody": "Add the questions you go through with the customer, or set them on the web.",
+    "newQuestion": "NEW QUESTION",
+    "questionPlaceholder": "Question",
+    "answerPlaceholder": "Answer",
+    "addQuestion": "Add question",
+    "saved": "Answers saved",
+    "saveError": "Could not save",
+    "saveRetry": "Check your connection and try again.",
+    "duplicate": "“{{question}}” is already on the list.",
+    "missingQuestion": "Every answer needs a question. Fill in the question or remove the row.",
+    "removeTitle": "Remove question?",
+    "removeBody": "“{{question}}” and its answer are removed when you save.",
+    "remove": "Remove",
+    "discardTitle": "Discard changes?",
+    "discardBody": "Your answers have not been saved yet.",
+    "keepEditing": "Keep editing",
+    "maxTitle": "Limit reached",
+    "maxBody": "A customer can have at most {{n}} questions."
   },
   "common": {
     "cancel": "Cancel",
@@ -399,8 +413,7 @@
     "noCustomerSerial": "No customer matched serial {{serial}}.",
     "noCustomer": "No customer linked.",
     "meter": "Meter",
-    "shsUnit": "SHS unit",
-    "appliance": "Appliance"
+    "shsUnit": "SHS unit"
   },
   "saleNew": {
     "plans": {

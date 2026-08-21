@@ -32,6 +32,7 @@ import {
   DateField,
   DocumentSection,
   LocationPickerSheet,
+  OnboardingSection,
   PhoneField,
   ProgressSteps,
   SecondaryHeader,
@@ -742,6 +743,7 @@ function SuccessStep({
           </Callout>
         ) : customer ? (
           <View style={styles.successDocs}>
+            <OnboardingSection customerId={customer.id} />
             <DocumentSection customerId={customer.id} />
           </View>
         ) : null}
@@ -900,6 +902,7 @@ const styles = StyleSheet.create({
   successDocs: {
     marginTop: spacing.lg,
     alignSelf: 'stretch',
+    gap: spacing.lg,
   },
   retryCallout: {
     marginBottom: spacing.md,

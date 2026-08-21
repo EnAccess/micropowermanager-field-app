@@ -17,6 +17,7 @@ export { LocationPickerSheet } from './LocationPickerSheet';
 export { Logo } from './Logo';
 export { MonoChip } from './MonoChip';
 export { NumericKeypad } from './NumericKeypad';
+export { OnboardingSection } from './OnboardingSection';
 export { PhoneField } from './PhoneField';
 export { Pill } from './Pill';
 export { ProgressSteps } from './ProgressSteps';

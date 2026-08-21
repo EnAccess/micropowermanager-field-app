@@ -1,15 +1,29 @@
 {
-  "documents": {
-    "questions": {
-      "title": "أسئلة التسجيل",
-      "answerPlaceholder": "بدون إجابة",
-      "addedSection": "مضافة",
-      "questionPlaceholder": "سؤال",
-      "answerFieldPlaceholder": "إجابة",
-      "addQuestion": "إضافة سؤال",
-      "empty": "لا توجد أسئلة بعد. أضف سؤالاً أدناه أو عيّنها عبر الويب.",
-      "saveError": "تعذّر الحفظ"
-    }
+  "onboarding": {
+    "sectionLabel": "التسجيل",
+    "title": "أسئلة التسجيل",
+    "noAnswers": "لا توجد إجابات بعد",
+    "unanswered": "{{n}} بدون إجابة",
+    "allAnswered": "تمت الإجابة على جميع الأسئلة",
+    "empty": "لا توجد أسئلة بعد",
+    "emptyBody": "أضف الأسئلة التي تطرحها على العميل، أو عيّنها عبر الويب.",
+    "newQuestion": "سؤال جديد",
+    "questionPlaceholder": "سؤال",
+    "answerPlaceholder": "إجابة",
+    "addQuestion": "إضافة سؤال",
+    "saved": "تم حفظ الإجابات",
+    "saveError": "تعذّر الحفظ",
+    "saveRetry": "تحقق من الاتصال وحاول مرة أخرى.",
+    "duplicate": "«{{question}}» موجود بالفعل في القائمة.",
+    "missingQuestion": "كل إجابة تحتاج إلى سؤال. أدخل السؤال أو احذف الصف.",
+    "removeTitle": "حذف السؤال؟",
+    "removeBody": "سيُحذف «{{question}}» وإجابته عند الحفظ.",
+    "remove": "حذف",
+    "discardTitle": "تجاهل التغييرات؟",
+    "discardBody": "لم يتم حفظ إجاباتك بعد.",
+    "keepEditing": "متابعة التحرير",
+    "maxTitle": "تم الوصول إلى الحد",
+    "maxBody": "يمكن أن يكون للعميل {{n}} أسئلة كحد أقصى."
   },
   "common": {
     "cancel": "إلغاء",
@@ -399,8 +413,7 @@
     "noCustomerSerial": "لم يطابق أي عميل الرقم التسلسلي {{serial}}.",
     "noCustomer": "لا يوجد عميل مرتبط.",
     "meter": "عدّاد",
-    "shsUnit": "وحدة SHS",
-    "appliance": "جهاز"
+    "shsUnit": "وحدة SHS"
   },
   "saleNew": {
     "plans": {

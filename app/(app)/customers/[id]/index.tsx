@@ -30,6 +30,7 @@ import {
   DocumentSection,
   GradientHero,
   MonoChip,
+  OnboardingSection,
   Pill,
   Text,
 } from '@/components';
@@ -183,6 +184,10 @@ export default function CustomerDetailScreen() {
               tone="primary"
             />
           </Card>
+        </View>
+
+        <View style={styles.section}>
+          <OnboardingSection customerId={id} />
         </View>
 
         <View style={styles.section}>

@@ -1,15 +1,29 @@
 {
-  "documents": {
-    "questions": {
-      "title": "Perguntas de integração",
-      "answerPlaceholder": "Sem resposta",
-      "addedSection": "ADICIONADO",
-      "questionPlaceholder": "Pergunta",
-      "answerFieldPlaceholder": "Resposta",
-      "addQuestion": "Adicionar pergunta",
-      "empty": "Ainda não há perguntas. Adicione uma abaixo ou defina-as na web.",
-      "saveError": "Não foi possível guardar"
-    }
+  "onboarding": {
+    "sectionLabel": "INTEGRAÇÃO",
+    "title": "Perguntas de integração",
+    "noAnswers": "Ainda sem respostas",
+    "unanswered": "{{n}} sem resposta",
+    "allAnswered": "Todas as perguntas respondidas",
+    "empty": "Ainda não há perguntas",
+    "emptyBody": "Adicione as perguntas que faz ao cliente ou defina-as na web.",
+    "newQuestion": "NOVA PERGUNTA",
+    "questionPlaceholder": "Pergunta",
+    "answerPlaceholder": "Resposta",
+    "addQuestion": "Adicionar pergunta",
+    "saved": "Respostas guardadas",
+    "saveError": "Não foi possível guardar",
+    "saveRetry": "Verifique a ligação e tente novamente.",
+    "duplicate": "“{{question}}” já está na lista.",
+    "missingQuestion": "Cada resposta precisa de uma pergunta. Preencha a pergunta ou remova a linha.",
+    "removeTitle": "Remover pergunta?",
+    "removeBody": "“{{question}}” e a sua resposta são removidos ao guardar.",
+    "remove": "Remover",
+    "discardTitle": "Descartar alterações?",
+    "discardBody": "As suas respostas ainda não foram guardadas.",
+    "keepEditing": "Continuar a editar",
+    "maxTitle": "Limite atingido",
+    "maxBody": "Um cliente pode ter no máximo {{n}} perguntas."
   },
   "common": {
     "cancel": "Cancelar",
@@ -399,8 +413,7 @@
     "noCustomerSerial": "Nenhum cliente corresponde ao número de série {{serial}}.",
     "noCustomer": "Sem cliente ligado.",
     "meter": "Contador",
-    "shsUnit": "Unidade SHS",
-    "appliance": "Aparelho"
+    "shsUnit": "Unidade SHS"
   },
   "saleNew": {
     "plans": {
