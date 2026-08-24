@@ -1,6 +1,6 @@
 {
   "name": "micropowermanager-field-app",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
