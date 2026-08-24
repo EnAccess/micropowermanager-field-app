@@ -578,7 +578,10 @@
     "weeklyPayg": "PAYG لمدة {{count}} أسبوع",
     "installment": "قسط",
     "planFallback": "خطة",
-    "dueDash": "—"
+    "dueDash": "—",
+    "tokenShow": "إظهار الرمز",
+    "tokenNone": "لا يوجد رمز لهذه الدفعة.",
+    "tokenCopied": "تم نسخ الرمز"
   },
   "syncBanner": {
     "offline": "ما زلت غير متصل — سنزامن فور عودتك إلى الشبكة.",

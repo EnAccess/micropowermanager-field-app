@@ -50,6 +50,7 @@ import {
 } from '@/components';
 import { fonts, radii, semantic, spacing } from '@/theme';
 import { extractServerError as errorMessage } from '@/utils/errorMessage';
+import { describeTokenCredit } from '@/utils/tokenDisplay';
 import { useCurrency } from '@/utils/useCurrency';
 
 type Step = 'find' | 'amount' | 'confirm' | 'success';
@@ -791,21 +792,10 @@ function TokenCard({
         <Feather name="copy" size={16} color={semantic.ink2} />
       </Pressable>
       <Text variant="meta" tone="muted">
-        {describeTokenAmount(token) ?? t('paymentNew.token.readToCustomer')}
+        {describeTokenCredit(token) ?? t('paymentNew.token.readToCustomer')}
       </Text>
     </View>
   );
-}
-
-function describeTokenAmount(token: PaymentToken): string | null {
-  if (token.token_amount == null) return null;
-  const unit = token.token_unit ?? '';
-  const amount = token.token_amount;
-  if (unit === 'kWh') return `${amount.toFixed(3)} ${unit}`;
-  if (unit === 'days' || unit === 'weeks' || unit === 'months') {
-    return `${amount.toFixed(1)} ${unit}`;
-  }
-  return unit ? `${amount} ${unit}` : null;
 }
 
 async function copyToken(value: string, t: TFunction) {

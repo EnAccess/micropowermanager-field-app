@@ -578,7 +578,10 @@
     "weeklyPayg": "{{count}} ပတ် PAYG",
     "installment": "အရစ်ကျ",
     "planFallback": "အစီအစဉ်",
-    "dueDash": "—"
+    "dueDash": "—",
+    "tokenShow": "တိုကင် ပြရန်",
+    "tokenNone": "ဤပေးချေမှုအတွက် တိုကင် မရှိပါ။",
+    "tokenCopied": "တိုကင် ကူးယူပြီး"
   },
   "syncBanner": {
     "offline": "အော့ဖ်လိုင်း ဖြစ်နေဆဲ — ကွန်ရက် ပြန်ရသည်နှင့် စင့်ခ်ပါမည်။",

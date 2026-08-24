@@ -578,7 +578,10 @@
     "weeklyPayg": "{{count}}-week PAYG",
     "installment": "Installment",
     "planFallback": "Plan",
-    "dueDash": "—"
+    "dueDash": "—",
+    "tokenShow": "Show token",
+    "tokenNone": "No token for this payment.",
+    "tokenCopied": "Token copied"
   },
   "syncBanner": {
     "offline": "Still offline — we'll sync the moment you're back on a network.",

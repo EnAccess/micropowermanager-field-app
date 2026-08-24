@@ -578,7 +578,10 @@
     "weeklyPayg": "PAYG {{count}} semaines",
     "installment": "Tempérament",
     "planFallback": "Plan",
-    "dueDash": "—"
+    "dueDash": "—",
+    "tokenShow": "Afficher le jeton",
+    "tokenNone": "Aucun jeton pour ce paiement.",
+    "tokenCopied": "Jeton copié"
   },
   "syncBanner": {
     "offline": "Toujours hors ligne — nous synchroniserons dès votre retour en ligne.",

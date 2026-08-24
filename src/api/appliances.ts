@@ -72,13 +72,26 @@ export async function fetchUnassignedDevices(
   return data.data ?? [];
 }
 
+export type RatePaymentHistory = {
+  id: number;
+  transaction_id: number | null;
+  amount?: number | null;
+};
+
 export type SaleRate = {
   id: number;
   rate_cost: number;
   remaining: number;
   due_date: string;
   created_at?: string;
+  payment_histories?: RatePaymentHistory[];
 };
+
+export function ratePaymentTransactionIds(rate: SaleRate): number[] {
+  return (rate.payment_histories ?? [])
+    .map((history) => history.transaction_id)
+    .filter((id): id is number => typeof id === 'number');
+}
 
 export type SalePerson = {
   id: number;

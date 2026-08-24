@@ -578,7 +578,10 @@
     "weeklyPayg": "PAYG {{count}} semanas",
     "installment": "Prestação",
     "planFallback": "Plano",
-    "dueDash": "—"
+    "dueDash": "—",
+    "tokenShow": "Ver token",
+    "tokenNone": "Sem token para este pagamento.",
+    "tokenCopied": "Token copiado"
   },
   "syncBanner": {
     "offline": "Ainda offline — sincronizamos assim que voltar à rede.",

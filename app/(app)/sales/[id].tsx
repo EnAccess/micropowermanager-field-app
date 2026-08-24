@@ -2,7 +2,7 @@ import { Feather } from '@expo/vector-icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Clipboard from 'expo-clipboard';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
@@ -22,15 +22,18 @@ import {
   SoldAppliance,
   fetchAllSoldAppliances,
   nextDueDate,
+  ratePaymentTransactionIds,
   saleCost,
   saleCustomerName,
   saleCustomerPhone,
   salePaid,
 } from '@/api/appliances';
+import { fetchTransactionToken } from '@/api/transactions';
 import { useSession } from '@/auth/SessionContext';
 import { Button, Card, GradientHero, MonoChip, Pill, Text } from '@/components';
 import { fonts, radii, semantic, shadows, spacing } from '@/theme';
 import { initials } from '@/utils/format';
+import { describeTokenCredit } from '@/utils/tokenDisplay';
 import { useCurrency } from '@/utils/useCurrency';
 
 export default function SaleDetailScreen() {
@@ -420,6 +423,7 @@ function RateRow({
   t: TFunction;
   last: boolean;
 }) {
+  const [showToken, setShowToken] = useState(false);
   const cost = rate.rate_cost;
   const remaining = rate.remaining;
   const paid = Math.max(0, cost - remaining);
@@ -427,35 +431,130 @@ function RateRow({
   const dueDate = rate.due_date
     ? formatDate(rate.due_date)
     : t('saleDetail.dueDash');
+  const transactionIds = ratePaymentTransactionIds(rate);
+  const canShowToken = fullyPaid && transactionIds.length > 0;
 
   return (
     <View style={[styles.rateRow, last && styles.rateRowLast]}>
-      <View
-        style={[
-          styles.rateDot,
-          { backgroundColor: fullyPaid ? semantic.green : semantic.line2 },
-        ]}
-      />
-      <View style={styles.rateBody}>
-        <Text variant="bodyEmphasis" numberOfLines={1}>
-          {dueDate}
-        </Text>
-        <Text variant="meta" tone="muted">
-          {fullyPaid
-            ? t('saleDetail.paidFull', { amount: formatCurrency(cost) })
-            : paid > 0
-              ? t('saleDetail.partial', {
-                  paid: formatCurrency(paid),
-                  total: formatCurrency(cost),
-                })
-              : t('saleDetail.due', { amount: formatCurrency(cost) })}
-        </Text>
+      <View style={styles.rateMain}>
+        <View
+          style={[
+            styles.rateDot,
+            { backgroundColor: fullyPaid ? semantic.green : semantic.line2 },
+          ]}
+        />
+        <View style={styles.rateBody}>
+          <Text variant="bodyEmphasis" numberOfLines={1}>
+            {dueDate}
+          </Text>
+          <Text variant="meta" tone="muted">
+            {fullyPaid
+              ? t('saleDetail.paidFull', { amount: formatCurrency(cost) })
+              : paid > 0
+                ? t('saleDetail.partial', {
+                    paid: formatCurrency(paid),
+                    total: formatCurrency(cost),
+                  })
+                : t('saleDetail.due', { amount: formatCurrency(cost) })}
+          </Text>
+        </View>
+        {canShowToken ? (
+          <Pressable
+            onPress={() => setShowToken((prev) => !prev)}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={t('saleDetail.tokenShow')}
+            style={({ pressed }) => [
+              styles.tokenBtn,
+              showToken && styles.tokenBtnActive,
+              pressed && { opacity: 0.7 },
+            ]}
+          >
+            <Feather
+              name="key"
+              size={14}
+              color={showToken ? semantic.paper : semantic.blue}
+            />
+          </Pressable>
+        ) : null}
+        {fullyPaid ? (
+          <Pill label={t('saleDetail.paid')} tone="green" />
+        ) : (
+          <Text variant="mono" style={styles.rateAmount}>
+            {formatCurrency(remaining)}
+          </Text>
+        )}
       </View>
-      {fullyPaid ? (
-        <Pill label={t('saleDetail.paid')} tone="green" />
+
+      {showToken ? (
+        <View style={styles.tokenPanel}>
+          {transactionIds.map((transactionId, index) => (
+            <TokenLine
+              key={transactionId}
+              transactionId={transactionId}
+              last={index === transactionIds.length - 1}
+              t={t}
+            />
+          ))}
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+function TokenLine({
+  transactionId,
+  last,
+  t,
+}: {
+  transactionId: number;
+  last: boolean;
+  t: TFunction;
+}) {
+  const { api } = useSession();
+  const tokenQuery = useQuery({
+    queryKey: ['installment-token', transactionId],
+    queryFn: () => fetchTransactionToken(api!, transactionId),
+    enabled: !!api,
+    staleTime: Infinity,
+    retry: false,
+  });
+
+  const token = tokenQuery.data ?? null;
+  const credit = token ? describeTokenCredit(token) : null;
+
+  return (
+    <View style={[styles.tokenLine, !last && styles.tokenLineDivided]}>
+      {tokenQuery.isPending ? (
+        <ActivityIndicator color={semantic.blue} size="small" />
+      ) : token ? (
+        <Pressable
+          onPress={() =>
+            copyToClipboard(token.token, t('saleDetail.tokenCopied'))
+          }
+          style={({ pressed }) => [
+            styles.tokenValueRow,
+            pressed && { opacity: 0.7 },
+          ]}
+        >
+          <Text
+            style={styles.tokenValue}
+            selectable
+            numberOfLines={1}
+            adjustsFontSizeToFit
+          >
+            {token.token}
+          </Text>
+          {credit ? (
+            <Text variant="meta" tone="muted">
+              {credit}
+            </Text>
+          ) : null}
+          <Feather name="copy" size={14} color={semantic.ink3} />
+        </Pressable>
       ) : (
-        <Text variant="mono" style={styles.rateAmount}>
-          {formatCurrency(remaining)}
+        <Text variant="meta" tone="muted">
+          {t('saleDetail.tokenNone')}
         </Text>
       )}
     </View>
@@ -738,16 +837,63 @@ const styles = StyleSheet.create({
     paddingHorizontal: 0,
   },
   rateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
     paddingVertical: spacing.sm + 2,
     paddingHorizontal: spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: semantic.line,
+    gap: spacing.sm,
   },
   rateRowLast: {
     borderBottomWidth: 0,
+  },
+  rateMain: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  tokenBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: radii.pill,
+    borderWidth: 1.5,
+    borderColor: semantic.sky,
+    backgroundColor: semantic.paper,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  tokenBtnActive: {
+    backgroundColor: semantic.blue,
+    borderColor: semantic.blue,
+  },
+  tokenPanel: {
+    marginLeft: 10 + spacing.md,
+    borderRadius: radii.input,
+    borderWidth: 1,
+    borderColor: semantic.line,
+    backgroundColor: semantic.bgSoft,
+    paddingHorizontal: spacing.md,
+  },
+  tokenLine: {
+    paddingVertical: spacing.sm,
+    minHeight: 44,
+    justifyContent: 'center',
+  },
+  tokenLineDivided: {
+    borderBottomWidth: 1,
+    borderBottomColor: semantic.line,
+  },
+  tokenValueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  tokenValue: {
+    flex: 1,
+    fontFamily: fonts.monoBold,
+    fontSize: 18,
+    letterSpacing: 1,
+    color: semantic.ink,
   },
   rateDot: {
     width: 10,
