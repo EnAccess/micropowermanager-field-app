@@ -5,8 +5,9 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
+import { isAxiosError } from 'axios';
 import { router } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
@@ -35,14 +36,27 @@ import {
   fetchCustomerPage,
   searchCustomers,
 } from '@/api/customer';
+import {
+  CASH_PAYMENT_PROVIDER,
+  PaymentProvider,
+  fetchPaymentProviders,
+} from '@/api/transactions';
+import { usePaymentStatus } from '@/api/usePaymentStatus';
 import { useSession } from '@/auth/SessionContext';
 import {
   Button,
   Callout,
   Card,
   CustomerChip,
+  PayerPhoneField,
+  PaymentAwaiting,
+  PaymentFailure,
+  PaymentFailureDetail,
+  PaymentMethodLogo,
+  PaymentMethodPicker,
   Pill,
   ProgressSteps,
+  ProviderCheckout,
   ReceiptCard,
   SecondaryHeader,
   Select,
@@ -59,7 +73,16 @@ import { extractServerError as errorMessage } from '@/utils/errorMessage';
 import { initials } from '@/utils/format';
 import { useCurrency } from '@/utils/useCurrency';
 
-type Step = 'customer' | 'unit' | 'plan' | 'confirm' | 'success';
+type Step =
+  | 'customer'
+  | 'unit'
+  | 'plan'
+  | 'method'
+  | 'confirm'
+  | 'checkout'
+  | 'awaiting'
+  | 'success'
+  | 'failed';
 
 type PlanId = 'cash' | 'twelve' | 'custom' | 'energy';
 
@@ -131,6 +154,13 @@ export default function SellShsScreen() {
   const [eaasDownPayment, setEaasDownPayment] = useState('');
   const [deviceSerial, setDeviceSerial] = useState('');
   const [transactionRef, setTransactionRef] = useState<string | null>(null);
+  const [providerId, setProviderId] = useState(CASH_PAYMENT_PROVIDER);
+  const [payerPhoneOverride, setPayerPhoneOverride] = useState<string | null>(
+    null,
+  );
+  const [transactionId, setTransactionId] = useState<number | null>(null);
+  const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
+  const [failure, setFailure] = useState<PaymentFailureDetail | null>(null);
 
   const plan = useMemo(() => PLANS.find((p) => p.id === planId)!, [planId]);
   const cost = assignment?.cost ?? 0;
@@ -159,6 +189,29 @@ export default function SellShsScreen() {
     return d;
   }, [isWeekly]);
 
+  const providersQuery = useQuery({
+    queryKey: ['payment-providers'],
+    queryFn: () => fetchPaymentProviders(api!),
+    enabled: !!api,
+    staleTime: 0,
+    gcTime: 0,
+  });
+
+  const providers = providersQuery.data ?? [];
+  const isProvider = providerId !== CASH_PAYMENT_PROVIDER;
+  const resolvedPayerPhone = customer ? customerPhone(customer) : null;
+  const payerPhone = payerPhoneOverride ?? resolvedPayerPhone;
+  const collectsProviderDownPayment = providers.length > 0 && downPayment > 0;
+  const totalSteps = collectsProviderDownPayment ? 5 : 4;
+
+  const statusEnabled =
+    step === 'awaiting' && isProvider && transactionId != null;
+  const { progress, check } = usePaymentStatus(
+    api,
+    transactionId,
+    statusEnabled,
+  );
+
   const sellMutation = useMutation({
     mutationFn: () =>
       sellAppliance(api!, {
@@ -181,10 +234,32 @@ export default function SellShsScreen() {
               first_payment_date: toIsoDate(firstPaymentDate),
             }),
         ...(deviceSerial.trim() ? { device_serial: deviceSerial.trim() } : {}),
+        ...(isProvider ? { payment_provider: providerId } : {}),
+        ...(isProvider && payerPhoneOverride
+          ? { payer_phone: payerPhoneOverride }
+          : {}),
       }),
-    onSuccess: async () => {
-      setTransactionRef(String(Date.now()).slice(-6));
-      setStep('success');
+    onSuccess: async (result) => {
+      setTransactionRef(
+        result.transactionId != null
+          ? String(result.transactionId)
+          : String(Date.now()).slice(-6),
+      );
+      setTransactionId(result.transactionId);
+
+      if (isProvider && result.redirectUrl) {
+        setRedirectUrl(result.redirectUrl);
+        setStep('checkout');
+      } else if (isProvider && result.transactionId == null) {
+        setFailure({
+          title: t('saleNew.failure.timeoutTitle'),
+          body: t('saleNew.failure.timeoutBody'),
+        });
+        setStep('failed');
+      } else if (!isProvider) {
+        setStep('success');
+      }
+
       await queryClient.invalidateQueries({ queryKey: ['agent-balance'] });
       await queryClient.invalidateQueries({ queryKey: ['agent-transactions'] });
       await queryClient.invalidateQueries({
@@ -195,10 +270,58 @@ export default function SellShsScreen() {
       });
       await queryClient.invalidateQueries({ queryKey: ['sold-appliances'] });
     },
-    onError: (err) => {
-      toast.showError(errorMessage(err, t('saleNew.failed')));
+    onError: async (err) => {
+      if (isAxiosError(err) && err.code === 'ECONNABORTED') {
+        setFailure({
+          title: t('saleNew.failure.timeoutTitle'),
+          body: t('saleNew.failure.timeoutBody'),
+        });
+        setStep('failed');
+        return;
+      }
+
+      const message = errorMessage(err, t('saleNew.failed'));
+
+      if (isAxiosError(err) && err.response?.status === 422) {
+        await queryClient.invalidateQueries({
+          queryKey: ['payment-providers'],
+        });
+        if (isProvider) setStep('method');
+        toast.showError(message);
+        return;
+      }
+
+      if (isProvider) {
+        setFailure({
+          title: t('saleNew.failure.rejectedTitle'),
+          body: message,
+        });
+        setStep('failed');
+        return;
+      }
+
+      toast.showError(message);
     },
   });
+
+  useEffect(() => {
+    if (progress === 'processed') setStep('success');
+    if (progress === 'failed') {
+      setFailure({
+        title: t('saleNew.failure.rejectedTitle'),
+        body: t('saleNew.failure.rejectedBody'),
+      });
+      setStep('failed');
+    }
+  }, [progress, t]);
+
+  function submitSale() {
+    if (isProvider) {
+      setFailure(null);
+      setStep('awaiting');
+    }
+    sellMutation.mutate();
+  }
 
   function reset() {
     setStep('customer');
@@ -213,12 +336,18 @@ export default function SellShsScreen() {
     setEaasDownPayment('');
     setDeviceSerial('');
     setTransactionRef(null);
+    setProviderId(CASH_PAYMENT_PROVIDER);
+    setPayerPhoneOverride(null);
+    setTransactionId(null);
+    setRedirectUrl(null);
+    setFailure(null);
     sellMutation.reset();
   }
 
   if (step === 'customer') {
     return (
       <CustomerStep
+        totalSteps={totalSteps}
         onPick={(c) => {
           setCustomer(c);
           setStep('unit');
@@ -231,6 +360,7 @@ export default function SellShsScreen() {
   if (step === 'unit' && customer) {
     return (
       <UnitStep
+        totalSteps={totalSteps}
         customer={customer}
         selectedId={assignment?.id ?? null}
         onChangeCustomer={() => setStep('customer')}
@@ -248,6 +378,7 @@ export default function SellShsScreen() {
   if (step === 'plan' && customer && assignment) {
     return (
       <PlanStep
+        totalSteps={totalSteps}
         customer={customer}
         assignment={assignment}
         planId={planId}
@@ -278,7 +409,65 @@ export default function SellShsScreen() {
         }
         formatCurrency={formatCurrency}
         onBack={() => setStep('unit')}
+        onContinue={() =>
+          setStep(collectsProviderDownPayment ? 'method' : 'confirm')
+        }
+      />
+    );
+  }
+
+  if (step === 'method' && customer) {
+    return (
+      <MethodStep
+        totalSteps={totalSteps}
+        providers={providers}
+        providerId={providerId}
+        onChangeProvider={setProviderId}
+        payerPhone={resolvedPayerPhone}
+        payerPhoneOverride={payerPhoneOverride}
+        onChangePayerPhone={setPayerPhoneOverride}
+        downPayment={downPayment}
+        formatCurrency={formatCurrency}
+        onBack={() => setStep('plan')}
         onContinue={() => setStep('confirm')}
+      />
+    );
+  }
+
+  if (step === 'checkout' && redirectUrl) {
+    return (
+      <ProviderCheckout
+        url={redirectUrl}
+        onDone={() => {
+          setRedirectUrl(null);
+          setStep('awaiting');
+        }}
+      />
+    );
+  }
+
+  if (step === 'awaiting') {
+    return (
+      <PaymentAwaiting
+        providerId={providerId}
+        providerName={providers.find((p) => p.id === providerId)?.name ?? null}
+        payerPhone={payerPhone}
+        amountFormatted={formatCurrency(downPayment)}
+        currency={null}
+        unresolved={progress === 'unresolved'}
+        onCheckAgain={check}
+        onClose={() => router.replace('/(app)/(tabs)')}
+      />
+    );
+  }
+
+  if (step === 'failed' && failure) {
+    return (
+      <PaymentFailure
+        failure={failure}
+        restartLabel={t('saleNew.failure.startOver')}
+        onClose={() => router.replace('/(app)/(tabs)')}
+        onRestart={reset}
       />
     );
   }
@@ -286,6 +475,7 @@ export default function SellShsScreen() {
   if (step === 'confirm' && customer && assignment) {
     return (
       <ConfirmStep
+        totalSteps={totalSteps}
         customer={customer}
         assignment={assignment}
         plan={plan}
@@ -301,8 +491,11 @@ export default function SellShsScreen() {
         formatCurrency={formatCurrency}
         currency={currency}
         loading={sellMutation.isPending}
-        onBack={() => setStep('plan')}
-        onConfirm={() => sellMutation.mutate()}
+        providerId={providerId}
+        providerName={providers.find((p) => p.id === providerId)?.name ?? null}
+        payerPhone={payerPhone}
+        onBack={() => setStep(collectsProviderDownPayment ? 'method' : 'plan')}
+        onConfirm={submitSale}
       />
     );
   }
@@ -314,6 +507,7 @@ export default function SellShsScreen() {
         assignment={assignment}
         downPayment={downPayment}
         isEaas={isEaas}
+        providerId={providerId}
         reference={transactionRef ?? '—'}
         formatCurrency={formatCurrency}
         onClose={() => router.replace('/(app)/(tabs)')}
@@ -326,9 +520,11 @@ export default function SellShsScreen() {
 }
 
 function CustomerStep({
+  totalSteps,
   onPick,
   onBack,
 }: {
+  totalSteps: number;
   onPick: (c: Customer) => void;
   onBack: () => void;
 }) {
@@ -367,11 +563,11 @@ function CustomerStep({
     <View style={styles.root}>
       <SecondaryHeader
         title={t('saleNew.pickCustomer.title')}
-        subtitle={t('saleNew.pickCustomer.step')}
+        subtitle={t('saleNew.stepOf', { current: 1, total: totalSteps })}
         onBack={onBack}
       />
       <View style={styles.progressWrap}>
-        <ProgressSteps total={4} current={1} />
+        <ProgressSteps total={totalSteps} current={1} />
       </View>
 
       <View style={styles.searchBlock}>
@@ -457,6 +653,7 @@ function CustomerStep({
 }
 
 function UnitStep({
+  totalSteps,
   customer,
   selectedId,
   onChangeCustomer,
@@ -465,6 +662,7 @@ function UnitStep({
   onBack,
   formatCurrency,
 }: {
+  totalSteps: number;
   customer: Customer;
   selectedId: number | null;
   onChangeCustomer: () => void;
@@ -490,11 +688,11 @@ function UnitStep({
     <View style={styles.root}>
       <SecondaryHeader
         title={t('saleNew.pickSystem.title')}
-        subtitle={t('saleNew.pickSystem.step')}
+        subtitle={t('saleNew.stepOf', { current: 2, total: totalSteps })}
         onBack={onBack}
       />
       <View style={styles.progressWrap}>
-        <ProgressSteps total={4} current={2} />
+        <ProgressSteps total={totalSteps} current={2} />
       </View>
 
       <ScrollView contentContainerStyle={styles.unitContent}>
@@ -613,6 +811,7 @@ function UnitStep({
 }
 
 function PlanStep({
+  totalSteps,
   customer,
   assignment,
   planId,
@@ -640,6 +839,7 @@ function PlanStep({
   onBack,
   onContinue,
 }: {
+  totalSteps: number;
   customer: Customer;
   assignment: AgentAssignedAppliance;
   planId: PlanId;
@@ -729,7 +929,7 @@ function PlanStep({
         onBack={onBack}
       />
       <View style={styles.progressWrap}>
-        <ProgressSteps total={4} current={3} />
+        <ProgressSteps total={totalSteps} current={3} />
       </View>
 
       <KeyboardAvoidingView
@@ -1007,7 +1207,112 @@ function PlanStep({
   );
 }
 
+function MethodStep({
+  totalSteps,
+  providers,
+  providerId,
+  onChangeProvider,
+  payerPhone,
+  payerPhoneOverride,
+  onChangePayerPhone,
+  downPayment,
+  formatCurrency,
+  onBack,
+  onContinue,
+}: {
+  totalSteps: number;
+  providers: PaymentProvider[];
+  providerId: number;
+  onChangeProvider: (id: number) => void;
+  payerPhone: string | null;
+  payerPhoneOverride: string | null;
+  onChangePayerPhone: (next: string | null) => void;
+  downPayment: number;
+  formatCurrency: (n: number) => string;
+  onBack: () => void;
+  onContinue: () => void;
+}) {
+  const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
+  const isProvider = providerId !== CASH_PAYMENT_PROVIDER;
+  const missingPayer = isProvider && !payerPhone && !payerPhoneOverride;
+
+  return (
+    <View style={styles.root}>
+      <SecondaryHeader
+        title={t('saleNew.method.title')}
+        subtitle={t('saleNew.stepOf', { current: 4, total: totalSteps })}
+        onBack={onBack}
+      />
+      <View style={styles.progressWrap}>
+        <ProgressSteps total={totalSteps} current={4} />
+      </View>
+
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={styles.flex}
+      >
+        <ScrollView
+          contentContainerStyle={styles.methodContent}
+          keyboardShouldPersistTaps="handled"
+        >
+          <Text variant="body" tone="muted">
+            {t('saleNew.method.hint', {
+              amount: formatCurrency(downPayment),
+            })}
+          </Text>
+
+          <PaymentMethodPicker
+            providers={providers}
+            value={providerId}
+            onChange={onChangeProvider}
+          />
+
+          {isProvider ? (
+            <Card>
+              <PayerPhoneField
+                resolvedPhone={payerPhone}
+                override={payerPhoneOverride}
+                onChangeOverride={onChangePayerPhone}
+                defaultIso="MZ"
+              />
+            </Card>
+          ) : null}
+
+          {isProvider ? (
+            <Callout tone="warning">
+              <Text variant="body" tone="secondary">
+                {t('saleNew.method.rollbackWarning')}
+              </Text>
+            </Callout>
+          ) : null}
+
+          {missingPayer ? (
+            <Callout tone="warning">
+              <Text variant="body" tone="secondary">
+                {t('saleNew.method.payerRequired')}
+              </Text>
+            </Callout>
+          ) : null}
+        </ScrollView>
+
+        <View
+          style={[styles.footer, { paddingBottom: insets.bottom + spacing.md }]}
+        >
+          <Button
+            tone="accent"
+            label={t('saleNew.method.next')}
+            onPress={onContinue}
+            disabled={missingPayer}
+          />
+        </View>
+      </KeyboardAvoidingView>
+    </View>
+  );
+}
+
 function ConfirmStep({
+  totalSteps,
   customer,
   assignment,
   plan,
@@ -1023,9 +1328,13 @@ function ConfirmStep({
   formatCurrency,
   currency,
   loading,
+  providerId,
+  providerName,
+  payerPhone,
   onBack,
   onConfirm,
 }: {
+  totalSteps: number;
   customer: Customer;
   assignment: AgentAssignedAppliance;
   plan: Plan;
@@ -1041,11 +1350,15 @@ function ConfirmStep({
   formatCurrency: (n: number) => string;
   currency: string | null;
   loading: boolean;
+  providerId: number;
+  providerName: string | null;
+  payerPhone: string | null;
   onBack: () => void;
   onConfirm: () => void;
 }) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+  const isProvider = providerId !== CASH_PAYMENT_PROVIDER;
   const customerName = `${customer.name} ${customer.surname}`.trim();
   const phone = customerPhone(customer);
   const unitName =
@@ -1057,11 +1370,14 @@ function ConfirmStep({
     <View style={styles.root}>
       <SecondaryHeader
         title={t('saleNew.confirm.title')}
-        subtitle={t('saleNew.confirm.step')}
+        subtitle={t('saleNew.stepOf', {
+          current: totalSteps,
+          total: totalSteps,
+        })}
         onBack={onBack}
       />
       <View style={styles.progressWrap}>
-        <ProgressSteps total={4} current={4} />
+        <ProgressSteps total={totalSteps} current={totalSteps} />
       </View>
 
       <ScrollView contentContainerStyle={styles.confirmContent}>
@@ -1079,13 +1395,25 @@ function ConfirmStep({
           >
             {formatCurrency(downPayment)}
           </Text>
-          <Text variant="body" tone="secondary">
-            {isEaas && downPayment === 0
-              ? t('saleNew.confirm.activationOnly')
-              : currency
-                ? t('saleNew.confirm.inCashWith', { currency })
-                : t('saleNew.confirm.inCash')}
-          </Text>
+          <View style={styles.confirmMethodRow}>
+            {isEaas && downPayment === 0 ? null : (
+              <PaymentMethodLogo providerId={providerId} height={22} />
+            )}
+            <Text variant="body" tone="secondary">
+              {isEaas && downPayment === 0
+                ? t('saleNew.confirm.activationOnly')
+                : isProvider
+                  ? (providerName ?? t('paymentMethod.providerFallback'))
+                  : currency
+                    ? t('saleNew.confirm.inCashWith', { currency })
+                    : t('saleNew.confirm.inCash')}
+            </Text>
+          </View>
+          {isProvider && payerPhone ? (
+            <Text variant="meta" tone="muted">
+              {t('saleNew.confirm.payer', { phone: payerPhone })}
+            </Text>
+          ) : null}
         </View>
 
         <Card padded={false} style={styles.confirmCard}>
@@ -1217,6 +1545,7 @@ function SuccessStep({
   assignment,
   downPayment,
   isEaas,
+  providerId,
   reference,
   formatCurrency,
   onClose,
@@ -1226,6 +1555,7 @@ function SuccessStep({
   assignment: AgentAssignedAppliance;
   downPayment: number;
   isEaas: boolean;
+  providerId: number;
   reference: string;
   formatCurrency: (n: number) => string;
   onClose: () => void;
@@ -1273,6 +1603,14 @@ function SuccessStep({
             {customerName} · {unitName}
           </Text>
         </View>
+
+        {providerId !== CASH_PAYMENT_PROVIDER ? (
+          <Callout tone="info" style={styles.successNote}>
+            <Text variant="body" tone="secondary">
+              {t('saleNew.result.providerNote')}
+            </Text>
+          </Callout>
+        ) : null}
 
         <ReceiptCard
           amount={formatCurrency(downPayment)}
@@ -1645,6 +1983,21 @@ const styles = StyleSheet.create({
   },
   confirmAmount: {
     marginTop: 4,
+  },
+  successNote: {
+    width: '100%',
+    marginTop: 0,
+  },
+  methodContent: {
+    padding: spacing.lg,
+    paddingBottom: spacing.xxl,
+    gap: spacing.md,
+  },
+  confirmMethodRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.xs,
   },
   confirmCard: {
     marginHorizontal: spacing.lg,

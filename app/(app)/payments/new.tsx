@@ -1,10 +1,10 @@
 import { Feather } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { AxiosInstance } from 'axios';
+import { AxiosInstance, isAxiosError } from 'axios';
 import * as Clipboard from 'expo-clipboard';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
@@ -19,17 +19,28 @@ import {
 import type { TFunction } from 'i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { SoldAppliance, fetchCustomerSoldAppliances } from '@/api/appliances';
+import {
+  fetchAllSoldAppliances,
+  fetchCustomerSoldAppliances,
+  installmentCeiling,
+  installmentFloor,
+  saleCustomerName,
+  saleCustomerPhone,
+} from '@/api/appliances';
 import {
   DeviceLookup,
   findDeviceLookup,
   searchCustomers,
 } from '@/api/customer';
 import {
+  CASH_PAYMENT_PROVIDER,
   PaymentToken,
   collectAgentPayment,
+  fetchPaymentProviders,
   fetchTransactionToken,
+  payInstallment,
 } from '@/api/transactions';
+import { usePaymentStatus } from '@/api/usePaymentStatus';
 import { useSession } from '@/auth/SessionContext';
 import {
   Button,
@@ -38,8 +49,15 @@ import {
   CustomerChip,
   MonoChip,
   NumericKeypad,
+  PayerPhoneField,
+  PaymentAwaiting,
+  PaymentFailure,
+  PaymentFailureDetail,
+  PaymentMethodLogo,
+  PaymentMethodPicker,
   Pill,
   ProgressSteps,
+  ProviderCheckout,
   ReceiptCard,
   Screen,
   SecondaryHeader,
@@ -53,7 +71,24 @@ import { extractServerError as errorMessage } from '@/utils/errorMessage';
 import { describeTokenCredit } from '@/utils/tokenDisplay';
 import { useCurrency } from '@/utils/useCurrency';
 
-type Step = 'find' | 'amount' | 'confirm' | 'success';
+type Step =
+  | 'find'
+  | 'amount'
+  | 'method'
+  | 'confirm'
+  | 'checkout'
+  | 'awaiting'
+  | 'success'
+  | 'failed';
+
+type CollectContext = {
+  customerName: string;
+  phone: string | null;
+  forLabel: string;
+  shortLabel: string;
+  iconName: 'sun' | 'zap' | 'package';
+  serial: string | null;
+};
 
 export default function CollectPaymentScreen() {
   const { t } = useTranslation();
@@ -61,10 +96,13 @@ export default function CollectPaymentScreen() {
   const { api } = useSession();
   const queryClient = useQueryClient();
   const { symbol: currency } = useCurrency();
-  const params = useLocalSearchParams<{ serial?: string }>();
+  const params = useLocalSearchParams<{ serial?: string; saleId?: string }>();
   const prefilledSerial = (params.serial ?? '').trim();
+  const saleIdParam = Number(params.saleId);
+  const installmentSaleId =
+    Number.isFinite(saleIdParam) && saleIdParam > 0 ? saleIdParam : null;
 
-  const [step, setStep] = useState<Step>('find');
+  const [step, setStep] = useState<Step>(installmentSaleId ? 'amount' : 'find');
   const [serial, setSerial] = useState(prefilledSerial);
   const [lookup, setLookup] = useState<DeviceLookup | null>(null);
   const [lookupError, setLookupError] = useState<string | null>(null);
@@ -72,6 +110,14 @@ export default function CollectPaymentScreen() {
   const [transactionRef, setTransactionRef] = useState<string | null>(null);
   const [transactionId, setTransactionId] = useState<number | null>(null);
   const [autoLookupAttempted, setAutoLookupAttempted] = useState(false);
+  const [providerId, setProviderId] = useState(CASH_PAYMENT_PROVIDER);
+  const [payerPhoneOverride, setPayerPhoneOverride] = useState<string | null>(
+    null,
+  );
+  const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
+  const [failure, setFailure] = useState<PaymentFailureDetail | null>(null);
+
+  const isProvider = providerId !== CASH_PAYMENT_PROVIDER;
 
   const lookupMutation = useMutation({
     mutationFn: async (s: string) => {
@@ -79,6 +125,29 @@ export default function CollectPaymentScreen() {
       return findDeviceLookup(customers, s);
     },
   });
+
+  const providersQuery = useQuery({
+    queryKey: ['payment-providers'],
+    queryFn: () => fetchPaymentProviders(api!),
+    enabled: !!api,
+    staleTime: 0,
+    gcTime: 0,
+  });
+
+  const providers = providersQuery.data ?? [];
+  const hasProviders = providers.length > 0;
+
+  const installmentSaleQuery = useQuery({
+    queryKey: ['installment-sale', installmentSaleId],
+    queryFn: async () => {
+      const sales = await fetchAllSoldAppliances(api!);
+      return sales.find((s) => s.id === installmentSaleId) ?? null;
+    },
+    enabled: !!api && installmentSaleId != null,
+    staleTime: 60_000,
+  });
+
+  const installmentSale = installmentSaleQuery.data ?? null;
 
   const matchedSaleQuery = useQuery({
     queryKey: [
@@ -96,47 +165,150 @@ export default function CollectPaymentScreen() {
         null
       );
     },
-    enabled: !!api && !!lookup,
+    enabled: !!api && !!lookup && installmentSaleId == null,
     staleTime: 60_000,
   });
 
   const matchedSale = matchedSaleQuery.data ?? null;
-  const minimumPayment = computeMinimumPayment(matchedSale);
+  const amountValue = Number(amountStr) || 0;
+
+  const minimumPayment = installmentSale
+    ? installmentFloor(installmentSale)
+    : matchedSale
+      ? installmentFloor(matchedSale)
+      : 0;
+  const maximumPayment = installmentSale
+    ? installmentCeiling(installmentSale)
+    : 0;
+
+  const context = useMemo<CollectContext | null>(() => {
+    if (installmentSaleId != null) {
+      if (!installmentSale) return null;
+      return {
+        customerName:
+          saleCustomerName(installmentSale) ?? t('paymentNew.customerFallback'),
+        phone: saleCustomerPhone(installmentSale),
+        forLabel:
+          installmentSale.appliance?.name ?? t('paymentNew.device.installment'),
+        shortLabel: t('paymentNew.device.installmentShort'),
+        iconName: 'package',
+        serial: installmentSale.device_serial ?? null,
+      };
+    }
+    if (!lookup) return null;
+    return {
+      customerName: `${lookup.customer.name} ${lookup.customer.surname}`.trim(),
+      phone: primaryPhone(lookup.customer),
+      forLabel: deviceForLabel(lookup.device.device_type, t),
+      shortLabel: deviceShortLabel(lookup.device.device_type, t),
+      iconName: deviceKind(lookup.device.device_type) === 'shs' ? 'sun' : 'zap',
+      serial: lookup.device.device_serial,
+    };
+  }, [installmentSaleId, installmentSale, lookup, t]);
+
+  const payerPhone = payerPhoneOverride ?? context?.phone ?? null;
+
+  const statusEnabled =
+    step === 'awaiting' && isProvider && transactionId != null;
+  const { progress, check } = usePaymentStatus(
+    api,
+    transactionId,
+    statusEnabled,
+  );
 
   const submitMutation = useMutation({
     mutationFn: async () => {
-      const result = await collectAgentPayment(api!, {
-        device_serial: lookup!.device.device_serial,
+      const providerFields = {
+        ...(isProvider ? { payment_provider: providerId } : {}),
+        ...(isProvider && payerPhoneOverride
+          ? { payer_phone: payerPhoneOverride }
+          : {}),
+      };
+
+      if (installmentSaleId != null) {
+        return payInstallment(api!, installmentSaleId, {
+          amount: amountValue,
+          ...providerFields,
+        });
+      }
+
+      return collectAgentPayment(api!, {
+        device_serial: context!.serial!,
         amount: amountValue,
+        ...providerFields,
       });
-      return result;
     },
     onSuccess: async (result) => {
-      const ref = String(Date.now()).slice(-6);
-      setTransactionRef(ref);
-      setTransactionId(result.transaction_id);
-      setStep('success');
-      await queryClient.invalidateQueries({ queryKey: ['agent-balance'] });
-      await queryClient.invalidateQueries({ queryKey: ['agent-transactions'] });
-      await queryClient.invalidateQueries({
-        queryKey: ['agent-transactions-today'],
-      });
-      await queryClient.invalidateQueries({
-        queryKey: ['agent-transactions-list'],
-      });
+      setTransactionRef(
+        result.transactionId != null
+          ? String(result.transactionId)
+          : String(Date.now()).slice(-6),
+      );
+      setTransactionId(result.transactionId);
+
+      if (isProvider && result.redirectUrl) {
+        setRedirectUrl(result.redirectUrl);
+        setStep('checkout');
+      } else if (isProvider && result.transactionId == null) {
+        setFailure({
+          title: t('paymentNew.failure.timeoutTitle'),
+          body: t('paymentNew.failure.timeoutBody'),
+        });
+        setStep('failed');
+      } else if (!isProvider) {
+        setStep('success');
+      }
+
+      await invalidatePaymentQueries(queryClient);
     },
-    onError: (e) => toast.showError(errorMessage(e, t('paymentNew.failed'))),
+    onError: async (error) => {
+      if (isAxiosError(error) && error.code === 'ECONNABORTED') {
+        setFailure({
+          title: t('paymentNew.failure.timeoutTitle'),
+          body: t('paymentNew.failure.timeoutBody'),
+        });
+        setStep('failed');
+        return;
+      }
+
+      const message = errorMessage(error, t('paymentNew.failed'));
+
+      if (isAxiosError(error) && error.response?.status === 422) {
+        await queryClient.invalidateQueries({
+          queryKey: ['payment-providers'],
+        });
+        if (isProvider) setStep('method');
+        toast.showError(message);
+        return;
+      }
+
+      if (isProvider) {
+        setFailure({
+          title: t('paymentNew.failure.rejectedTitle'),
+          body: message,
+        });
+        setStep('failed');
+        return;
+      }
+
+      toast.showError(message);
+    },
   });
 
-  const amountValue = Number(amountStr) || 0;
+  useEffect(() => {
+    if (progress === 'processed') setStep('success');
+    if (progress === 'failed') {
+      setFailure({
+        title: t('paymentNew.failure.rejectedTitle'),
+        body: t('paymentNew.failure.rejectedBody'),
+      });
+      setStep('failed');
+    }
+  }, [progress, t]);
 
-  // When the screen is opened with a `?serial=…` (e.g. from a sale detail
-  // page), skip the manual Find step: run the lookup once and jump straight
-  // to amount entry. If the lookup fails, fall through to the Find step with
-  // the prefilled serial and the error so the user can correct it.
   useEffect(() => {
     if (autoLookupAttempted) return;
-    if (!api || !prefilledSerial) return;
+    if (!api || !prefilledSerial || installmentSaleId != null) return;
     setAutoLookupAttempted(true);
     void (async () => {
       try {
@@ -153,16 +325,27 @@ export default function CollectPaymentScreen() {
         setLookupError(errorMessage(e, t('paymentNew.find.errorGeneric')));
       }
     })();
-  }, [api, prefilledSerial, autoLookupAttempted, lookupMutation, t]);
+  }, [
+    api,
+    prefilledSerial,
+    autoLookupAttempted,
+    lookupMutation,
+    installmentSaleId,
+    t,
+  ]);
 
   function reset() {
-    setStep('find');
+    setStep(installmentSaleId ? 'amount' : 'find');
     setSerial('');
     setLookup(null);
     setLookupError(null);
     setAmountStr('');
     setTransactionRef(null);
     setTransactionId(null);
+    setProviderId(CASH_PAYMENT_PROVIDER);
+    setPayerPhoneOverride(null);
+    setRedirectUrl(null);
+    setFailure(null);
     submitMutation.reset();
     lookupMutation.reset();
   }
@@ -199,6 +382,16 @@ export default function CollectPaymentScreen() {
     setAmountStr((prev) => prev.slice(0, -1));
   }
 
+  function submit() {
+    if (isProvider) {
+      setFailure(null);
+      setStep('awaiting');
+    }
+    submitMutation.mutate();
+  }
+
+  const totalSteps = hasProviders ? 4 : 3;
+
   if (step === 'find') {
     return (
       <FindStep
@@ -212,51 +405,125 @@ export default function CollectPaymentScreen() {
     );
   }
 
-  if (step === 'amount' && lookup) {
+  if (!context) {
+    return (
+      <View style={styles.loadingRoot}>
+        <ActivityIndicator color={semantic.blue} />
+      </View>
+    );
+  }
+
+  if (step === 'amount') {
     const belowMinimum =
       minimumPayment > 0 && amountValue > 0 && amountValue < minimumPayment;
+    const aboveMaximum = maximumPayment > 0 && amountValue > maximumPayment;
     return (
       <AmountStep
-        lookup={lookup}
+        context={context}
         amount={amountValue}
         amountFormatted={formatAmount(amountStr)}
         currency={currency}
         minimumPayment={minimumPayment}
+        maximumPayment={maximumPayment}
         belowMinimum={belowMinimum}
+        aboveMaximum={aboveMaximum}
+        totalSteps={totalSteps}
         onKeyPress={handleKeypress}
         onDelete={handleDelete}
-        onChangeCustomer={() => setStep('find')}
+        onChangeCustomer={
+          installmentSaleId == null ? () => setStep('find') : undefined
+        }
         onContinue={() => {
-          if (amountValue <= 0 || belowMinimum) return;
-          setStep('confirm');
+          if (amountValue <= 0 || belowMinimum || aboveMaximum) return;
+          setStep(hasProviders ? 'method' : 'confirm');
         }}
-        onBack={() => setStep('find')}
+        onBack={() =>
+          installmentSaleId == null ? setStep('find') : router.back()
+        }
       />
     );
   }
 
-  if (step === 'confirm' && lookup) {
+  if (step === 'method') {
+    return (
+      <MethodStep
+        providers={providers}
+        providerId={providerId}
+        onChangeProvider={setProviderId}
+        payerPhone={context.phone}
+        payerPhoneOverride={payerPhoneOverride}
+        onChangePayerPhone={setPayerPhoneOverride}
+        totalSteps={totalSteps}
+        onBack={() => setStep('amount')}
+        onContinue={() => setStep('confirm')}
+      />
+    );
+  }
+
+  if (step === 'confirm') {
     return (
       <ConfirmStep
-        lookup={lookup}
+        context={context}
         amount={amountValue}
         amountFormatted={formatAmount(amountStr)}
         currency={currency}
-        onBack={() => setStep('amount')}
-        onConfirm={() => submitMutation.mutate()}
+        providerId={providerId}
+        providerName={providerNameOf(providers, providerId)}
+        payerPhone={payerPhone}
+        totalSteps={totalSteps}
+        onBack={() => setStep(hasProviders ? 'method' : 'amount')}
+        onConfirm={submit}
         loading={submitMutation.isPending}
       />
     );
   }
 
-  if (step === 'success' && lookup) {
+  if (step === 'checkout' && redirectUrl) {
+    return (
+      <ProviderCheckout
+        url={redirectUrl}
+        onDone={() => {
+          setRedirectUrl(null);
+          setStep('awaiting');
+        }}
+      />
+    );
+  }
+
+  if (step === 'awaiting') {
+    return (
+      <PaymentAwaiting
+        providerId={providerId}
+        providerName={providerNameOf(providers, providerId)}
+        payerPhone={payerPhone}
+        amountFormatted={formatAmount(amountStr)}
+        currency={currency}
+        unresolved={progress === 'unresolved'}
+        onCheckAgain={check}
+        onClose={() => router.replace('/(app)/(tabs)')}
+      />
+    );
+  }
+
+  if (step === 'failed' && failure) {
+    return (
+      <PaymentFailure
+        failure={failure}
+        onClose={() => router.replace('/(app)/(tabs)')}
+        onRestart={reset}
+      />
+    );
+  }
+
+  if (step === 'success') {
     return (
       <SuccessStep
-        lookup={lookup}
+        context={context}
         amountFormatted={formatAmount(amountStr)}
         reference={transactionRef ?? '—'}
         currency={currency}
         transactionId={transactionId}
+        providerId={providerId}
         onClose={() => router.replace('/(app)/(tabs)')}
         onNext={reset}
       />
@@ -264,6 +531,30 @@ export default function CollectPaymentScreen() {
   }
 
   return null;
+}
+
+async function invalidatePaymentQueries(
+  queryClient: ReturnType<typeof useQueryClient>,
+) {
+  await queryClient.invalidateQueries({ queryKey: ['agent-balance'] });
+  await queryClient.invalidateQueries({ queryKey: ['agent-transactions'] });
+  await queryClient.invalidateQueries({
+    queryKey: ['agent-transactions-today'],
+  });
+  await queryClient.invalidateQueries({
+    queryKey: ['agent-transactions-list'],
+  });
+  await queryClient.invalidateQueries({ queryKey: ['sold-appliances'] });
+  await queryClient.invalidateQueries({
+    queryKey: ['agent-sold-appliances-all'],
+  });
+}
+
+function providerNameOf(
+  providers: { id: number; name: string }[],
+  providerId: number,
+): string | null {
+  return providers.find((p) => p.id === providerId)?.name ?? null;
 }
 
 function FindStep({
@@ -331,50 +622,54 @@ function FindStep({
 }
 
 function AmountStep({
-  lookup,
+  context,
   amount,
   amountFormatted,
   currency,
   minimumPayment,
+  maximumPayment,
   belowMinimum,
+  aboveMaximum,
+  totalSteps,
   onKeyPress,
   onDelete,
   onChangeCustomer,
   onContinue,
   onBack,
 }: {
-  lookup: DeviceLookup;
+  context: CollectContext;
   amount: number;
   amountFormatted: string;
   currency: string | null;
   minimumPayment: number;
+  maximumPayment: number;
   belowMinimum: boolean;
+  aboveMaximum: boolean;
+  totalSteps: number;
   onKeyPress: (k: string) => void;
   onDelete: () => void;
-  onChangeCustomer: () => void;
+  onChangeCustomer?: () => void;
   onContinue: () => void;
   onBack: () => void;
 }) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
-  const customerName =
-    `${lookup.customer.name} ${lookup.customer.surname}`.trim();
 
   return (
     <View style={styles.root}>
       <SecondaryHeader
         title={t('paymentNew.amount.title')}
-        subtitle={t('paymentNew.amount.step')}
+        subtitle={t('paymentNew.stepOf', { current: 1, total: totalSteps })}
         onBack={onBack}
       />
       <View style={styles.progressWrap}>
-        <ProgressSteps total={3} current={1} />
+        <ProgressSteps total={totalSteps} current={1} />
       </View>
 
       <View style={styles.amountBody}>
         <CustomerChip
-          name={customerName}
-          meta={deviceShortLabel(lookup.device.device_type, t)}
+          name={context.customerName}
+          meta={context.shortLabel}
           onChange={onChangeCustomer}
           style={styles.amountChip}
         />
@@ -397,7 +692,13 @@ function AmountStep({
               {currency}
             </Text>
           ) : null}
-          {minimumPayment > 0 ? (
+          {aboveMaximum ? (
+            <Text variant="meta" tone="danger" style={styles.amountMinimum}>
+              {t('paymentNew.amount.aboveMax')}
+              {currency ? `${currency} ` : ''}
+              {formatAmount(String(maximumPayment))}
+            </Text>
+          ) : minimumPayment > 0 ? (
             <Text
               variant="meta"
               tone={belowMinimum ? 'danger' : 'muted'}
@@ -426,45 +727,144 @@ function AmountStep({
           tone="accent"
           label={t('paymentNew.amount.next')}
           onPress={onContinue}
-          disabled={amount <= 0 || belowMinimum}
+          disabled={amount <= 0 || belowMinimum || aboveMaximum}
         />
       </View>
     </View>
   );
 }
 
+function MethodStep({
+  providers,
+  providerId,
+  onChangeProvider,
+  payerPhone,
+  payerPhoneOverride,
+  onChangePayerPhone,
+  totalSteps,
+  onBack,
+  onContinue,
+}: {
+  providers: { id: number; name: string }[];
+  providerId: number;
+  onChangeProvider: (id: number) => void;
+  payerPhone: string | null;
+  payerPhoneOverride: string | null;
+  onChangePayerPhone: (next: string | null) => void;
+  totalSteps: number;
+  onBack: () => void;
+  onContinue: () => void;
+}) {
+  const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
+  const isProvider = providerId !== CASH_PAYMENT_PROVIDER;
+  const missingPayer = isProvider && !payerPhone && !payerPhoneOverride;
+
+  return (
+    <View style={styles.root}>
+      <SecondaryHeader
+        title={t('paymentNew.method.title')}
+        subtitle={t('paymentNew.stepOf', { current: 2, total: totalSteps })}
+        onBack={onBack}
+      />
+      <View style={styles.progressWrap}>
+        <ProgressSteps total={totalSteps} current={2} />
+      </View>
+
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={styles.flex}
+      >
+        <ScrollView
+          contentContainerStyle={styles.methodContent}
+          keyboardShouldPersistTaps="handled"
+        >
+          <Text variant="body" tone="muted" style={styles.methodIntro}>
+            {t('paymentNew.method.hint')}
+          </Text>
+
+          <PaymentMethodPicker
+            providers={providers}
+            value={providerId}
+            onChange={onChangeProvider}
+          />
+
+          {isProvider ? (
+            <Card style={styles.methodPayerCard}>
+              <PayerPhoneField
+                resolvedPhone={payerPhone}
+                override={payerPhoneOverride}
+                onChangeOverride={onChangePayerPhone}
+                defaultIso="MZ"
+              />
+            </Card>
+          ) : null}
+
+          {missingPayer ? (
+            <Callout tone="warning" style={styles.methodCallout}>
+              <Text variant="body" tone="secondary">
+                {t('paymentNew.method.payerRequired')}
+              </Text>
+            </Callout>
+          ) : null}
+        </ScrollView>
+
+        <View
+          style={[styles.footer, { paddingBottom: insets.bottom + spacing.md }]}
+        >
+          <Button
+            tone="accent"
+            label={t('paymentNew.method.next')}
+            onPress={onContinue}
+            disabled={missingPayer}
+          />
+        </View>
+      </KeyboardAvoidingView>
+    </View>
+  );
+}
+
 function ConfirmStep({
-  lookup,
+  context,
   amount,
   amountFormatted,
   currency,
+  providerId,
+  providerName,
+  payerPhone,
+  totalSteps,
   onBack,
   onConfirm,
   loading,
 }: {
-  lookup: DeviceLookup;
+  context: CollectContext;
   amount: number;
   amountFormatted: string;
   currency: string | null;
+  providerId: number;
+  providerName: string | null;
+  payerPhone: string | null;
+  totalSteps: number;
   onBack: () => void;
   onConfirm: () => void;
   loading: boolean;
 }) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
-  const customerName =
-    `${lookup.customer.name} ${lookup.customer.surname}`.trim();
-  const phone = primaryPhone(lookup.customer);
+  const isProvider = providerId !== CASH_PAYMENT_PROVIDER;
 
   return (
     <View style={styles.root}>
       <SecondaryHeader
         title={t('paymentNew.confirm.title')}
-        subtitle={t('paymentNew.confirm.step')}
+        subtitle={t('paymentNew.stepOf', {
+          current: totalSteps - 1,
+          total: totalSteps,
+        })}
         onBack={onBack}
       />
       <View style={styles.progressWrap}>
-        <ProgressSteps total={3} current={2} />
+        <ProgressSteps total={totalSteps} current={totalSteps - 1} />
       </View>
 
       <Screen scroll padded={false}>
@@ -483,11 +883,16 @@ function ConfirmStep({
           >
             {amountFormatted}
           </Text>
-          <Text variant="body" tone="secondary">
-            {currency
-              ? t('paymentNew.confirm.inCashWith', { currency })
-              : t('paymentNew.confirm.inCash')}
-          </Text>
+          <View style={styles.confirmMethodRow}>
+            <PaymentMethodLogo providerId={providerId} height={22} />
+            <Text variant="body" tone="secondary">
+              {isProvider
+                ? (providerName ?? t('paymentMethod.providerFallback'))
+                : currency
+                  ? t('paymentNew.confirm.inCashWith', { currency })
+                  : t('paymentNew.confirm.inCash')}
+            </Text>
+          </View>
         </LinearGradient>
 
         <View style={styles.confirmCardWrap}>
@@ -495,16 +900,16 @@ function ConfirmStep({
             <View style={styles.customerRow}>
               <View style={styles.customerAvatar}>
                 <Text variant="bodyEmphasis" tone="brand">
-                  {avatarInitials(customerName)}
+                  {avatarInitials(context.customerName)}
                 </Text>
               </View>
               <View style={styles.customerBody}>
                 <Text variant="bodyEmphasis" numberOfLines={1}>
-                  {customerName}
+                  {context.customerName}
                 </Text>
-                {phone ? (
+                {context.phone ? (
                   <Text variant="meta" tone="muted" numberOfLines={1}>
-                    {phone}
+                    {context.phone}
                   </Text>
                 ) : null}
               </View>
@@ -514,15 +919,11 @@ function ConfirmStep({
               label={t('paymentNew.confirm.for')}
               value={
                 <Pill
-                  label={deviceForLabel(lookup.device.device_type, t)}
+                  label={context.forLabel}
                   tone="blue"
                   leading={
                     <Feather
-                      name={
-                        deviceKind(lookup.device.device_type) === 'shs'
-                          ? 'sun'
-                          : 'zap'
-                      }
+                      name={context.iconName}
                       size={12}
                       color={semantic.blue}
                     />
@@ -530,17 +931,25 @@ function ConfirmStep({
                 />
               }
             />
-            <DataRow
-              label={t('paymentNew.confirm.device')}
-              value={
-                <MonoChip value={truncateUuid(lookup.device.device_serial)} />
-              }
-            />
+            {context.serial ? (
+              <DataRow
+                label={t('paymentNew.confirm.device')}
+                value={<MonoChip value={truncateUuid(context.serial)} />}
+              />
+            ) : null}
+            {isProvider && payerPhone ? (
+              <DataRow
+                label={t('paymentNew.confirm.payer')}
+                value={<MonoChip value={payerPhone} />}
+              />
+            ) : null}
           </Card>
 
           <Callout tone="warning" style={styles.confirmCallout}>
             <Text variant="body" tone="secondary">
-              {t('paymentNew.confirm.warning')}
+              {isProvider
+                ? t('paymentNew.confirm.providerWarning')
+                : t('paymentNew.confirm.warning')}
             </Text>
           </Callout>
         </View>
@@ -561,7 +970,11 @@ function ConfirmStep({
         />
         <Button
           tone="success"
-          label={t('paymentNew.confirm.submit')}
+          label={
+            isProvider
+              ? t('paymentNew.confirm.request')
+              : t('paymentNew.confirm.submit')
+          }
           onPress={onConfirm}
           loading={loading}
           disabled={amount <= 0}
@@ -573,29 +986,29 @@ function ConfirmStep({
 }
 
 function SuccessStep({
-  lookup,
+  context,
   amountFormatted,
   reference,
   currency,
   transactionId,
+  providerId,
   onClose,
   onNext,
 }: {
-  lookup: DeviceLookup;
+  context: CollectContext;
   amountFormatted: string;
   reference: string;
   currency: string | null;
   transactionId: number | null;
+  providerId: number;
   onClose: () => void;
   onNext: () => void;
 }) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { api } = useSession();
-  const customerName =
-    `${lookup.customer.name} ${lookup.customer.surname}`.trim();
-  const phone = primaryPhone(lookup.customer);
   const tokenState = useTokenPolling(api, transactionId);
+  const isProvider = providerId !== CASH_PAYMENT_PROVIDER;
 
   return (
     <View style={styles.root}>
@@ -626,11 +1039,19 @@ function SuccessStep({
             {t('paymentNew.result.title')}
           </Text>
           <Text variant="body" tone="muted" style={styles.successSubtitle}>
-            {phone
-              ? t('paymentNew.result.receiptSent', { phone })
+            {context.phone
+              ? t('paymentNew.result.receiptSent', { phone: context.phone })
               : t('paymentNew.result.recorded')}
           </Text>
         </View>
+
+        {isProvider ? (
+          <Callout tone="info" style={styles.successNote}>
+            <Text variant="body" tone="secondary">
+              {t('paymentNew.result.providerNote')}
+            </Text>
+          </Callout>
+        ) : null}
 
         <TokenCard token={tokenState.token} state={tokenState.status} />
 
@@ -638,10 +1059,10 @@ function SuccessStep({
           amount={amountFormatted}
           currency={
             currency
-              ? `${currency} · ${deviceShortLabel(lookup.device.device_type, t).toLowerCase()}`
-              : deviceShortLabel(lookup.device.device_type, t)
+              ? `${currency} · ${context.shortLabel.toLowerCase()}`
+              : context.shortLabel
           }
-          customerName={customerName}
+          customerName={context.customerName}
           reference={t('paymentNew.result.refLabel', { ref: reference })}
           style={styles.receipt}
         />
@@ -689,7 +1110,7 @@ function useTokenPolling(
 
     let cancelled = false;
     let attempts = 0;
-    const MAX_ATTEMPTS = 12; // ~24s with 2s interval
+    const MAX_ATTEMPTS = 12;
 
     async function poll() {
       try {
@@ -701,7 +1122,7 @@ function useTokenPolling(
           return;
         }
       } catch {
-        // Ignore — try again, give up after MAX_ATTEMPTS.
+        // retried below
       }
       attempts += 1;
       if (cancelled) return;
@@ -872,19 +1293,6 @@ function truncateUuid(value: string): string {
   return `${value.slice(0, 6)}…${value.slice(-5)}`;
 }
 
-function toPositiveAmount(value: unknown): number {
-  const n = Number(value ?? 0);
-  return Number.isFinite(n) && n > 0 ? n : 0;
-}
-
-function computeMinimumPayment(sale: SoldAppliance | null): number {
-  if (!sale) return 0;
-  if (sale.payment_type === 'energy_service') {
-    return toPositiveAmount(sale.minimum_payable_amount);
-  }
-  return toPositiveAmount(sale.rates?.[1]?.rate_cost);
-}
-
 function formatAmount(raw: string): string {
   if (!raw) return '0';
   const n = Number(raw);
@@ -899,6 +1307,12 @@ const styles = StyleSheet.create({
   },
   flex: {
     flex: 1,
+  },
+  loadingRoot: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: semantic.paper,
   },
   progressWrap: {
     paddingHorizontal: spacing.lg,
@@ -964,6 +1378,22 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
 
+  /* Method */
+  methodContent: {
+    padding: spacing.lg,
+    paddingBottom: spacing.xxl,
+    gap: spacing.md,
+  },
+  methodIntro: {
+    marginBottom: spacing.xs,
+  },
+  methodPayerCard: {
+    marginTop: spacing.xs,
+  },
+  methodCallout: {
+    marginTop: 0,
+  },
+
   /* Confirm */
   confirmHero: {
     paddingTop: spacing.xl,
@@ -974,6 +1404,12 @@ const styles = StyleSheet.create({
   },
   confirmAmount: {
     marginTop: 4,
+  },
+  confirmMethodRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.xs,
   },
   confirmCardWrap: {
     paddingHorizontal: spacing.lg,
@@ -1052,6 +1488,10 @@ const styles = StyleSheet.create({
   },
   successSubtitle: {
     textAlign: 'center',
+  },
+  successNote: {
+    width: '100%',
+    marginTop: 0,
   },
   receipt: {
     width: '100%',

@@ -357,7 +357,7 @@ export default function SaleDetailScreen() {
               pathname: '/(app)/payments/new',
               params: sale.device_serial
                 ? { serial: sale.device_serial }
-                : undefined,
+                : { saleId: String(sale.id) },
             })
           }
           style={styles.footerPrimary}

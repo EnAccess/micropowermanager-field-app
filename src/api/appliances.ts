@@ -1,5 +1,13 @@
 import { AxiosInstance } from 'axios';
 
+import {
+  CASH_PAYMENT_PROVIDER,
+  INITIATE_TIMEOUT_MS,
+  InitiatedPayment,
+  ProviderPaymentFields,
+  readInitiatedPayment,
+} from './transactions';
+
 export type AppliancePaymentType = 'installment' | 'energy_service';
 
 export type ApplianceType = {
@@ -182,7 +190,7 @@ export async function fetchAllSoldAppliances(
   return collected;
 }
 
-export type SellAppliancePayload = {
+export type SellAppliancePayload = ProviderPaymentFields & {
   person_id: number;
   agent_assigned_appliance_id: number;
   payment_type: AppliancePaymentType;
@@ -198,15 +206,23 @@ export type SellAppliancePayload = {
 export async function sellAppliance(
   client: AxiosInstance,
   payload: SellAppliancePayload,
-): Promise<void> {
-  await client.post('/app/agents/appliances', payload);
+): Promise<InitiatedPayment> {
+  const { data } = await client.post<{ data: Record<string, unknown> }>(
+    '/app/agents/appliances',
+    payload,
+    (payload.payment_provider ?? CASH_PAYMENT_PROVIDER) ===
+      CASH_PAYMENT_PROVIDER
+      ? {}
+      : { timeout: INITIATE_TIMEOUT_MS },
+  );
+  return readInitiatedPayment(data.data, 'transaction_id');
 }
 
 export function saleCost(sale: SoldAppliance): number {
   return sale.total_cost ?? sale.appliance?.cost ?? 0;
 }
 
-export function nextDueDate(sale: SoldAppliance): string | null {
+export function nextPayableRate(sale: SoldAppliance): SaleRate | null {
   if (!sale.rates?.length) return null;
   let earliest: SaleRate | null = null;
   let earliestTime = Number.POSITIVE_INFINITY;
@@ -219,7 +235,26 @@ export function nextDueDate(sale: SoldAppliance): string | null {
       earliestTime = t;
     }
   }
-  return earliest?.due_date ?? null;
+  return earliest;
+}
+
+export function nextDueDate(sale: SoldAppliance): string | null {
+  return nextPayableRate(sale)?.due_date ?? null;
+}
+
+export function installmentFloor(sale: SoldAppliance): number {
+  if (sale.payment_type === 'energy_service') {
+    return Math.max(0, sale.minimum_payable_amount ?? 0);
+  }
+  return Math.max(0, nextPayableRate(sale)?.remaining ?? 0);
+}
+
+export function installmentCeiling(sale: SoldAppliance): number {
+  if (sale.payment_type === 'energy_service') return 0;
+  return (sale.rates ?? []).reduce(
+    (total, rate) => total + Math.max(0, rate.remaining),
+    0,
+  );
 }
 
 export function salePaid(sale: SoldAppliance): number {
