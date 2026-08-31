@@ -349,15 +349,14 @@
     },
     "amount": {
       "title": "Receber pagamento",
-      "step": "Passo 1 de 3",
       "label": "MONTANTE RECEBIDO",
       "belowMin": "Abaixo do mínimo: ",
       "minimum": "Mínimo: ",
-      "next": "Rever e confirmar"
+      "next": "Rever e confirmar",
+      "aboveMax": "Mais do que o valor em dívida. Máximo: "
     },
     "confirm": {
       "title": "Confirmar pagamento",
-      "step": "Passo 2 de 3",
       "label": "ESTÁ A RECEBER",
       "inCashWith": "{{currency}} · em dinheiro",
       "inCash": "Em dinheiro",
@@ -365,7 +364,10 @@
       "device": "Aparelho",
       "warning": "Confirme apenas depois de ter recebido o dinheiro do cliente. Esta ação é final.",
       "back": "Voltar",
-      "submit": "Dinheiro recebido — confirmar"
+      "submit": "Dinheiro recebido — confirmar",
+      "payer": "Pagador",
+      "providerWarning": "O cliente paga diretamente ao provedor, por isso o seu saldo não muda. A sua comissão é adicionada quando o pagamento for liquidado.",
+      "request": "Solicitar pagamento"
     },
     "result": {
       "title": "Pagamento recebido",
@@ -373,14 +375,17 @@
       "recorded": "Registado com sucesso",
       "backHome": "Voltar ao início",
       "next": "Próximo cliente",
-      "refLabel": "Ref. #{{ref}}"
+      "refLabel": "Ref. #{{ref}}",
+      "providerNote": "O cliente pagou diretamente ao provedor, por isso o seu saldo não muda. A sua comissão é adicionada quando o pagamento for liquidado."
     },
     "device": {
       "energyMeter": "Energia (contador)",
       "shs": "Sistema solar doméstico",
       "fallback": "Aparelho",
       "meterShort": "Contador",
-      "shsShort": "SHS"
+      "shsShort": "SHS",
+      "installment": "Prestação",
+      "installmentShort": "Prestação"
     },
     "token": {
       "generating": "A GERAR CÓDIGO",
@@ -391,7 +396,21 @@
       "readToCustomer": "Leia este código ao cliente.",
       "copied": "Código copiado"
     },
-    "failed": "Pagamento falhou. Tente novamente."
+    "failed": "Pagamento falhou. Tente novamente.",
+    "stepOf": "Passo {{current}} de {{total}}",
+    "customerFallback": "Cliente",
+    "method": {
+      "title": "Forma de pagamento",
+      "hint": "Como é que o cliente vai pagar?",
+      "next": "Continuar",
+      "payerRequired": "Este provedor envia o pedido para o telefone do cliente e não há nenhum número registado. Adicione o número a partir do qual ele vai pagar."
+    },
+    "failure": {
+      "timeoutTitle": "Não foi possível confirmar este pagamento",
+      "timeoutBody": "A ligação caiu enquanto o pagamento estava a ser processado, por isso pode ter sido concluído. Verifique o histórico de pagamentos do cliente antes de cobrar novamente.",
+      "rejectedTitle": "O pagamento não foi concluído",
+      "rejectedBody": "O provedor não concluiu este pagamento, por isso nada foi cobrado."
+    }
   },
   "paymentDetail": {
     "notFound": "Venda não encontrada.",
@@ -441,7 +460,6 @@
     },
     "pickCustomer": {
       "title": "Vender SSD",
-      "step": "Passo 1 de 4",
       "label": "ESCOLHER UM CLIENTE",
       "search": "Pesquisar por nome ou telefone…",
       "noMatches": "Sem resultados. Tente outra pesquisa.",
@@ -449,7 +467,6 @@
     },
     "pickSystem": {
       "title": "Vender SSD",
-      "step": "Passo 2 de 4",
       "newCustomer": "Novo cliente",
       "label": "ESCOLHER UM SISTEMA",
       "noUnits": "Nenhuma unidade SHS atribuída a si. Peça ao seu administrador para atribuir uma.",
@@ -494,7 +511,6 @@
     },
     "confirm": {
       "title": "Confirmar venda",
-      "step": "Passo 4 de 4",
       "labelCash": "DINHEIRO HOJE",
       "labelDeposit": "DEPÓSITO HOJE",
       "activationOnly": "Apenas ativação — sem dinheiro recebido",
@@ -518,7 +534,8 @@
       "warningDeposit": "Confirme apenas após ter recebido o depósito. Esta ação é final.",
       "back": "Voltar",
       "activate": "Ativar serviço de energia",
-      "submit": "Dinheiro recebido — confirmar"
+      "submit": "Dinheiro recebido — confirmar",
+      "payer": "Pagador: {{phone}}"
     },
     "result": {
       "titleActivated": "Serviço ativado",
@@ -527,7 +544,8 @@
       "deposit": "Depósito",
       "backHome": "Voltar ao início",
       "next": "Próxima venda",
-      "refLabel": "Ref. #{{ref}}"
+      "refLabel": "Ref. #{{ref}}",
+      "providerNote": "O cliente pagou a entrada diretamente ao provedor, por isso o seu saldo não muda. A sua comissão é adicionada quando o pagamento for liquidado."
     },
     "errors": {
       "serialLoad": "Não foi possível carregar as unidades não atribuídas. Verifique a sua ligação.",
@@ -535,7 +553,22 @@
       "noUnits": "Sem unidades não atribuídas disponíveis para este aparelho."
     },
     "planSubtitle": "{{customer}} · {{unit}}",
-    "failed": "Venda falhou. Tente novamente."
+    "failed": "Venda falhou. Tente novamente.",
+    "stepOf": "Passo {{current}} de {{total}}",
+    "method": {
+      "title": "Forma de pagamento",
+      "hint": "Como é que o cliente vai pagar a entrada de {{amount}}?",
+      "next": "Continuar",
+      "payerRequired": "Este provedor envia o pedido para o telefone do cliente e não há nenhum número registado. Adicione o número a partir do qual ele vai pagar.",
+      "rollbackWarning": "Se o provedor não concluir a entrada, toda a venda é cancelada e terá de a começar de novo."
+    },
+    "failure": {
+      "timeoutTitle": "Não foi possível confirmar esta entrada",
+      "timeoutBody": "A ligação caiu enquanto a entrada estava a ser processada. Verifique as vendas e os pagamentos do cliente antes de vender novamente.",
+      "rejectedTitle": "A venda não foi concluída",
+      "rejectedBody": "O provedor não concluiu a entrada, por isso a venda foi cancelada. Nada foi cobrado e nenhuma unidade foi atribuída. Terá de começar a venda de novo.",
+      "startOver": "Começar a venda de novo"
+    }
   },
   "saleDetail": {
     "notFound": "Venda não encontrada.",
@@ -589,5 +622,36 @@
     "customer_one": "{{count}} cliente por sincronizar",
     "customer_other": "{{count}} clientes por sincronizar",
     "syncNow": "Sincronizar"
+  },
+  "paymentMethod": {
+    "cash": "Dinheiro",
+    "cashHint": "Você recebe o dinheiro. Ele é somado ao seu saldo.",
+    "providerHint": "O cliente paga pelo próprio telefone. O seu saldo não muda.",
+    "providerFallback": "Provedor de pagamento",
+    "payerLabel": "Número do cliente",
+    "payerMissing": "Nenhum número registado",
+    "payerUseOther": "Pagar de outro número",
+    "payerUseDefault": "Usar o número registado"
+  },
+  "paymentAwaiting": {
+    "title": "A aguardar o cliente",
+    "body": "Peça ao cliente para aprovar o pagamento no {{phone}}.",
+    "bodyNoPhone": "Peça ao cliente para aprovar o pagamento no telefone dele.",
+    "hint": "Pode levar até dois minutos. Mantenha este ecrã aberto.",
+    "amountLabel": "VALOR SOLICITADO",
+    "unresolvedTitle": "Ainda em processamento",
+    "unresolvedBody": "Este pagamento ainda não foi confirmado. Verifique novamente dentro de um momento. Não peça ao cliente para pagar uma segunda vez.",
+    "checkAgain": "Verificar novamente",
+    "close": "Fechar"
+  },
+  "paymentFailure": {
+    "close": "Fechar",
+    "startOver": "Começar de novo"
+  },
+  "providerCheckout": {
+    "title": "Concluir o pagamento",
+    "subtitle": "Entregue o telefone ao cliente",
+    "done": "Terminei",
+    "errorBody": "Não foi possível carregar esta página. Se o cliente já pagou, toque em “Terminei” — o pagamento é confirmado com o provedor, não nesta página."
   }
 }

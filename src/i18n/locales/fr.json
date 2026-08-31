@@ -349,15 +349,14 @@
     },
     "amount": {
       "title": "Encaisser un paiement",
-      "step": "Étape 1 sur 3",
       "label": "MONTANT REÇU",
       "belowMin": "Sous le minimum : ",
       "minimum": "Minimum : ",
-      "next": "Vérifier et confirmer"
+      "next": "Vérifier et confirmer",
+      "aboveMax": "Supérieur au montant dû. Maximum : "
     },
     "confirm": {
       "title": "Confirmer le paiement",
-      "step": "Étape 2 sur 3",
       "label": "VOUS ENCAISSEZ",
       "inCashWith": "{{currency}} · en espèces",
       "inCash": "En espèces",
@@ -365,7 +364,10 @@
       "device": "Appareil",
       "warning": "Confirmez uniquement après avoir reçu les espèces du client. Cette action est définitive.",
       "back": "Retour",
-      "submit": "Espèces reçues — confirmer"
+      "submit": "Espèces reçues — confirmer",
+      "payer": "Payeur",
+      "providerWarning": "Le client paie directement le prestataire : votre solde ne change donc pas. Votre commission est ajoutée dès que le paiement est réglé.",
+      "request": "Demander le paiement"
     },
     "result": {
       "title": "Paiement encaissé",
@@ -373,14 +375,17 @@
       "recorded": "Enregistré avec succès",
       "backHome": "Retour à l'accueil",
       "next": "Client suivant",
-      "refLabel": "Réf. #{{ref}}"
+      "refLabel": "Réf. #{{ref}}",
+      "providerNote": "Le client a payé directement le prestataire : votre solde ne change pas. Votre commission est ajoutée dès que le paiement est réglé."
     },
     "device": {
       "energyMeter": "Énergie (compteur)",
       "shs": "Système solaire domestique",
       "fallback": "Appareil",
       "meterShort": "Compteur",
-      "shsShort": "SHS"
+      "shsShort": "SHS",
+      "installment": "Échéance",
+      "installmentShort": "Échéance"
     },
     "token": {
       "generating": "GÉNÉRATION DU CODE",
@@ -391,7 +396,21 @@
       "readToCustomer": "Lisez ce code au client.",
       "copied": "Code copié"
     },
-    "failed": "Échec du paiement. Réessayez."
+    "failed": "Échec du paiement. Réessayez.",
+    "stepOf": "Étape {{current}} sur {{total}}",
+    "customerFallback": "Client",
+    "method": {
+      "title": "Mode de paiement",
+      "hint": "Comment le client paie-t-il ?",
+      "next": "Continuer",
+      "payerRequired": "Ce prestataire envoie la demande sur le téléphone du client, et aucun numéro n’est enregistré. Ajoutez le numéro depuis lequel il paie."
+    },
+    "failure": {
+      "timeoutTitle": "Impossible de confirmer ce paiement",
+      "timeoutBody": "La connexion a été perdue pendant le traitement du paiement : il a peut-être tout de même abouti. Vérifiez l’historique des paiements du client avant d’encaisser à nouveau.",
+      "rejectedTitle": "Le paiement n’a pas abouti",
+      "rejectedBody": "Le prestataire n’a pas finalisé ce paiement. Rien n’a été débité."
+    }
   },
   "paymentDetail": {
     "notFound": "Vente introuvable.",
@@ -441,7 +460,6 @@
     },
     "pickCustomer": {
       "title": "Vendre un SHS",
-      "step": "Étape 1 sur 4",
       "label": "CHOISIR UN CLIENT",
       "search": "Rechercher par nom ou téléphone…",
       "noMatches": "Aucun résultat. Essayez une autre recherche.",
@@ -449,7 +467,6 @@
     },
     "pickSystem": {
       "title": "Vendre un SHS",
-      "step": "Étape 2 sur 4",
       "newCustomer": "Nouveau client",
       "label": "CHOISIR UN SYSTÈME",
       "noUnits": "Aucune unité SHS ne vous est attribuée. Demandez à votre administrateur d'en attribuer une.",
@@ -494,7 +511,6 @@
     },
     "confirm": {
       "title": "Confirmer la vente",
-      "step": "Étape 4 sur 4",
       "labelCash": "ESPÈCES AUJOURD'HUI",
       "labelDeposit": "ACOMPTE AUJOURD'HUI",
       "activationOnly": "Activation seulement — aucune espèce encaissée",
@@ -518,7 +534,8 @@
       "warningDeposit": "Confirmez uniquement après avoir reçu l'acompte. Cette action est définitive.",
       "back": "Retour",
       "activate": "Activer le service énergétique",
-      "submit": "Espèces reçues — confirmer"
+      "submit": "Espèces reçues — confirmer",
+      "payer": "Payeur : {{phone}}"
     },
     "result": {
       "titleActivated": "Service activé",
@@ -527,7 +544,8 @@
       "deposit": "Acompte",
       "backHome": "Retour à l'accueil",
       "next": "Vente suivante",
-      "refLabel": "Réf. #{{ref}}"
+      "refLabel": "Réf. #{{ref}}",
+      "providerNote": "Le client a payé l’acompte directement au prestataire : votre solde ne change pas. Votre commission est ajoutée dès que le paiement est réglé."
     },
     "errors": {
       "serialLoad": "Impossible de charger les unités non attribuées. Vérifiez votre connexion.",
@@ -535,7 +553,22 @@
       "noUnits": "Aucune unité non attribuée disponible pour cet appareil."
     },
     "planSubtitle": "{{customer}} · {{unit}}",
-    "failed": "Échec de la vente. Réessayez."
+    "failed": "Échec de la vente. Réessayez.",
+    "stepOf": "Étape {{current}} sur {{total}}",
+    "method": {
+      "title": "Mode de paiement",
+      "hint": "Comment le client paie-t-il l’acompte de {{amount}} ?",
+      "next": "Continuer",
+      "payerRequired": "Ce prestataire envoie la demande sur le téléphone du client, et aucun numéro n’est enregistré. Ajoutez le numéro depuis lequel il paie.",
+      "rollbackWarning": "Si le prestataire ne finalise pas l’acompte, toute la vente est annulée et vous devrez la recommencer."
+    },
+    "failure": {
+      "timeoutTitle": "Impossible de confirmer cet acompte",
+      "timeoutBody": "La connexion a été perdue pendant le traitement de l’acompte. Vérifiez les ventes et paiements du client avant de vendre à nouveau.",
+      "rejectedTitle": "La vente n’a pas abouti",
+      "rejectedBody": "Le prestataire n’a pas finalisé l’acompte : la vente a été annulée. Rien n’a été débité et aucune unité n’a été attribuée. Vous devrez recommencer la vente.",
+      "startOver": "Recommencer la vente"
+    }
   },
   "saleDetail": {
     "notFound": "Vente introuvable.",
@@ -589,5 +622,36 @@
     "customer_one": "{{count}} client en attente de sync",
     "customer_other": "{{count}} clients en attente de sync",
     "syncNow": "Synchroniser"
+  },
+  "paymentMethod": {
+    "cash": "Espèces",
+    "cashHint": "Vous encaissez l’argent. Il est ajouté à votre solde.",
+    "providerHint": "Le client paie depuis son propre téléphone. Votre solde ne change pas.",
+    "providerFallback": "Prestataire de paiement",
+    "payerLabel": "Numéro du client",
+    "payerMissing": "Aucun numéro enregistré",
+    "payerUseOther": "Payer depuis un autre numéro",
+    "payerUseDefault": "Utiliser le numéro enregistré"
+  },
+  "paymentAwaiting": {
+    "title": "En attente du client",
+    "body": "Demandez au client d’approuver le paiement sur le {{phone}}.",
+    "bodyNoPhone": "Demandez au client d’approuver le paiement sur son téléphone.",
+    "hint": "Cela peut prendre jusqu’à deux minutes. Gardez cet écran ouvert.",
+    "amountLabel": "MONTANT DEMANDÉ",
+    "unresolvedTitle": "Toujours en cours",
+    "unresolvedBody": "Ce paiement n’est pas encore confirmé. Vérifiez à nouveau dans un instant. Ne demandez pas au client de payer une deuxième fois.",
+    "checkAgain": "Vérifier à nouveau",
+    "close": "Fermer"
+  },
+  "paymentFailure": {
+    "close": "Fermer",
+    "startOver": "Recommencer"
+  },
+  "providerCheckout": {
+    "title": "Finaliser le paiement",
+    "subtitle": "Passez le téléphone au client",
+    "done": "J’ai terminé",
+    "errorBody": "Cette page n’a pas pu être chargée. Si le client a déjà payé, appuyez sur « J’ai terminé » : le paiement est confirmé auprès du prestataire, pas sur cette page."
   }
 }
