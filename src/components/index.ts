@@ -18,7 +18,18 @@ export { Logo } from './Logo';
 export { MonoChip } from './MonoChip';
 export { NumericKeypad } from './NumericKeypad';
 export { OnboardingSection } from './OnboardingSection';
+export { PayerPhoneField } from './PayerPhoneField';
+export { PaymentAwaiting } from './PaymentAwaiting';
+export { PaymentFailure } from './PaymentFailure';
+export type { PaymentFailureDetail } from './PaymentFailure';
+export {
+  PaymentMethodLogo,
+  ReversedPaymentMethodLogo,
+  reversedMarkOf,
+} from './PaymentMethodLogo';
+export { PaymentMethodPicker } from './PaymentMethodPicker';
 export { PhoneField } from './PhoneField';
+export { ProviderCheckout } from './ProviderCheckout';
 export { Pill } from './Pill';
 export { ProgressSteps } from './ProgressSteps';
 export { QuickAddChips } from './QuickAddChips';

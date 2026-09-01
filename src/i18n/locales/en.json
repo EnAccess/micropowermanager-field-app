@@ -349,15 +349,14 @@
     },
     "amount": {
       "title": "Collect payment",
-      "step": "Step 1 of 3",
       "label": "AMOUNT RECEIVED",
       "belowMin": "Below minimum: ",
       "minimum": "Minimum: ",
-      "next": "Review & confirm"
+      "next": "Review & confirm",
+      "aboveMax": "More than is owed. Maximum: "
     },
     "confirm": {
       "title": "Confirm payment",
-      "step": "Step 2 of 3",
       "label": "YOU ARE COLLECTING",
       "inCashWith": "{{currency}} · in cash",
       "inCash": "In cash",
@@ -365,7 +364,10 @@
       "device": "Device",
       "warning": "Confirm only after you've received cash from the customer. This action is final.",
       "back": "Back",
-      "submit": "Cash received — confirm"
+      "submit": "Cash received — confirm",
+      "payer": "Payer",
+      "providerWarning": "The customer pays the provider directly, so this does not change your balance. Your commission is added once the payment settles.",
+      "request": "Request payment"
     },
     "result": {
       "title": "Payment collected",
@@ -373,14 +375,17 @@
       "recorded": "Recorded successfully",
       "backHome": "Back to home",
       "next": "Next customer",
-      "refLabel": "Ref #{{ref}}"
+      "refLabel": "Ref #{{ref}}",
+      "providerNote": "The customer paid the provider directly, so your balance does not change. Your commission is added once the payment settles."
     },
     "device": {
       "energyMeter": "Energy (meter)",
       "shs": "Solar home system",
       "fallback": "Device",
       "meterShort": "Meter",
-      "shsShort": "SHS"
+      "shsShort": "SHS",
+      "installment": "Installment",
+      "installmentShort": "Installment"
     },
     "token": {
       "generating": "GENERATING TOKEN",
@@ -391,7 +396,21 @@
       "readToCustomer": "Read this code to the customer.",
       "copied": "Token copied"
     },
-    "failed": "Payment failed. Try again."
+    "failed": "Payment failed. Try again.",
+    "stepOf": "Step {{current}} of {{total}}",
+    "customerFallback": "Customer",
+    "method": {
+      "title": "Payment method",
+      "hint": "How is the customer paying?",
+      "next": "Continue",
+      "payerRequired": "This provider sends the request to the customer’s phone, and there is no number on file. Add the number they are paying from."
+    },
+    "failure": {
+      "timeoutTitle": "We could not confirm this payment",
+      "timeoutBody": "The connection dropped while the payment was being processed, so it may still have gone through. Check the customer’s payment history before collecting again.",
+      "rejectedTitle": "Payment was not completed",
+      "rejectedBody": "The provider did not complete this payment, so nothing has been charged."
+    }
   },
   "paymentDetail": {
     "notFound": "Sale not found.",
@@ -441,7 +460,6 @@
     },
     "pickCustomer": {
       "title": "Sell SHS",
-      "step": "Step 1 of 4",
       "label": "PICK A CUSTOMER",
       "search": "Search by name or phone…",
       "noMatches": "No matches. Try a different search.",
@@ -449,7 +467,6 @@
     },
     "pickSystem": {
       "title": "Sell SHS",
-      "step": "Step 2 of 4",
       "newCustomer": "New customer",
       "label": "PICK A SYSTEM",
       "noUnits": "No SHS units assigned to you. Ask your administrator to assign one.",
@@ -494,7 +511,6 @@
     },
     "confirm": {
       "title": "Confirm sale",
-      "step": "Step 4 of 4",
       "labelCash": "CASH TODAY",
       "labelDeposit": "DEPOSIT TODAY",
       "activationOnly": "Activation only — no cash collected",
@@ -518,7 +534,8 @@
       "warningDeposit": "Confirm only after you've received the deposit. This action is final.",
       "back": "Back",
       "activate": "Activate energy service",
-      "submit": "Cash received — confirm"
+      "submit": "Cash received — confirm",
+      "payer": "Payer: {{phone}}"
     },
     "result": {
       "titleActivated": "Service activated",
@@ -527,7 +544,8 @@
       "deposit": "Deposit",
       "backHome": "Back to home",
       "next": "Next sale",
-      "refLabel": "Ref #{{ref}}"
+      "refLabel": "Ref #{{ref}}",
+      "providerNote": "The customer paid the deposit to the provider directly, so your balance does not change. Your commission is added once the payment settles."
     },
     "errors": {
       "serialLoad": "Could not load unassigned units. Check your connection.",
@@ -535,7 +553,22 @@
       "noUnits": "No unassigned units available for this appliance."
     },
     "planSubtitle": "{{customer}} · {{unit}}",
-    "failed": "Sale failed. Try again."
+    "failed": "Sale failed. Try again.",
+    "stepOf": "Step {{current}} of {{total}}",
+    "method": {
+      "title": "Payment method",
+      "hint": "How is the customer paying the {{amount}} deposit?",
+      "next": "Continue",
+      "payerRequired": "This provider sends the request to the customer’s phone, and there is no number on file. Add the number they are paying from.",
+      "rollbackWarning": "If the provider does not complete the deposit, the whole sale is cancelled and you will have to start it again."
+    },
+    "failure": {
+      "timeoutTitle": "We could not confirm this deposit",
+      "timeoutBody": "The connection dropped while the deposit was being processed. Check the customer’s sales and payments before selling again.",
+      "rejectedTitle": "The sale was not completed",
+      "rejectedBody": "The provider did not complete the deposit, so the sale was cancelled. Nothing has been charged and no unit was assigned. You will have to start the sale again.",
+      "startOver": "Start the sale again"
+    }
   },
   "saleDetail": {
     "notFound": "Sale not found.",
@@ -589,5 +622,36 @@
     "customer_one": "{{count}} customer pending sync",
     "customer_other": "{{count}} customers pending sync",
     "syncNow": "Sync now"
+  },
+  "paymentMethod": {
+    "cash": "Cash",
+    "cashHint": "You collect the money. It is added to your balance.",
+    "providerHint": "The customer pays from their own phone. Your balance does not change.",
+    "providerFallback": "Payment provider",
+    "payerLabel": "Customer's number",
+    "payerMissing": "No number on file",
+    "payerUseOther": "Pay from another number",
+    "payerUseDefault": "Use the number on file"
+  },
+  "paymentAwaiting": {
+    "title": "Waiting for the customer",
+    "body": "Ask the customer to approve the payment on {{phone}}.",
+    "bodyNoPhone": "Ask the customer to approve the payment on their phone.",
+    "hint": "This can take up to two minutes. Keep this screen open.",
+    "amountLabel": "AMOUNT REQUESTED",
+    "unresolvedTitle": "Still processing",
+    "unresolvedBody": "This payment has not been confirmed yet. Check again in a moment. Do not ask the customer to pay a second time.",
+    "checkAgain": "Check again",
+    "close": "Close"
+  },
+  "paymentFailure": {
+    "close": "Close",
+    "startOver": "Start over"
+  },
+  "providerCheckout": {
+    "title": "Complete the payment",
+    "subtitle": "Hand the phone to the customer",
+    "done": "I'm done",
+    "errorBody": "This page could not be loaded. If the customer has already paid, tap “I’m done” — the payment is confirmed with the provider, not on this page."
   }
 }
