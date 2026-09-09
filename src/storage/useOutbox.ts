@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { Customer } from '@/api/customer';
+import { useSession } from '@/auth/SessionContext';
 
 import {
   OutboxEntry,
@@ -9,8 +10,15 @@ import {
 } from './outbox';
 
 export function useOutbox(): OutboxEntry[] {
+  const { scopeId } = useSession();
   const [entries, setEntries] = useState<OutboxEntry[]>([]);
-  useEffect(() => subscribeOutbox(setEntries), []);
+
+  useEffect(() => {
+    setEntries([]);
+    if (!scopeId) return;
+    return subscribeOutbox(scopeId, setEntries);
+  }, [scopeId]);
+
   return entries;
 }
 

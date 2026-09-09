@@ -1,50 +1,57 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect, useState } from 'react';
 
-const STORAGE_KEY = 'mpm.last_synced_at';
-const listeners = new Set<(ts: number | null) => void>();
-let cached: number | null | undefined;
+import { scopedKey } from '@/auth/sessionScope';
 
-function notify(ts: number | null) {
-  cached = ts;
-  for (const l of listeners) l(ts);
-}
+type Bucket = {
+  cached: number | null | undefined;
+  listeners: Set<(ts: number | null) => void>;
+};
 
-export async function readLastSyncedAt(): Promise<number | null> {
-  if (cached !== undefined) return cached;
-  try {
-    const raw = await AsyncStorage.getItem(STORAGE_KEY);
-    cached = raw ? Number(raw) || null : null;
-  } catch {
-    cached = null;
+const buckets = new Map<string, Bucket>();
+
+export function lastSyncBucket(scopeId: string): Bucket {
+  let bucket = buckets.get(scopeId);
+  if (!bucket) {
+    bucket = { cached: undefined, listeners: new Set() };
+    buckets.set(scopeId, bucket);
   }
-  return cached;
+  return bucket;
 }
 
-export async function markSyncedNow(): Promise<void> {
+function storageKey(scopeId: string): string {
+  return scopedKey(scopeId, 'last_synced_at');
+}
+
+export async function readLastSyncedAt(
+  scopeId: string,
+): Promise<number | null> {
+  const bucket = lastSyncBucket(scopeId);
+  if (bucket.cached !== undefined) return bucket.cached;
+  try {
+    const raw = await AsyncStorage.getItem(storageKey(scopeId));
+    bucket.cached = raw ? Number(raw) || null : null;
+  } catch {
+    bucket.cached = null;
+  }
+  return bucket.cached;
+}
+
+export async function markSyncedNow(scopeId: string): Promise<void> {
   const ts = Date.now();
   try {
-    await AsyncStorage.setItem(STORAGE_KEY, String(ts));
+    await AsyncStorage.setItem(storageKey(scopeId), String(ts));
   } catch {
     // best effort
   }
-  notify(ts);
+  const bucket = lastSyncBucket(scopeId);
+  bucket.cached = ts;
+  for (const listener of bucket.listeners) listener(ts);
 }
 
-export function useLastSyncedAt(): number | null {
-  const [ts, setTs] = useState<number | null>(cached ?? null);
-  useEffect(() => {
-    let mounted = true;
-    if (cached === undefined) {
-      void readLastSyncedAt().then((v) => {
-        if (mounted) setTs(v);
-      });
-    }
-    listeners.add(setTs);
-    return () => {
-      mounted = false;
-      listeners.delete(setTs);
-    };
-  }, []);
-  return ts;
+export function evictLastSyncedScope(scopeId: string): void {
+  const bucket = buckets.get(scopeId);
+  if (!bucket) return;
+  bucket.cached = null;
+  for (const listener of bucket.listeners) listener(null);
+  buckets.delete(scopeId);
 }

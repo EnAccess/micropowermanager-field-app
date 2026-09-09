@@ -97,7 +97,14 @@
     "signOut": "Se déconnecter",
     "signOutConfirm": {
       "title": "Se déconnecter ?",
-      "message": "Vous devrez vous reconnecter pour continuer."
+      "message": "Vous devrez vous reconnecter pour continuer.",
+      "unsynced_one": "{{count}} inscription hors ligne n'a pas encore atteint le serveur. Synchronisez-la, sinon elle sera perdue.",
+      "unsynced_other": "{{count}} inscriptions hors ligne n'ont pas encore atteint le serveur. Synchronisez-les, sinon elles seront perdues.",
+      "syncNow": "Synchroniser",
+      "discard": "Supprimer et se déconnecter",
+      "unsyncedFailed_one": "{{count}} inscription hors ligne a été rejetée par le serveur. Corrigez-la ou supprimez-la depuis l'onglet Clients avant de vous déconnecter.",
+      "unsyncedFailed_other": "{{count}} inscriptions hors ligne ont été rejetées par le serveur. Corrigez-les ou supprimez-les depuis l'onglet Clients avant de vous déconnecter.",
+      "reviewCustomers": "Voir dans Clients"
     },
     "version": "v{{version}} · build {{build}}",
     "appName": "MicroPowerManager"

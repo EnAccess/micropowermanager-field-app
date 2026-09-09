@@ -64,6 +64,18 @@ export async function fetchMe(
   return { agent: data.agent, settings: data.settings ?? null };
 }
 
-export async function logout(client: AxiosInstance): Promise<void> {
-  await client.post('/app/logout');
+/**
+ * `token` is passed explicitly because sign-out clears the session before
+ * telling the server, so the request interceptor has nothing to attach.
+ */
+export async function logout(
+  client: AxiosInstance,
+  options: { token?: string; timeoutMs?: number } = {},
+): Promise<void> {
+  await client.post('/app/logout', undefined, {
+    ...(options.token
+      ? { headers: { Authorization: `Bearer ${options.token}` } }
+      : {}),
+    ...(options.timeoutMs != null ? { timeout: options.timeoutMs } : {}),
+  });
 }

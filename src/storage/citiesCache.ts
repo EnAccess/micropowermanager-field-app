@@ -1,8 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { AxiosInstance } from 'axios';
 
 import type { City } from '@/api/referenceData';
+import { fetchCities } from '@/api/referenceData';
+import { scopedKey } from '@/auth/sessionScope';
 
-const KEY_PREFIX = 'mpm.cache.cities.v1';
 const CACHE_VERSION = 1;
 
 type Envelope = {
@@ -11,15 +13,15 @@ type Envelope = {
   data: City[];
 };
 
-function keyFor(agentId: number): string {
-  return `${KEY_PREFIX}:${agentId}`;
+function keyFor(scopeId: string): string {
+  return scopedKey(scopeId, 'cities.v1');
 }
 
 export async function readCachedCities(
-  agentId: number,
+  scopeId: string,
 ): Promise<City[] | null> {
   try {
-    const raw = await AsyncStorage.getItem(keyFor(agentId));
+    const raw = await AsyncStorage.getItem(keyFor(scopeId));
     if (!raw) return null;
     const env = JSON.parse(raw) as Envelope;
     if (env?.version !== CACHE_VERSION) return null;
@@ -31,7 +33,7 @@ export async function readCachedCities(
 }
 
 export async function writeCachedCities(
-  agentId: number,
+  scopeId: string,
   cities: City[],
 ): Promise<void> {
   const env: Envelope = {
@@ -39,11 +41,23 @@ export async function writeCachedCities(
     fetched_at: Date.now(),
     data: cities,
   };
-  await AsyncStorage.setItem(keyFor(agentId), JSON.stringify(env));
+  await AsyncStorage.setItem(keyFor(scopeId), JSON.stringify(env));
 }
 
-export async function clearAllCachedCities(): Promise<void> {
-  const keys = await AsyncStorage.getAllKeys();
-  const ours = keys.filter((k) => k.startsWith(KEY_PREFIX));
-  if (ours.length) await AsyncStorage.multiRemove(ours);
+/**
+ * Warms the on-disk cache at login so an agent who loses connectivity
+ * immediately afterwards can still pick a village. Never throws — a failed
+ * prefetch must not fail the sign-in.
+ */
+export async function prefetchCitiesToDisk(
+  api: AxiosInstance,
+  scopeId: string,
+  timeoutMs: number,
+): Promise<void> {
+  try {
+    const cities = await fetchCities(api, { timeoutMs });
+    if (cities.length) await writeCachedCities(scopeId, cities);
+  } catch {
+    // the tab shell retries via usePrefetchCities
+  }
 }

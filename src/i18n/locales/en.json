@@ -97,7 +97,14 @@
     "signOut": "Sign out",
     "signOutConfirm": {
       "title": "Sign out?",
-      "message": "You'll need to sign in again to continue."
+      "message": "You'll need to sign in again to continue.",
+      "unsynced_one": "{{count}} offline registration hasn't reached the server yet. Sync it first or it will be lost.",
+      "unsynced_other": "{{count}} offline registrations haven't reached the server yet. Sync them first or they will be lost.",
+      "syncNow": "Sync now",
+      "discard": "Discard & sign out",
+      "unsyncedFailed_one": "{{count}} offline registration was rejected by the server. Fix or discard it from the Customers tab before signing out.",
+      "unsyncedFailed_other": "{{count}} offline registrations were rejected by the server. Fix or discard them from the Customers tab before signing out.",
+      "reviewCustomers": "Review in Customers"
     },
     "version": "v{{version}} · build {{build}}",
     "appName": "MicroPowerManager"

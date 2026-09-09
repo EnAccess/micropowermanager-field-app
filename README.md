@@ -84,7 +84,7 @@ File-based routing on **Expo Router** with an offline-first data layer.
 - **Expo Router** for navigation (typed, file-based routes)
 - **TanStack React Query** for server cache and request orchestration
 - **Axios** client with auth + `device-id` interceptors and a 401 → re-login handler
-- **AsyncStorage** outbox; **expo-secure-store** for tokens
+- **AsyncStorage** for per-session scoped caches and the outbox; **expo-secure-store** for tokens
 - **React Hook Form** + **Zod** for forms and validation
 - Custom design system in `src/components` + `src/theme`
 
@@ -94,13 +94,27 @@ File-based routing on **Expo Router** with an offline-first data layer.
 - `(app)/(tabs)` — `index`, `customers`, `sales`, `payments`
 - `(app)/{customers,sales,payments}/` — `[id]` and `new` screens
 
+### Session scopes
+
+Every piece of per-agent state, on disk and in memory, belongs to a **session scope**. `sessionScopeId()` (`src/auth/sessionScope.ts`) derives it from the environment base URL plus the signed-in agent's email and id, so two agents — or the same agent on two servers — can never read each other's data. Scoped storage keys are namespaced `mpm.s.<scopeId>.<name>`.
+
+Rules the app upholds:
+
+- Nothing outside the current scope is ever read. `scopeId` comes from `useSession()`; storage helpers take it explicitly.
+- A fresh `QueryClient` is minted per scope (`src/providers/AppProviders.tsx`) and the outgoing one is cleared. Most query keys carry no agent identity, so this is what stops one agent's cached lists reaching the next.
+- **Explicit sign-out** wipes the scope: outbox, cities cache, last-sync timestamp and downloaded documents, then tells the server best-effort. It is blocked while unsynced registrations exist — the confirm sheet offers _Sync now_ or _Discard & sign out_.
+- **Forced sign-out** (a 401) clears credentials and memory but leaves the scope's outbox on disk, so the same agent recovers unsynced work on re-login. No other agent can see it.
+- Device-level preferences stay global on purpose: `mpm.environment`, `mpm.device_id`, `mpm.user_language`.
+
+Background work that must only run inside a session (outbox drain, reference-data prefetch) lives in `SessionServices`, rendered below the auth guard in `app/(app)/_layout.tsx`.
+
 ### Offline Outbox
 
-Mutations that fail offline are queued in `src/storage/outbox.ts` (AsyncStorage, capped at 200 entries) and replayed by `outboxDrainer.ts` once `useNetworkStatus` reports connectivity. `SyncBanner` surfaces pending and failed counts.
+Registrations that fail offline are queued per scope in `src/storage/outbox.ts` (AsyncStorage, capped at 200 entries) and replayed by `outboxDrainer.ts` once connectivity returns. A drain coalesces only with a run for the same scope, and sign-out cancels it and waits for the in-flight request to settle. `SyncBanner` surfaces pending and failed counts.
 
 ### Session
 
-`SessionContext` (`src/auth/SessionContext.tsx`) holds the active environment, token, and agent. Tokens live in `expo-secure-store`; a stable `device-id` is generated on first launch.
+`SessionContext` (`src/auth/SessionContext.tsx`) holds the active environment, token, agent and scope id. Tokens live in `expo-secure-store`; a stable `device-id` is generated on first launch. Login warms the village list before completing so an agent who immediately loses signal can still register customers.
 
 ## Feature Modules
 

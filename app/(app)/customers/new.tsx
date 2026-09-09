@@ -115,7 +115,7 @@ type Step = 'form' | 'success';
 export default function RegisterCustomerScreen() {
   const { t } = useTranslation();
   const toast = useToast();
-  const { api, agent } = useSession();
+  const { api, agent, scopeId } = useSession();
   const queryClient = useQueryClient();
   const schema = useMemo(() => buildSchema(t), [t]);
   const params = useLocalSearchParams<{ retry_local_id?: string }>();
@@ -142,7 +142,7 @@ export default function RegisterCustomerScreen() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const hasCaptured = useRef(false);
 
-  const cities = useCachedCities(api, agent?.id ?? null);
+  const cities = useCachedCities(api, scopeId);
 
   const scopedCities = useMemo(
     () =>
@@ -252,7 +252,8 @@ export default function RegisterCustomerScreen() {
       // offline we skip the request entirely and queue immediately.
       const reachable = online && (await fetchOnline());
       if (!reachable) {
-        const entry = await enqueueRegisterCustomer(fullPayload);
+        if (!scopeId) throw new Error('Not signed in.');
+        const entry = await enqueueRegisterCustomer(scopeId, fullPayload);
         return { kind: 'local', entry };
       }
       try {
@@ -265,7 +266,8 @@ export default function RegisterCustomerScreen() {
         // recoverable — queue and sync later. Validation / auth errors (4xx)
         // propagate as mutation errors and stay inline on the form.
         if (isNetworkError(err)) {
-          const entry = await enqueueRegisterCustomer(fullPayload);
+          if (!scopeId) throw err;
+          const entry = await enqueueRegisterCustomer(scopeId, fullPayload);
           return { kind: 'local', entry };
         }
         throw err;
@@ -274,8 +276,8 @@ export default function RegisterCustomerScreen() {
     onSuccess: async (result) => {
       // If the user was retrying a failed outbox entry, drop the old one now
       // that we've either synced it or replaced it with a fresh queued entry.
-      if (retryLocalId) {
-        await removeOutboxEntry(retryLocalId);
+      if (retryLocalId && scopeId) {
+        await removeOutboxEntry(scopeId, retryLocalId);
       }
       await queryClient.invalidateQueries({ queryKey: ['agent-customers'] });
       if (result.kind === 'remote') {
@@ -358,18 +360,20 @@ type CachedCities = {
 
 function useCachedCities(
   api: ReturnType<typeof useSession>['api'],
-  agentId: number | null,
+  scopeId: string | null,
 ): CachedCities {
   const [diskCities, setDiskCities] = useState<City[] | null>(null);
   const [diskReady, setDiskReady] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    if (agentId == null) {
+    setDiskCities(null);
+    setDiskReady(false);
+    if (!scopeId) {
       setDiskReady(true);
       return;
     }
-    void readCachedCities(agentId).then((cached) => {
+    void readCachedCities(scopeId).then((cached) => {
       if (cancelled) return;
       setDiskCities(cached);
       setDiskReady(true);
@@ -377,18 +381,18 @@ function useCachedCities(
     return () => {
       cancelled = true;
     };
-  }, [agentId]);
+  }, [scopeId]);
 
   const networkQuery = useQuery({
-    queryKey: ['cities', agentId],
+    queryKey: ['cities', scopeId],
     queryFn: async () => {
       const fresh = await fetchCities(api!);
-      if (agentId != null) {
-        await writeCachedCities(agentId, fresh);
+      if (scopeId) {
+        await writeCachedCities(scopeId, fresh);
       }
       return fresh;
     },
-    enabled: !!api && agentId != null,
+    enabled: !!api && !!scopeId,
     staleTime: 24 * 60 * 60_000,
   });
 

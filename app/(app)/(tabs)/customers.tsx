@@ -50,7 +50,7 @@ const FILTER_IDS: { id: FilterId; key: string }[] = [
 
 export default function CustomersTab() {
   const { t } = useTranslation();
-  const { api } = useSession();
+  const { api, scopeId } = useSession();
   const insets = useSafeAreaInsets();
   const [term, setTerm] = useState('');
   const [filter, setFilter] = useState<FilterId>('all');
@@ -81,7 +81,7 @@ export default function CustomersTab() {
     () => outboxAsCustomers(outboxEntries),
     [outboxEntries],
   );
-  const drainer = useDrainerStatus(api, queryClient);
+  const drainer = useDrainerStatus(api, queryClient, scopeId);
   const pendingCount = outboxEntries.filter(
     (e) => e.status === 'pending',
   ).length;
@@ -388,6 +388,7 @@ function SwipeToDiscardRow({
   children: React.ReactNode;
 }) {
   const { t } = useTranslation();
+  const { scopeId } = useSession();
   const translateX = useRef(new Animated.Value(0)).current;
 
   const reset = useCallback(() => {
@@ -418,13 +419,13 @@ function SwipeToDiscardRow({
           text: t('customersList.discard.confirm'),
           style: 'destructive',
           onPress: () => {
-            void removeOutboxEntry(localId);
+            if (scopeId) void removeOutboxEntry(scopeId, localId);
           },
         },
       ],
       { cancelable: true, onDismiss: reset },
     );
-  }, [translateX, name, localId, reset, t]);
+  }, [translateX, name, localId, reset, scopeId, t]);
 
   const panResponder = useMemo(
     () =>

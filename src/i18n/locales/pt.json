@@ -97,7 +97,14 @@
     "signOut": "Terminar sessão",
     "signOutConfirm": {
       "title": "Terminar sessão?",
-      "message": "Terá de iniciar sessão novamente para continuar."
+      "message": "Terá de iniciar sessão novamente para continuar.",
+      "unsynced_one": "{{count}} registo offline ainda não chegou ao servidor. Sincronize-o ou será perdido.",
+      "unsynced_other": "{{count}} registos offline ainda não chegaram ao servidor. Sincronize-os ou serão perdidos.",
+      "syncNow": "Sincronizar",
+      "discard": "Descartar e sair",
+      "unsyncedFailed_one": "{{count}} registo offline foi rejeitado pelo servidor. Corrija-o ou descarte-o no separador Clientes antes de sair.",
+      "unsyncedFailed_other": "{{count}} registos offline foram rejeitados pelo servidor. Corrija-os ou descarte-os no separador Clientes antes de sair.",
+      "reviewCustomers": "Ver em Clientes"
     },
     "version": "v{{version}} · build {{build}}",
     "appName": "MicroPowerManager"

@@ -1,9 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { RegisterCustomerPayload } from '@/api/customer';
+import { scopedKey } from '@/auth/sessionScope';
 
-const STORAGE_KEY = 'mpm.outbox.v1';
-const ARCHIVE_KEY = 'mpm.outbox.v1.corrupted';
 const MAX_OUTBOX_ENTRIES = 200;
 
 export type OutboxEntryKind = 'register_customer';
@@ -30,9 +29,34 @@ export type RegisterCustomerOutboxEntry = BaseEntry & {
 
 export type OutboxEntry = RegisterCustomerOutboxEntry;
 
-let cache: OutboxEntry[] | null = null;
-let writeChain: Promise<void> = Promise.resolve();
-const listeners = new Set<(entries: OutboxEntry[]) => void>();
+type Bucket = {
+  cache: OutboxEntry[] | null;
+  writeChain: Promise<void>;
+  listeners: Set<(entries: OutboxEntry[]) => void>;
+};
+
+const buckets = new Map<string, Bucket>();
+
+function bucketFor(scopeId: string): Bucket {
+  let bucket = buckets.get(scopeId);
+  if (!bucket) {
+    bucket = {
+      cache: null,
+      writeChain: Promise.resolve(),
+      listeners: new Set(),
+    };
+    buckets.set(scopeId, bucket);
+  }
+  return bucket;
+}
+
+function storageKey(scopeId: string): string {
+  return scopedKey(scopeId, 'outbox.v1');
+}
+
+function archiveKey(scopeId: string): string {
+  return scopedKey(scopeId, 'outbox.v1.corrupted');
+}
 
 function uuid(): string {
   // RFC 4122-ish v4 uuid using Math.random — fine for client ids; not crypto.
@@ -43,8 +67,8 @@ function uuid(): string {
   });
 }
 
-async function readFromDisk(): Promise<OutboxEntry[]> {
-  const raw = await AsyncStorage.getItem(STORAGE_KEY);
+async function readFromDisk(scopeId: string): Promise<OutboxEntry[]> {
+  const raw = await AsyncStorage.getItem(storageKey(scopeId));
   if (!raw) return [];
   try {
     const parsed = JSON.parse(raw);
@@ -52,49 +76,72 @@ async function readFromDisk(): Promise<OutboxEntry[]> {
     return parsed as OutboxEntry[];
   } catch (err) {
     console.warn('outbox: corrupted store, archiving and resetting', err);
-    await AsyncStorage.setItem(ARCHIVE_KEY, raw);
-    await AsyncStorage.removeItem(STORAGE_KEY);
+    await AsyncStorage.setItem(archiveKey(scopeId), raw);
+    await AsyncStorage.removeItem(storageKey(scopeId));
     return [];
   }
 }
 
-async function loadCache(): Promise<OutboxEntry[]> {
-  if (cache) return cache;
-  cache = await readFromDisk();
-  return cache;
+async function loadCache(scopeId: string): Promise<OutboxEntry[]> {
+  const bucket = bucketFor(scopeId);
+  if (bucket.cache) return bucket.cache;
+  bucket.cache = await readFromDisk(scopeId);
+  return bucket.cache;
 }
 
-function notify() {
-  const snapshot = cache ? [...cache] : [];
-  for (const listener of listeners) listener(snapshot);
+function notify(scopeId: string) {
+  const bucket = bucketFor(scopeId);
+  const snapshot = bucket.cache ? [...bucket.cache] : [];
+  for (const listener of bucket.listeners) listener(snapshot);
 }
 
-function persist(next: OutboxEntry[]): Promise<void> {
-  cache = next;
+function persist(scopeId: string, next: OutboxEntry[]): Promise<void> {
+  const bucket = bucketFor(scopeId);
+  bucket.cache = next;
   // Serialize all writes through a single chain so concurrent enqueue/remove
   // calls don't clobber each other's state.
-  writeChain = writeChain
+  bucket.writeChain = bucket.writeChain
     .catch(() => undefined)
-    .then(() => AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next)));
-  notify();
-  return writeChain;
+    .then(() =>
+      AsyncStorage.setItem(storageKey(scopeId), JSON.stringify(next)),
+    );
+  notify(scopeId);
+  return bucket.writeChain;
 }
 
-export async function listOutbox(): Promise<OutboxEntry[]> {
-  const entries = await loadCache();
+export async function listOutbox(scopeId: string): Promise<OutboxEntry[]> {
+  const entries = await loadCache(scopeId);
   return [...entries];
 }
 
 export function subscribeOutbox(
+  scopeId: string,
   listener: (entries: OutboxEntry[]) => void,
 ): () => void {
-  listeners.add(listener);
+  const bucket = bucketFor(scopeId);
+  bucket.listeners.add(listener);
   // Hydrate the listener with the current snapshot if we already have one.
-  if (cache) listener([...cache]);
-  else void loadCache().then(() => listener(cache ? [...cache] : []));
+  if (bucket.cache) listener([...bucket.cache]);
+  else
+    void loadCache(scopeId).then(() =>
+      listener(bucket.cache ? [...bucket.cache] : []),
+    );
   return () => {
-    listeners.delete(listener);
+    bucket.listeners.delete(listener);
   };
+}
+
+/**
+ * Drops the in-memory bucket after its on-disk keys are gone. Any listener
+ * still attached is told the scope is empty first so the UI can't keep
+ * rendering rows that no longer exist.
+ */
+export function evictOutboxScope(scopeId: string): void {
+  const bucket = buckets.get(scopeId);
+  if (!bucket) return;
+  bucket.cache = [];
+  notify(scopeId);
+  buckets.delete(scopeId);
 }
 
 export class OutboxFullError extends Error {
@@ -105,9 +152,10 @@ export class OutboxFullError extends Error {
 }
 
 export async function enqueueRegisterCustomer(
+  scopeId: string,
   payload: RegisterCustomerPayload,
 ): Promise<RegisterCustomerOutboxEntry> {
-  const entries = await loadCache();
+  const entries = await loadCache(scopeId);
   if (entries.length >= MAX_OUTBOX_ENTRIES) {
     throw new OutboxFullError();
   }
@@ -119,22 +167,26 @@ export async function enqueueRegisterCustomer(
     attempts: 0,
     created_at: new Date().toISOString(),
   };
-  await persist([...entries, entry]);
+  await persist(scopeId, [...entries, entry]);
   return entry;
 }
 
-export async function removeOutboxEntry(localId: string): Promise<void> {
-  const entries = await loadCache();
+export async function removeOutboxEntry(
+  scopeId: string,
+  localId: string,
+): Promise<void> {
+  const entries = await loadCache(scopeId);
   const next = entries.filter((e) => e.local_id !== localId);
   if (next.length === entries.length) return;
-  await persist(next);
+  await persist(scopeId, next);
 }
 
 export async function markOutboxFailed(
+  scopeId: string,
   localId: string,
   error: OutboxError,
 ): Promise<void> {
-  const entries = await loadCache();
+  const entries = await loadCache(scopeId);
   const next = entries.map((e) =>
     e.local_id === localId
       ? {
@@ -145,27 +197,29 @@ export async function markOutboxFailed(
         }
       : e,
   );
-  await persist(next);
+  await persist(scopeId, next);
 }
 
-export async function bumpOutboxAttempt(localId: string): Promise<void> {
-  const entries = await loadCache();
+export async function bumpOutboxAttempt(
+  scopeId: string,
+  localId: string,
+): Promise<void> {
+  const entries = await loadCache(scopeId);
   const next = entries.map((e) =>
     e.local_id === localId ? { ...e, attempts: e.attempts + 1 } : e,
   );
-  await persist(next);
+  await persist(scopeId, next);
 }
 
-export async function retryOutboxEntry(localId: string): Promise<void> {
-  const entries = await loadCache();
+export async function retryOutboxEntry(
+  scopeId: string,
+  localId: string,
+): Promise<void> {
+  const entries = await loadCache(scopeId);
   const next = entries.map((e) =>
     e.local_id === localId
       ? { ...e, status: 'pending' as const, last_error: undefined }
       : e,
   );
-  await persist(next);
-}
-
-export async function clearOutbox(): Promise<void> {
-  await persist([]);
+  await persist(scopeId, next);
 }

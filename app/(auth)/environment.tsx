@@ -52,10 +52,14 @@ const OPTIONS: Option[] = [
 
 export default function EnvironmentPicker() {
   const { t } = useTranslation();
-  const { setEnvironment } = useSession();
+  const { environment, setEnvironment } = useSession();
   const insets = useSafeAreaInsets();
-  const [selected, setSelected] = useState<EnvironmentKind>('cloud');
-  const [customUrl, setCustomUrl] = useState('');
+  const [selected, setSelected] = useState<EnvironmentKind>(
+    environment?.kind ?? 'cloud',
+  );
+  const [customUrl, setCustomUrl] = useState(
+    environment?.kind === 'custom' ? environment.baseUrl : '',
+  );
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 

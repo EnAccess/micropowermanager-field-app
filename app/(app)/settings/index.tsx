@@ -1,4 +1,5 @@
 import { Feather } from '@expo/vector-icons';
+import { useQueryClient } from '@tanstack/react-query';
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import { useState } from 'react';
@@ -7,10 +8,17 @@ import { useTranslation } from 'react-i18next';
 
 import { agentFullName } from '@/api/auth';
 import { useSession } from '@/auth/SessionContext';
-import { BottomSheet, Button, SecondaryHeader, Text } from '@/components';
+import {
+  BottomSheet,
+  Button,
+  Callout,
+  SecondaryHeader,
+  Text,
+} from '@/components';
 import { SupportedLanguage } from '@/i18n';
 import { useI18n } from '@/i18n/I18nProvider';
-import { useLastSyncedAt } from '@/storage/lastSync';
+import { useLastSyncedAt } from '@/storage/useLastSyncedAt';
+import { useDrainerStatus } from '@/storage/outboxDrainer';
 import { useAgentVillage } from '@/storage/useAgentVillage';
 import { useOutbox } from '@/storage/useOutbox';
 import { fonts, radii, semantic, shadows, spacing } from '@/theme';
@@ -19,12 +27,15 @@ import { formatRelativeTime } from '@/utils/time';
 
 export default function SettingsScreen() {
   const { t } = useTranslation();
-  const { agent, logout } = useSession();
+  const { agent, api, scopeId, signOut } = useSession();
   const { language } = useI18n();
+  const queryClient = useQueryClient();
   const outbox = useOutbox();
   const lastSyncedAt = useLastSyncedAt();
   const village = useAgentVillage();
+  const drainer = useDrainerStatus(api, queryClient, scopeId);
   const [confirmVisible, setConfirmVisible] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
 
   const fullName = agentFullName(agent) ?? agent?.email ?? t('common.agent');
   const initial = initials(fullName).slice(0, 2);
@@ -44,7 +55,18 @@ export default function SettingsScreen() {
       ? t('settings.syncStatus.pending', { count: pending + failed })
       : t('settings.syncStatus.pending', { count: pending });
 
+  const unsynced = pending + failed;
   const languageLabel = t(`language.${LANGUAGE_LABEL_KEY[language]}`);
+
+  async function handleSignOut() {
+    setSigningOut(true);
+    try {
+      await signOut();
+    } finally {
+      setSigningOut(false);
+      setConfirmVisible(false);
+    }
+  }
 
   const version = Constants.expoConfig?.version ?? '—';
   const build =
@@ -165,6 +187,18 @@ export default function SettingsScreen() {
           </Text>
         </View>
 
+        {unsynced > 0 ? (
+          <Callout tone="warning" style={styles.confirmWarning}>
+            <Text variant="meta" tone="secondary">
+              {pending > 0
+                ? t('settings.signOutConfirm.unsynced', { count: unsynced })
+                : t('settings.signOutConfirm.unsyncedFailed', {
+                    count: unsynced,
+                  })}
+            </Text>
+          </Callout>
+        ) : null}
+
         <View style={styles.confirmCard}>
           <View style={styles.avatar}>
             <Text variant="bodyEmphasis" style={styles.avatarLetter}>
@@ -183,23 +217,62 @@ export default function SettingsScreen() {
           </View>
         </View>
 
-        <View style={styles.confirmActions}>
-          <Button
-            tone="ghost"
-            label={t('common.cancel')}
-            onPress={() => setConfirmVisible(false)}
-            style={styles.confirmBtn}
-          />
-          <Button
-            tone="accent"
-            label={t('settings.signOut')}
-            onPress={() => {
-              setConfirmVisible(false);
-              void logout();
-            }}
-            style={styles.confirmBtn}
-          />
-        </View>
+        {unsynced > 0 ? (
+          <View style={styles.confirmStack}>
+            {pending > 0 ? (
+              <Button
+                tone="primary"
+                label={t('settings.signOutConfirm.syncNow')}
+                loading={drainer.status === 'draining'}
+                disabled={signingOut}
+                onPress={drainer.drainNow}
+              />
+            ) : (
+              <Button
+                tone="primary"
+                label={t('settings.signOutConfirm.reviewCustomers')}
+                disabled={signingOut}
+                onPress={() => {
+                  setConfirmVisible(false);
+                  router.replace('/(app)/(tabs)/customers');
+                }}
+              />
+            )}
+            <View style={styles.confirmRow}>
+              <Button
+                tone="ghost"
+                label={t('common.cancel')}
+                disabled={signingOut}
+                onPress={() => setConfirmVisible(false)}
+                style={styles.confirmBtn}
+              />
+              <Button
+                tone="accent"
+                label={t('settings.signOutConfirm.discard')}
+                loading={signingOut}
+                onPress={() => void handleSignOut()}
+                style={styles.confirmBtn}
+              />
+            </View>
+          </View>
+        ) : (
+          <View style={styles.confirmActions}>
+            <Button
+              tone="ghost"
+              label={t('common.cancel')}
+              disabled={signingOut}
+              onPress={() => setConfirmVisible(false)}
+              style={styles.confirmBtn}
+            />
+            <Button
+              tone="accent"
+              label={t('settings.signOut')}
+              loading={signingOut}
+              onPress={() => void handleSignOut()}
+              style={styles.confirmBtn}
+            />
+          </View>
+        )}
       </BottomSheet>
     </View>
   );
@@ -369,6 +442,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.md,
     paddingHorizontal: spacing.sm,
+  },
+  confirmStack: {
+    gap: spacing.md,
+    paddingHorizontal: spacing.sm,
+  },
+  confirmRow: {
+    flexDirection: 'row',
+    gap: spacing.md,
+  },
+  confirmWarning: {
+    marginHorizontal: spacing.sm,
+    marginBottom: spacing.md,
   },
   confirmBtn: {
     flex: 1,

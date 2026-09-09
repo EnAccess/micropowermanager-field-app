@@ -21,6 +21,8 @@ type DrainStatus = 'idle' | 'draining' | 'offline';
 
 let isDraining = false;
 let drainPromise: Promise<DrainResult> | null = null;
+let drainingScope: string | null = null;
+let cancelRequested = false;
 const statusListeners = new Set<(status: DrainStatus) => void>();
 
 function setStatus(status: DrainStatus) {
@@ -40,6 +42,25 @@ export type DrainResult = {
   failed: number;
   remainingPending: number;
 };
+
+/**
+ * Asks an in-flight drain to stop after the current entry. Sign-out awaits
+ * `drainSettled()` so a request started under the outgoing token can never
+ * land after the session is gone.
+ */
+export function cancelDrain(): void {
+  if (drainPromise) cancelRequested = true;
+}
+
+export async function drainSettled(): Promise<void> {
+  while (drainPromise) {
+    try {
+      await drainPromise;
+    } catch {
+      // a rejected drain is still a settled drain
+    }
+  }
+}
 
 function isNetworkError(error: unknown): boolean {
   if (!error || typeof error !== 'object') return false;
@@ -69,37 +90,48 @@ function extractError(error: unknown): OutboxError {
 export async function drainOutbox(
   api: AxiosInstance,
   queryClient: QueryClient,
+  scopeId: string,
 ): Promise<DrainResult> {
-  if (drainPromise) return drainPromise;
+  // Only coalesce with a run for the same scope; a different scope's entries
+  // must never be reported as this one's.
+  if (drainPromise && drainingScope === scopeId) return drainPromise;
+  if (drainPromise) {
+    return { attempted: 0, succeeded: 0, failed: 0, remainingPending: 0 };
+  }
   isDraining = true;
+  drainingScope = scopeId;
+  cancelRequested = false;
   setStatus('draining');
 
   drainPromise = (async () => {
     let attempted = 0;
     let succeeded = 0;
     let failed = 0;
-    let pendingRemaining = 0;
+    let remainingPending = 0;
 
-    const entries = await listOutbox();
+    const entries = await listOutbox(scopeId);
+    const pending = entries.filter((e) => e.status === 'pending');
     // Drain sequentially: avoid duplicate-phone races on parallel inserts and
     // exit early on the first network error so we don't flood a flaky
     // connection.
-    for (const entry of entries) {
-      if (entry.status !== 'pending') continue;
+    for (let i = 0; i < pending.length; i++) {
+      if (cancelRequested) {
+        remainingPending = pending.length - i;
+        break;
+      }
+      const entry = pending[i];
       attempted += 1;
       try {
         await syncEntry(api, entry);
-        await removeOutboxEntry(entry.local_id);
+        await removeOutboxEntry(scopeId, entry.local_id);
         succeeded += 1;
       } catch (err) {
         if (isNetworkError(err)) {
-          await bumpOutboxAttempt(entry.local_id);
-          pendingRemaining += entries.filter(
-            (e) => e.status === 'pending',
-          ).length;
+          await bumpOutboxAttempt(scopeId, entry.local_id);
+          remainingPending = pending.length - i;
           break;
         }
-        await markOutboxFailed(entry.local_id, extractError(err));
+        await markOutboxFailed(scopeId, entry.local_id, extractError(err));
         failed += 1;
       }
     }
@@ -107,19 +139,20 @@ export async function drainOutbox(
     if (succeeded > 0) {
       await queryClient.invalidateQueries({ queryKey: ['agent-customers'] });
       await queryClient.invalidateQueries({ queryKey: ['customer-search'] });
+      void markSyncedNow(scopeId);
     }
-
-    void markSyncedNow();
 
     return {
       attempted,
       succeeded,
       failed,
-      remainingPending: pendingRemaining,
+      remainingPending,
     };
   })().finally(() => {
     isDraining = false;
     drainPromise = null;
+    drainingScope = null;
+    cancelRequested = false;
     setStatus('idle');
   });
 
@@ -138,7 +171,8 @@ async function syncEntry(
 }
 
 /**
- * Mount at the app shell exactly once. Drains the outbox whenever:
+ * Mount inside the authenticated shell exactly once. Drains the outbox of the
+ * current session scope whenever:
  *   - the device transitions to online
  *   - the app transitions to foreground
  *   - any of the entries change (a new offline registration was just enqueued)
@@ -148,23 +182,25 @@ async function syncEntry(
 export function useOutboxDrainerHost(
   api: AxiosInstance | null,
   queryClient: QueryClient,
+  scopeId: string | null,
 ): void {
   useEffect(() => {
-    if (!api) return;
+    if (!api || !scopeId) return;
     let cancelled = false;
 
     const tryDrain = async () => {
       if (cancelled) return;
-      const entries = await listOutbox();
+      const entries = await listOutbox(scopeId);
       const hasPending = entries.some((e) => e.status === 'pending');
       if (!hasPending) return;
       const net = await NetInfo.fetch();
       if (net.isConnected === false) return;
       if (net.isInternetReachable === false) return;
-      void drainOutbox(api, queryClient);
+      if (cancelled) return;
+      void drainOutbox(api, queryClient, scopeId);
     };
 
-    // Drain on mount in case there are leftover entries from a previous session.
+    // Drain on mount in case there are leftover entries from a previous run.
     void tryDrain();
 
     const netUnsub = NetInfo.addEventListener((state) => {
@@ -180,7 +216,7 @@ export function useOutboxDrainerHost(
       },
     );
 
-    const outboxUnsub = subscribeOutbox((entries) => {
+    const outboxUnsub = subscribeOutbox(scopeId, (entries) => {
       if (entries.some((e) => e.status === 'pending')) void tryDrain();
     });
 
@@ -190,7 +226,7 @@ export function useOutboxDrainerHost(
       appStateSub.remove();
       outboxUnsub();
     };
-  }, [api, queryClient]);
+  }, [api, queryClient, scopeId]);
 }
 
 /**
@@ -201,6 +237,7 @@ export function useOutboxDrainerHost(
 export function useDrainerStatus(
   api: AxiosInstance | null,
   queryClient: QueryClient,
+  scopeId: string | null,
 ): { status: DrainStatus; drainNow: () => void } {
   const [status, setLocalStatus] = useState<DrainStatus>(
     isDraining ? 'draining' : 'idle',
@@ -216,14 +253,14 @@ export function useDrainerStatus(
   return {
     status,
     drainNow: () => {
-      if (!api) return;
+      if (!api || !scopeId) return;
       void (async () => {
         const net = await NetInfo.fetch();
         if (net.isConnected === false || net.isInternetReachable === false) {
           flashOfflineStatus();
           return;
         }
-        void drainOutbox(api, queryClient);
+        void drainOutbox(api, queryClient, scopeId);
       })();
     },
   };

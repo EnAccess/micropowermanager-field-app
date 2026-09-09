@@ -4,14 +4,12 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { usePrefetchCities } from '@/storage/usePrefetchCities';
 import { fonts, semantic } from '@/theme';
 
 export default function TabsLayout() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const bottomInset = Math.max(insets.bottom, 8);
-  usePrefetchCities();
 
   return (
     <Tabs
