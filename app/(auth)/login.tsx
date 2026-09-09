@@ -49,16 +49,18 @@ export default function LoginScreen() {
     [t],
   );
 
+  const initialValues: LoginForm =
+    environment?.kind === 'demo'
+      ? DEMO_CREDENTIALS
+      : { email: '', password: '' };
+
   const {
     control,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<LoginForm>({
     resolver: zodResolver(schema),
-    defaultValues:
-      environment?.kind === 'demo'
-        ? DEMO_CREDENTIALS
-        : { email: '', password: '' },
+    defaultValues: initialValues,
   });
 
   const onSubmit = handleSubmit(async (values) => {
@@ -112,14 +114,14 @@ export default function LoginScreen() {
             <Controller
               control={control}
               name="email"
-              render={({ field: { value, onChange, onBlur } }) => (
+              render={({ field: { onChange, onBlur } }) => (
                 <TextField
                   label={t('login.email')}
                   placeholder={t('login.emailPlaceholder')}
                   autoCapitalize="none"
                   autoCorrect={false}
                   keyboardType="email-address"
-                  defaultValue={value}
+                  defaultValue={initialValues.email}
                   onChangeText={onChange}
                   onBlur={onBlur}
                   error={errors.email?.message}
@@ -129,14 +131,14 @@ export default function LoginScreen() {
             <Controller
               control={control}
               name="password"
-              render={({ field: { value, onChange, onBlur } }) => (
+              render={({ field: { onChange, onBlur } }) => (
                 <TextField
                   label={t('login.password')}
                   placeholder={t('login.passwordPlaceholder')}
                   secureTextEntry={!showPassword}
                   autoCapitalize="none"
                   autoCorrect={false}
-                  defaultValue={value}
+                  defaultValue={initialValues.password}
                   onChangeText={onChange}
                   onBlur={onBlur}
                   error={errors.password?.message}
