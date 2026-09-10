@@ -31,10 +31,35 @@ async function fetchList<T>(
 
 const BASE = '/customer-registration-app';
 
-export const fetchCities = (
+type CitiesPage = City[] | { data: City[]; last_page?: number };
+
+/** `timeoutMs` budgets the whole walk, so a caller on a deadline aborts instead of caching a partial list. */
+export async function fetchCities(
   client: AxiosInstance,
   options: { timeoutMs?: number } = {},
-) => fetchList<City>(client, `${BASE}/cities`, options);
+): Promise<City[]> {
+  const deadline =
+    options.timeoutMs != null ? Date.now() + options.timeoutMs : null;
+  const cities: City[] = [];
+
+  for (let page = 1; ; page += 1) {
+    const timeout = deadline != null ? deadline - Date.now() : undefined;
+    if (timeout != null && timeout <= 0) {
+      throw new Error('Timed out loading villages');
+    }
+
+    const { data } = await client.get<CitiesPage>(
+      `${BASE}/cities?page=${page}`,
+      timeout != null ? { timeout } : undefined,
+    );
+
+    if (Array.isArray(data)) return data;
+    cities.push(...data.data);
+
+    if (data.last_page == null || page >= data.last_page) return cities;
+  }
+}
+
 export const fetchManufacturers = (
   client: AxiosInstance,
   params: { type?: string } = {},
