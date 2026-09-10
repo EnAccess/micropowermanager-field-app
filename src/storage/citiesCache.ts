@@ -32,6 +32,7 @@ export async function readCachedCities(
   }
 }
 
+/** Never throws — a storage failure must not cost the caller the cities it fetched. */
 export async function writeCachedCities(
   scopeId: string,
   cities: City[],
@@ -41,7 +42,11 @@ export async function writeCachedCities(
     fetched_at: Date.now(),
     data: cities,
   };
-  await AsyncStorage.setItem(keyFor(scopeId), JSON.stringify(env));
+  try {
+    await AsyncStorage.setItem(keyFor(scopeId), JSON.stringify(env));
+  } catch {
+    return;
+  }
 }
 
 /**
