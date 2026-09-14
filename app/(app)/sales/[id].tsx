@@ -27,6 +27,7 @@ import {
   saleCustomerName,
   saleCustomerPhone,
   salePaid,
+  findCachedSale,
 } from '@/api/appliances';
 import { fetchTransactionToken } from '@/api/transactions';
 import { useSession } from '@/auth/SessionContext';
@@ -46,7 +47,7 @@ export default function SaleDetailScreen() {
   const queryClient = useQueryClient();
 
   const cached = useMemo(
-    () => findInCachedPages(queryClient, id),
+    () => findCachedSale(queryClient, id),
     [queryClient, id],
   );
 
@@ -616,22 +617,6 @@ function useSortedRates(
     }
     return sorted;
   }, [rates, downPayment]);
-}
-
-function findInCachedPages(
-  queryClient: ReturnType<typeof useQueryClient>,
-  id: number,
-): SoldAppliance | null {
-  const queries = queryClient.getQueriesData<{
-    pages?: { data: SoldAppliance[] }[];
-  }>({ queryKey: ['agent-sales-list'] });
-  for (const [, data] of queries) {
-    for (const page of data?.pages ?? []) {
-      const hit = page.data.find((s) => s.id === id);
-      if (hit) return hit;
-    }
-  }
-  return null;
 }
 
 function isWeeklySchedule(sale: SoldAppliance): boolean {

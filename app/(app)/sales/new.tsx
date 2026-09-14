@@ -42,6 +42,7 @@ import {
   fetchPaymentProviders,
 } from '@/api/transactions';
 import { usePaymentStatus } from '@/api/usePaymentStatus';
+import { useTokenPolling } from '@/api/useTokenPolling';
 import { useSession } from '@/auth/SessionContext';
 import {
   Button,
@@ -49,6 +50,8 @@ import {
   Card,
   CustomerChip,
   PayerPhoneField,
+  effectivePayerPhone,
+  payerPhoneProblem,
   PaymentAwaiting,
   PaymentFailure,
   PaymentFailureDetail,
@@ -65,6 +68,7 @@ import {
   SuccessCheckmark,
   Text,
   TextField,
+  TokenCard,
   toIsoDate,
   useToast,
 } from '@/components';
@@ -160,7 +164,9 @@ export default function SellShsScreen() {
   );
   const [transactionId, setTransactionId] = useState<number | null>(null);
   const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
-  const [failure, setFailure] = useState<PaymentFailureDetail | null>(null);
+  const [failure, setFailure] = useState<
+    (PaymentFailureDetail & { saleRecorded: boolean }) | null
+  >(null);
 
   const plan = useMemo(() => PLANS.find((p) => p.id === planId)!, [planId]);
   const cost = assignment?.cost ?? 0;
@@ -200,7 +206,10 @@ export default function SellShsScreen() {
   const providers = providersQuery.data ?? [];
   const isProvider = providerId !== CASH_PAYMENT_PROVIDER;
   const resolvedPayerPhone = customer ? customerPhone(customer) : null;
-  const payerPhone = payerPhoneOverride ?? resolvedPayerPhone;
+  const payerPhone = effectivePayerPhone(
+    resolvedPayerPhone,
+    payerPhoneOverride,
+  );
   const collectsProviderDownPayment = providers.length > 0 && downPayment > 0;
   const totalSteps = collectsProviderDownPayment ? 5 : 4;
 
@@ -235,7 +244,7 @@ export default function SellShsScreen() {
             }),
         ...(deviceSerial.trim() ? { device_serial: deviceSerial.trim() } : {}),
         ...(isProvider ? { payment_provider: providerId } : {}),
-        ...(isProvider && payerPhoneOverride
+        ...(isProvider && payerPhoneOverride?.trim()
           ? { payer_phone: payerPhoneOverride }
           : {}),
       }),
@@ -252,8 +261,9 @@ export default function SellShsScreen() {
         setStep('checkout');
       } else if (isProvider && result.transactionId == null) {
         setFailure({
-          title: t('saleNew.failure.timeoutTitle'),
-          body: t('saleNew.failure.timeoutBody'),
+          title: t('saleNew.failure.depositTitle'),
+          body: t('saleNew.failure.depositBody'),
+          saleRecorded: true,
         });
         setStep('failed');
       } else if (!isProvider) {
@@ -275,6 +285,7 @@ export default function SellShsScreen() {
         setFailure({
           title: t('saleNew.failure.timeoutTitle'),
           body: t('saleNew.failure.timeoutBody'),
+          saleRecorded: true,
         });
         setStep('failed');
         return;
@@ -295,6 +306,7 @@ export default function SellShsScreen() {
         setFailure({
           title: t('saleNew.failure.rejectedTitle'),
           body: message,
+          saleRecorded: false,
         });
         setStep('failed');
         return;
@@ -308,12 +320,22 @@ export default function SellShsScreen() {
     if (progress === 'processed') setStep('success');
     if (progress === 'failed') {
       setFailure({
-        title: t('saleNew.failure.rejectedTitle'),
-        body: t('saleNew.failure.rejectedBody'),
+        title: t('saleNew.failure.depositTitle'),
+        body: t('saleNew.failure.depositBody'),
+        saleRecorded: true,
       });
       setStep('failed');
     }
   }, [progress, t]);
+
+  async function viewSales() {
+    await queryClient.invalidateQueries({ queryKey: ['agent-sales-list'] });
+    await queryClient.invalidateQueries({ queryKey: ['sold-appliances'] });
+    await queryClient.invalidateQueries({
+      queryKey: ['agent-sold-appliances-all'],
+    });
+    router.replace('/(app)/(tabs)/sales');
+  }
 
   function submitSale() {
     if (isProvider) {
@@ -465,9 +487,13 @@ export default function SellShsScreen() {
     return (
       <PaymentFailure
         failure={failure}
-        restartLabel={t('saleNew.failure.startOver')}
+        primaryLabel={
+          failure.saleRecorded
+            ? t('saleNew.failure.viewSales')
+            : t('saleNew.failure.startOver')
+        }
         onClose={() => router.replace('/(app)/(tabs)')}
-        onRestart={reset}
+        onPrimary={failure.saleRecorded ? viewSales : reset}
       />
     );
   }
@@ -508,6 +534,7 @@ export default function SellShsScreen() {
         downPayment={downPayment}
         isEaas={isEaas}
         providerId={providerId}
+        transactionId={transactionId}
         reference={transactionRef ?? '—'}
         formatCurrency={formatCurrency}
         onClose={() => router.replace('/(app)/(tabs)')}
@@ -1235,7 +1262,9 @@ function MethodStep({
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const isProvider = providerId !== CASH_PAYMENT_PROVIDER;
-  const missingPayer = isProvider && !payerPhone && !payerPhoneOverride;
+  const problem = isProvider
+    ? payerPhoneProblem(payerPhone, payerPhoneOverride)
+    : null;
 
   return (
     <View style={styles.root}>
@@ -1287,7 +1316,7 @@ function MethodStep({
             </Callout>
           ) : null}
 
-          {missingPayer ? (
+          {problem === 'missing' ? (
             <Callout tone="warning">
               <Text variant="body" tone="secondary">
                 {t('saleNew.method.payerRequired')}
@@ -1303,7 +1332,7 @@ function MethodStep({
             tone="accent"
             label={t('saleNew.method.next')}
             onPress={onContinue}
-            disabled={missingPayer}
+            disabled={problem !== null}
           />
         </View>
       </KeyboardAvoidingView>
@@ -1546,6 +1575,7 @@ function SuccessStep({
   downPayment,
   isEaas,
   providerId,
+  transactionId,
   reference,
   formatCurrency,
   onClose,
@@ -1556,6 +1586,7 @@ function SuccessStep({
   downPayment: number;
   isEaas: boolean;
   providerId: number;
+  transactionId: number | null;
   reference: string;
   formatCurrency: (n: number) => string;
   onClose: () => void;
@@ -1563,6 +1594,11 @@ function SuccessStep({
 }) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+  const { api } = useSession();
+  const tokenState = useTokenPolling(
+    api,
+    isPaygoAppliance(assignment) ? transactionId : null,
+  );
   const customerName = `${customer.name} ${customer.surname}`.trim();
   const unitName =
     assignment.appliance?.name ??
@@ -1611,6 +1647,8 @@ function SuccessStep({
             </Text>
           </Callout>
         ) : null}
+
+        <TokenCard token={tokenState.token} state={tokenState.status} />
 
         <ReceiptCard
           amount={formatCurrency(downPayment)}

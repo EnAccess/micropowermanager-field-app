@@ -1,7 +1,6 @@
 import { Feather } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { AxiosInstance, isAxiosError } from 'axios';
-import * as Clipboard from 'expo-clipboard';
+import { isAxiosError } from 'axios';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
@@ -13,7 +12,6 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  ToastAndroid,
   View,
 } from 'react-native';
 import type { TFunction } from 'i18next';
@@ -21,6 +19,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
   fetchAllSoldAppliances,
+  findCachedSale,
   fetchCustomerSoldAppliances,
   installmentCeiling,
   installmentFloor,
@@ -34,13 +33,12 @@ import {
 } from '@/api/customer';
 import {
   CASH_PAYMENT_PROVIDER,
-  PaymentToken,
   collectAgentPayment,
   fetchPaymentProviders,
-  fetchTransactionToken,
   payInstallment,
 } from '@/api/transactions';
 import { usePaymentStatus } from '@/api/usePaymentStatus';
+import { useTokenPolling } from '@/api/useTokenPolling';
 import { useSession } from '@/auth/SessionContext';
 import {
   Button,
@@ -50,6 +48,8 @@ import {
   MonoChip,
   NumericKeypad,
   PayerPhoneField,
+  effectivePayerPhone,
+  payerPhoneProblem,
   PaymentAwaiting,
   PaymentFailure,
   PaymentFailureDetail,
@@ -64,11 +64,11 @@ import {
   SuccessCheckmark,
   Text,
   TextField,
+  TokenCard,
   useToast,
 } from '@/components';
 import { fonts, radii, semantic, spacing } from '@/theme';
 import { extractServerError as errorMessage } from '@/utils/errorMessage';
-import { describeTokenCredit } from '@/utils/tokenDisplay';
 import { useCurrency } from '@/utils/useCurrency';
 
 type Step =
@@ -137,17 +137,25 @@ export default function CollectPaymentScreen() {
   const providers = providersQuery.data ?? [];
   const hasProviders = providers.length > 0;
 
+  const cachedInstallmentSale = useMemo(
+    () =>
+      installmentSaleId != null
+        ? findCachedSale(queryClient, installmentSaleId)
+        : null,
+    [queryClient, installmentSaleId],
+  );
+
   const installmentSaleQuery = useQuery({
-    queryKey: ['installment-sale', installmentSaleId],
-    queryFn: async () => {
-      const sales = await fetchAllSoldAppliances(api!);
-      return sales.find((s) => s.id === installmentSaleId) ?? null;
-    },
-    enabled: !!api && installmentSaleId != null,
+    queryKey: ['agent-sold-appliances-all'],
+    queryFn: () => fetchAllSoldAppliances(api!),
+    enabled: !!api && installmentSaleId != null && !cachedInstallmentSale,
     staleTime: 60_000,
   });
 
-  const installmentSale = installmentSaleQuery.data ?? null;
+  const installmentSale =
+    cachedInstallmentSale ??
+    installmentSaleQuery.data?.find((s) => s.id === installmentSaleId) ??
+    null;
 
   const matchedSaleQuery = useQuery({
     queryKey: [
@@ -206,7 +214,10 @@ export default function CollectPaymentScreen() {
     };
   }, [installmentSaleId, installmentSale, lookup, t]);
 
-  const payerPhone = payerPhoneOverride ?? context?.phone ?? null;
+  const payerPhone = effectivePayerPhone(
+    context?.phone ?? null,
+    payerPhoneOverride,
+  );
 
   const statusEnabled =
     step === 'awaiting' && isProvider && transactionId != null;
@@ -220,7 +231,7 @@ export default function CollectPaymentScreen() {
     mutationFn: async () => {
       const providerFields = {
         ...(isProvider ? { payment_provider: providerId } : {}),
-        ...(isProvider && payerPhoneOverride
+        ...(isProvider && payerPhoneOverride?.trim()
           ? { payer_phone: payerPhoneOverride }
           : {}),
       };
@@ -408,7 +419,20 @@ export default function CollectPaymentScreen() {
   if (!context) {
     return (
       <View style={styles.loadingRoot}>
-        <ActivityIndicator color={semantic.blue} />
+        {installmentSaleQuery.isLoading ? (
+          <ActivityIndicator color={semantic.blue} />
+        ) : (
+          <>
+            <Text variant="body" tone="muted">
+              {t('saleDetail.notFound')}
+            </Text>
+            <Button
+              label={t('saleDetail.back')}
+              tone="ghost"
+              onPress={() => router.back()}
+            />
+          </>
+        )}
       </View>
     );
   }
@@ -510,7 +534,7 @@ export default function CollectPaymentScreen() {
       <PaymentFailure
         failure={failure}
         onClose={() => router.replace('/(app)/(tabs)')}
-        onRestart={reset}
+        onPrimary={reset}
       />
     );
   }
@@ -758,7 +782,9 @@ function MethodStep({
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const isProvider = providerId !== CASH_PAYMENT_PROVIDER;
-  const missingPayer = isProvider && !payerPhone && !payerPhoneOverride;
+  const problem = isProvider
+    ? payerPhoneProblem(payerPhone, payerPhoneOverride)
+    : null;
 
   return (
     <View style={styles.root}>
@@ -800,7 +826,7 @@ function MethodStep({
             </Card>
           ) : null}
 
-          {missingPayer ? (
+          {problem === 'missing' ? (
             <Callout tone="warning" style={styles.methodCallout}>
               <Text variant="body" tone="secondary">
                 {t('paymentNew.method.payerRequired')}
@@ -816,7 +842,7 @@ function MethodStep({
             tone="accent"
             label={t('paymentNew.method.next')}
             onPress={onContinue}
-            disabled={missingPayer}
+            disabled={problem !== null}
           />
         </View>
       </KeyboardAvoidingView>
@@ -1091,141 +1117,6 @@ function SuccessStep({
   );
 }
 
-type TokenStatus = 'pending' | 'ready' | 'unavailable' | 'skipped';
-
-function useTokenPolling(
-  api: AxiosInstance | null,
-  transactionId: number | null,
-): { token: PaymentToken | null; status: TokenStatus } {
-  const [token, setToken] = useState<PaymentToken | null>(null);
-  const [status, setStatus] = useState<TokenStatus>(
-    transactionId == null ? 'skipped' : 'pending',
-  );
-
-  useEffect(() => {
-    if (!api || transactionId == null) {
-      setStatus('skipped');
-      return;
-    }
-
-    let cancelled = false;
-    let attempts = 0;
-    const MAX_ATTEMPTS = 12;
-
-    async function poll() {
-      try {
-        const result = await fetchTransactionToken(api!, transactionId!);
-        if (cancelled) return;
-        if (result) {
-          setToken(result);
-          setStatus('ready');
-          return;
-        }
-      } catch {
-        // retried below
-      }
-      attempts += 1;
-      if (cancelled) return;
-      if (attempts >= MAX_ATTEMPTS) {
-        setStatus('unavailable');
-        return;
-      }
-      setTimeout(poll, 2000);
-    }
-
-    void poll();
-    return () => {
-      cancelled = true;
-    };
-  }, [api, transactionId]);
-
-  return { token, status };
-}
-
-function TokenCard({
-  token,
-  state,
-}: {
-  token: PaymentToken | null;
-  state: TokenStatus;
-}) {
-  const { t } = useTranslation();
-  if (state === 'skipped') return null;
-
-  if (state === 'pending') {
-    return (
-      <View style={[styles.tokenCard, styles.tokenCardPending]}>
-        <View style={styles.tokenHeader}>
-          <Feather name="key" size={16} color={semantic.blue} />
-          <Text variant="sectionLabel" tone="brand">
-            {t('paymentNew.token.generating')}
-          </Text>
-        </View>
-        <View style={styles.tokenLoadingRow}>
-          <ActivityIndicator color={semantic.blue} />
-          <Text variant="meta" tone="muted">
-            {t('paymentNew.token.waiting')}
-          </Text>
-        </View>
-      </View>
-    );
-  }
-
-  if (state === 'unavailable' || !token) {
-    return (
-      <View style={[styles.tokenCard, styles.tokenCardMuted]}>
-        <View style={styles.tokenHeader}>
-          <Feather name="info" size={16} color={semantic.ink3} />
-          <Text variant="sectionLabel" tone="muted">
-            {t('paymentNew.token.none')}
-          </Text>
-        </View>
-        <Text variant="meta" tone="muted">
-          {t('paymentNew.token.noneBody')}
-        </Text>
-      </View>
-    );
-  }
-
-  return (
-    <View style={[styles.tokenCard, styles.tokenCardReady]}>
-      <View style={styles.tokenHeader}>
-        <Feather name="key" size={16} color={semantic.green} />
-        <Text variant="sectionLabel" tone="success">
-          {t('paymentNew.token.label')}
-        </Text>
-      </View>
-      <Pressable
-        onPress={() => copyToken(token.token, t)}
-        style={({ pressed }) => [
-          styles.tokenValueRow,
-          pressed && { opacity: 0.7 },
-        ]}
-      >
-        <Text
-          style={styles.tokenValue}
-          selectable
-          numberOfLines={1}
-          adjustsFontSizeToFit
-        >
-          {token.token}
-        </Text>
-        <Feather name="copy" size={16} color={semantic.ink2} />
-      </Pressable>
-      <Text variant="meta" tone="muted">
-        {describeTokenCredit(token) ?? t('paymentNew.token.readToCustomer')}
-      </Text>
-    </View>
-  );
-}
-
-async function copyToken(value: string, t: TFunction) {
-  await Clipboard.setStringAsync(value);
-  if (Platform.OS === 'android') {
-    ToastAndroid.show(t('paymentNew.token.copied'), ToastAndroid.SHORT);
-  }
-}
-
 function DataRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <View style={styles.dataRow}>
@@ -1312,6 +1203,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: spacing.md,
     backgroundColor: semantic.paper,
   },
   progressWrap: {
@@ -1496,50 +1388,5 @@ const styles = StyleSheet.create({
   receipt: {
     width: '100%',
     marginTop: spacing.lg,
-  },
-
-  /* token */
-  tokenCard: {
-    width: '100%',
-    marginTop: spacing.lg,
-    borderRadius: radii.card,
-    borderWidth: 1.5,
-    padding: spacing.md,
-    gap: spacing.sm,
-  },
-  tokenCardPending: {
-    borderColor: semantic.line2,
-    backgroundColor: semantic.bgSoft,
-  },
-  tokenCardReady: {
-    borderColor: semantic.green,
-    backgroundColor: semantic.greenLight,
-  },
-  tokenCardMuted: {
-    borderColor: semantic.line,
-    backgroundColor: semantic.paper,
-  },
-  tokenHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  tokenLoadingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  tokenValueRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingVertical: spacing.xs,
-  },
-  tokenValue: {
-    flex: 1,
-    fontFamily: fonts.monoBold,
-    fontSize: 22,
-    letterSpacing: 1,
-    color: semantic.ink,
   },
 });

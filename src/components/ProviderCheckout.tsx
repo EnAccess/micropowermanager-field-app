@@ -16,7 +16,6 @@ type ProviderCheckoutProps = {
 
 const RETURN_MARKERS = [
   'trxref=',
-  'reference=',
   'tx_ref=',
   'transaction_id=',
   'ordertrackingid=',

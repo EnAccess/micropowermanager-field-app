@@ -18,7 +18,11 @@ export { Logo } from './Logo';
 export { MonoChip } from './MonoChip';
 export { NumericKeypad } from './NumericKeypad';
 export { OnboardingSection } from './OnboardingSection';
-export { PayerPhoneField } from './PayerPhoneField';
+export {
+  PayerPhoneField,
+  effectivePayerPhone,
+  payerPhoneProblem,
+} from './PayerPhoneField';
 export { PaymentAwaiting } from './PaymentAwaiting';
 export { PaymentFailure } from './PaymentFailure';
 export type { PaymentFailureDetail } from './PaymentFailure';
@@ -44,6 +48,7 @@ export type { StatTone } from './StatCard';
 export { SuccessCheckmark } from './SuccessCheckmark';
 export { SyncBanner } from './SyncBanner';
 export { Text } from './Text';
+export { TokenCard } from './TokenCard';
 export { TextField } from './TextField';
 export { ToastProvider, useToast } from './Toast';
 export { Timeline } from './Timeline';

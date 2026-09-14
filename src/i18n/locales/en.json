@@ -394,15 +394,6 @@
       "installment": "Installment",
       "installmentShort": "Installment"
     },
-    "token": {
-      "generating": "GENERATING TOKEN",
-      "waiting": "Waiting for the device to issue a code…",
-      "none": "NO TOKEN ISSUED",
-      "noneBody": "The payment was recorded. If a token is sent later, the customer will receive it via SMS.",
-      "label": "TOKEN",
-      "readToCustomer": "Read this code to the customer.",
-      "copied": "Token copied"
-    },
     "failed": "Payment failed. Try again.",
     "stepOf": "Step {{current}} of {{total}}",
     "customerFallback": "Customer",
@@ -567,14 +558,16 @@
       "hint": "How is the customer paying the {{amount}} deposit?",
       "next": "Continue",
       "payerRequired": "This provider sends the request to the customer’s phone, and there is no number on file. Add the number they are paying from.",
-      "rollbackWarning": "If the provider does not complete the deposit, the whole sale is cancelled and you will have to start it again."
+      "rollbackWarning": "If the deposit is not confirmed, check the Sales tab before starting a new sale — the sale may already be recorded."
     },
     "failure": {
       "timeoutTitle": "We could not confirm this deposit",
       "timeoutBody": "The connection dropped while the deposit was being processed. Check the customer’s sales and payments before selling again.",
       "rejectedTitle": "The sale was not completed",
-      "rejectedBody": "The provider did not complete the deposit, so the sale was cancelled. Nothing has been charged and no unit was assigned. You will have to start the sale again.",
-      "startOver": "Start the sale again"
+      "startOver": "Start the sale again",
+      "depositTitle": "The deposit was not paid",
+      "depositBody": "The sale is recorded and the unit is assigned, but the deposit is still owed. Do not start a new sale — open it from Sales and collect the deposit again.",
+      "viewSales": "View sales"
     }
   },
   "saleDetail": {
@@ -638,7 +631,8 @@
     "payerLabel": "Customer's number",
     "payerMissing": "No number on file",
     "payerUseOther": "Pay from another number",
-    "payerUseDefault": "Use the number on file"
+    "payerUseDefault": "Use the number on file",
+    "payerInvalid": "That is not a valid phone number. Check the country and the number."
   },
   "paymentAwaiting": {
     "title": "Waiting for the customer",
@@ -660,5 +654,14 @@
     "subtitle": "Hand the phone to the customer",
     "done": "I'm done",
     "errorBody": "This page could not be loaded. If the customer has already paid, tap “I’m done” — the payment is confirmed with the provider, not on this page."
+  },
+  "token": {
+    "generating": "GENERATING TOKEN",
+    "waiting": "Waiting for the device to issue a code…",
+    "none": "NO TOKEN ISSUED",
+    "noneBody": "The payment was recorded. If a token is sent later, the customer will receive it via SMS.",
+    "label": "TOKEN",
+    "readToCustomer": "Read this code to the customer.",
+    "copied": "Token copied"
   }
 }

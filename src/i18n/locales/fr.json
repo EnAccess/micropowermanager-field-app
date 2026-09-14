@@ -394,15 +394,6 @@
       "installment": "Échéance",
       "installmentShort": "Échéance"
     },
-    "token": {
-      "generating": "GÉNÉRATION DU CODE",
-      "waiting": "En attente du code de l'appareil…",
-      "none": "AUCUN CODE ÉMIS",
-      "noneBody": "Le paiement a été enregistré. Si un code est émis plus tard, le client le recevra par SMS.",
-      "label": "CODE",
-      "readToCustomer": "Lisez ce code au client.",
-      "copied": "Code copié"
-    },
     "failed": "Échec du paiement. Réessayez.",
     "stepOf": "Étape {{current}} sur {{total}}",
     "customerFallback": "Client",
@@ -567,14 +558,16 @@
       "hint": "Comment le client paie-t-il l’acompte de {{amount}} ?",
       "next": "Continuer",
       "payerRequired": "Ce prestataire envoie la demande sur le téléphone du client, et aucun numéro n’est enregistré. Ajoutez le numéro depuis lequel il paie.",
-      "rollbackWarning": "Si le prestataire ne finalise pas l’acompte, toute la vente est annulée et vous devrez la recommencer."
+      "rollbackWarning": "Si l’acompte n’est pas confirmé, vérifiez l’onglet Ventes avant de recommencer — la vente est peut-être déjà enregistrée."
     },
     "failure": {
       "timeoutTitle": "Impossible de confirmer cet acompte",
       "timeoutBody": "La connexion a été perdue pendant le traitement de l’acompte. Vérifiez les ventes et paiements du client avant de vendre à nouveau.",
       "rejectedTitle": "La vente n’a pas abouti",
-      "rejectedBody": "Le prestataire n’a pas finalisé l’acompte : la vente a été annulée. Rien n’a été débité et aucune unité n’a été attribuée. Vous devrez recommencer la vente.",
-      "startOver": "Recommencer la vente"
+      "startOver": "Recommencer la vente",
+      "depositTitle": "L’acompte n’a pas été payé",
+      "depositBody": "La vente est enregistrée et l’unité est attribuée, mais l’acompte reste dû. Ne recommencez pas la vente — ouvrez-la depuis Ventes et encaissez à nouveau l’acompte.",
+      "viewSales": "Voir les ventes"
     }
   },
   "saleDetail": {
@@ -638,7 +631,8 @@
     "payerLabel": "Numéro du client",
     "payerMissing": "Aucun numéro enregistré",
     "payerUseOther": "Payer depuis un autre numéro",
-    "payerUseDefault": "Utiliser le numéro enregistré"
+    "payerUseDefault": "Utiliser le numéro enregistré",
+    "payerInvalid": "Ce numéro de téléphone n’est pas valide. Vérifiez le pays et le numéro."
   },
   "paymentAwaiting": {
     "title": "En attente du client",
@@ -660,5 +654,14 @@
     "subtitle": "Passez le téléphone au client",
     "done": "J’ai terminé",
     "errorBody": "Cette page n’a pas pu être chargée. Si le client a déjà payé, appuyez sur « J’ai terminé » : le paiement est confirmé auprès du prestataire, pas sur cette page."
+  },
+  "token": {
+    "generating": "GÉNÉRATION DU CODE",
+    "waiting": "En attente du code de l'appareil…",
+    "none": "AUCUN CODE ÉMIS",
+    "noneBody": "Le paiement a été enregistré. Si un code est émis plus tard, le client le recevra par SMS.",
+    "label": "CODE",
+    "readToCustomer": "Lisez ce code au client.",
+    "copied": "Code copié"
   }
 }

@@ -19,7 +19,6 @@ import vodacomMz from '@/assets/payment-providers/vodacom-mz.png';
 
 export const PROVIDER_VODACOM_MZ = 19;
 export const PROVIDER_PAYSTACK = 25;
-export const PROVIDER_PESAPAL = 30;
 export const PROVIDER_SAFARICOM_KE = 31;
 export const PROVIDER_FLUTTERWAVE = 32;
 

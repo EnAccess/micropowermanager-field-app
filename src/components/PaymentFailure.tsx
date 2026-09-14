@@ -14,16 +14,16 @@ export type PaymentFailureDetail = {
 
 type PaymentFailureProps = {
   failure: PaymentFailureDetail;
-  restartLabel?: string;
+  primaryLabel?: string;
   onClose: () => void;
-  onRestart: () => void;
+  onPrimary: () => void;
 };
 
 export function PaymentFailure({
   failure,
-  restartLabel,
+  primaryLabel,
   onClose,
-  onRestart,
+  onPrimary,
 }: PaymentFailureProps) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
@@ -57,8 +57,8 @@ export function PaymentFailure({
           style={styles.footerBack}
         />
         <Button
-          label={restartLabel ?? t('paymentFailure.startOver')}
-          onPress={onRestart}
+          label={primaryLabel ?? t('paymentFailure.startOver')}
+          onPress={onPrimary}
           style={styles.footerPrimary}
         />
       </View>

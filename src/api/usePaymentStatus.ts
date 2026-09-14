@@ -1,5 +1,5 @@
 import { AxiosInstance } from 'axios';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { fetchPaymentStatus } from './transactions';
 
@@ -20,7 +20,6 @@ export function usePaymentStatus(
 ): { progress: PaymentProgress; check: () => void } {
   const [progress, setProgress] = useState<PaymentProgress>('idle');
   const [round, setRound] = useState(0);
-  const cancelledRef = useRef(false);
 
   const check = useCallback(() => {
     setRound((previous) => previous + 1);
@@ -32,7 +31,7 @@ export function usePaymentStatus(
       return;
     }
 
-    cancelledRef.current = false;
+    let cancelled = false;
     let attempts = 0;
     let timer: ReturnType<typeof setTimeout> | null = null;
     setProgress('processing');
@@ -40,7 +39,7 @@ export function usePaymentStatus(
     async function poll() {
       try {
         const result = await fetchPaymentStatus(api!, transactionId!);
-        if (cancelledRef.current) return;
+        if (cancelled) return;
 
         if (result.processed) {
           setProgress('processed');
@@ -52,7 +51,7 @@ export function usePaymentStatus(
           return;
         }
       } catch {
-        if (cancelledRef.current) return;
+        if (cancelled) return;
       }
 
       attempts += 1;
@@ -66,7 +65,7 @@ export function usePaymentStatus(
     void poll();
 
     return () => {
-      cancelledRef.current = true;
+      cancelled = true;
       if (timer) clearTimeout(timer);
     };
   }, [api, transactionId, enabled, round]);

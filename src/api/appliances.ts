@@ -1,3 +1,4 @@
+import { QueryClient } from '@tanstack/react-query';
 import { AxiosInstance } from 'axios';
 
 import {
@@ -116,7 +117,6 @@ export type SoldAppliance = {
   down_payment?: number | null;
   tenure?: number | null;
   first_payment_date?: string | null;
-  total_paid?: number | null;
   total_cost?: number | null;
   minimum_payable_amount?: number | null;
   device_serial?: string | null;
@@ -151,6 +151,22 @@ type LaravelPaginated<T> = {
   current_page: number;
   last_page: number;
 };
+
+export function findCachedSale(
+  queryClient: QueryClient,
+  id: number,
+): SoldAppliance | null {
+  const queries = queryClient.getQueriesData<{
+    pages?: { data: SoldAppliance[] }[];
+  }>({ queryKey: ['agent-sales-list'] });
+  for (const [, data] of queries) {
+    for (const page of data?.pages ?? []) {
+      const hit = page.data.find((s) => s.id === id);
+      if (hit) return hit;
+    }
+  }
+  return null;
+}
 
 export async function fetchSoldAppliancePage(
   client: AxiosInstance,
@@ -258,32 +274,10 @@ export function installmentCeiling(sale: SoldAppliance): number {
 }
 
 export function salePaid(sale: SoldAppliance): number {
-  if (sale.total_paid != null) return sale.total_paid;
-  const downPayment = sale.down_payment ?? 0;
-  if (!sale.rates) return downPayment;
-
-  // The backend records the down payment as its own paid rate
-  // (rate_cost === down_payment, remaining === 0). Skip it once when summing
-  // so we can add `down_payment` unconditionally — that way the paid total is
-  // correct whether or not the down-payment rate made it into the response.
-  const downPaymentRounded = Math.round(downPayment);
-  let downPaymentSkipped = false;
-  let installmentsPaid = 0;
-  for (const rate of sale.rates) {
-    const cost = rate.rate_cost;
-    const remaining = rate.remaining;
-    if (
-      !downPaymentSkipped &&
-      downPayment > 0 &&
-      remaining === 0 &&
-      Math.round(cost) === downPaymentRounded
-    ) {
-      downPaymentSkipped = true;
-      continue;
-    }
-    installmentsPaid += Math.max(0, cost - remaining);
-  }
-  return downPayment + installmentsPaid;
+  return (sale.rates ?? []).reduce(
+    (total, rate) => total + Math.max(0, rate.rate_cost - rate.remaining),
+    0,
+  );
 }
 
 export function saleCustomerName(sale: SoldAppliance): string | null {

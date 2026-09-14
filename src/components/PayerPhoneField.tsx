@@ -1,4 +1,5 @@
 import { Feather } from '@expo/vector-icons';
+import { isValidPhoneNumber } from 'libphonenumber-js';
 import { useTranslation } from 'react-i18next';
 import {
   Pressable,
@@ -11,6 +12,22 @@ import {
 import { semantic, spacing } from '@/theme';
 import { PhoneField } from './PhoneField';
 import { Text } from './Text';
+
+export function effectivePayerPhone(
+  resolvedPhone: string | null,
+  override: string | null,
+): string | null {
+  return override?.trim() ? override : resolvedPhone;
+}
+
+export function payerPhoneProblem(
+  resolvedPhone: string | null,
+  override: string | null,
+): 'missing' | 'invalid' | null {
+  const phone = effectivePayerPhone(resolvedPhone, override);
+  if (!phone) return 'missing';
+  return isValidPhoneNumber(phone) ? null : 'invalid';
+}
 
 type PayerPhoneFieldProps = {
   resolvedPhone: string | null;
@@ -39,8 +56,13 @@ export function PayerPhoneField({
       {overriding ? (
         <PhoneField
           value={override}
-          onChange={(next) => onChangeOverride(next)}
+          onChange={onChangeOverride}
           defaultIso={defaultIso}
+          error={
+            payerPhoneProblem(resolvedPhone, override) === 'invalid'
+              ? t('paymentMethod.payerInvalid')
+              : undefined
+          }
         />
       ) : (
         <Text variant="bodyEmphasis">
