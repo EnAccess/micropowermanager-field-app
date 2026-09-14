@@ -5,3 +5,4 @@ ios
 dist
 build
 package-lock.json
+.claude
