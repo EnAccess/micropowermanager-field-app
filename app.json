@@ -57,7 +57,16 @@
       "expo-document-picker",
       "@react-native-community/datetimepicker",
       "expo-localization",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableMinifyInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true
+          }
+        }
+      ]
     ],
     "extra": {
       "router": {},
