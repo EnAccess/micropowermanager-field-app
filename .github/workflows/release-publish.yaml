@@ -61,8 +61,19 @@ jobs:
           files: |
             ${{ steps.version.outputs.apk_name }}
 
-  eas-aab:
+  eas-store-build:
     runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: android
+            ext: aab
+            build_label: vc
+          - platform: ios
+            ext: ipa
+            build_label: b
 
     steps:
       - name: Checkout code
@@ -109,53 +120,57 @@ jobs:
         env:
           VERSION: ${{ steps.version.outputs.version }}
           APP_VERSION: ${{ steps.version.outputs.app_version }}
+          PLATFORM: ${{ matrix.platform }}
+          EXT: ${{ matrix.ext }}
+          BUILD_LABEL: ${{ matrix.build_label }}
         run: |
           set -euo pipefail
           eas build:list \
-            --platform android \
+            --platform "$PLATFORM" \
             --status finished \
             --distribution store \
             --build-profile production \
             --app-version "$APP_VERSION" \
             --limit 1 --json --non-interactive > "$RUNNER_TEMP/builds.json"
 
-          jq -r --arg version "$VERSION" '
-            (.[0] // error("no finished EAS production build for app version \($version)")) as $b
+          jq -r --arg version "$VERSION" --arg platform "$PLATFORM" --arg ext "$EXT" --arg label "$BUILD_LABEL" '
+            (.[0] // error("no finished EAS \($platform) production build for app version \($version)")) as $b
             | ($b.artifacts.applicationArchiveUrl // error("build \($b.id) has no application archive")) as $url
             | "id=\($b.id)",
               "commit=\($b.gitCommitHash)",
               "url=\($url)",
-              "aab_name=micropowermanager-field-app-\($version)-vc\($b.appBuildVersion).aab"
+              "artifact_name=micropowermanager-field-app-\($version)-\($label)\($b.appBuildVersion).\($ext)"
           ' "$RUNNER_TEMP/builds.json" >> "$GITHUB_OUTPUT"
 
-      - name: Download AAB
+      - name: Download ${{ matrix.ext }}
         env:
+          PLATFORM: ${{ matrix.platform }}
           BUILD_ID: ${{ steps.build.outputs.id }}
           COMMIT: ${{ steps.build.outputs.commit }}
-          AAB_NAME: ${{ steps.build.outputs.aab_name }}
+          ARTIFACT_NAME: ${{ steps.build.outputs.artifact_name }}
           URL: ${{ steps.build.outputs.url }}
         run: |
           set -euo pipefail
-          curl -fsSL -o "$AAB_NAME" "$URL"
+          curl -fsSL -o "$ARTIFACT_NAME" "$URL"
           {
-            echo "### EAS production build"
+            echo "### EAS $PLATFORM production build"
             echo ""
             echo "- Build ID: \`$BUILD_ID\`"
             echo "- Commit: \`$COMMIT\`"
-            echo "- Artifact: \`$AAB_NAME\`"
-            echo "- SHA-256: \`$(sha256sum "$AAB_NAME" | cut -d' ' -f1)\`"
+            echo "- Artifact: \`$ARTIFACT_NAME\`"
+            echo "- SHA-256: \`$(sha256sum "$ARTIFACT_NAME" | cut -d' ' -f1)\`"
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Upload AAB as workflow artifact
+      - name: Upload ${{ matrix.ext }} as workflow artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.build.outputs.aab_name }}
-          path: ${{ steps.build.outputs.aab_name }}
+          name: ${{ steps.build.outputs.artifact_name }}
+          path: ${{ steps.build.outputs.artifact_name }}
           if-no-files-found: error
 
-      - name: Add AAB to Github Release
+      - name: Add ${{ matrix.ext }} to Github Release
         if: github.event_name == 'release'
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            ${{ steps.build.outputs.aab_name }}
+            ${{ steps.build.outputs.artifact_name }}
