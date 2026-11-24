@@ -525,7 +525,6 @@
       "weeklyPayments_one": "{{count}} paiement hebdomadaire",
       "weeklyPayments_other": "{{count}} paiements hebdomadaires",
       "weeklyAmount": "{{amount}} / semaine",
-      "firstPayment": "Premier paiement",
       "deviceSerial": "Numéro de série",
       "warningEas": "L'activation démarre le contrat de service énergétique. Cette action est définitive.",
       "warningCash": "Confirmez uniquement après avoir reçu les espèces. Cette action est définitive.",

@@ -525,7 +525,6 @@
       "weeklyPayments_one": "{{count}} دفعة أسبوعية",
       "weeklyPayments_other": "{{count}} دفعات أسبوعية",
       "weeklyAmount": "{{amount}} / أسبوع",
-      "firstPayment": "الدفعة الأولى",
       "deviceSerial": "الرقم التسلسلي للجهاز",
       "warningEas": "التفعيل يبدأ عقد خدمة الطاقة. هذا الإجراء نهائي.",
       "warningCash": "أكّد فقط بعد استلام النقد. هذا الإجراء نهائي.",

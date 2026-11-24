@@ -509,7 +509,6 @@ export default function SellShsScreen() {
         rateType={rateType}
         downPayment={downPayment}
         installmentAmount={installmentAmount}
-        firstPaymentDate={firstPaymentDate}
         deviceSerial={deviceSerial}
         isEaas={isEaas}
         eaasPricePerDay={eaasPricePerDayNum}
@@ -1349,7 +1348,6 @@ function ConfirmStep({
   rateType,
   downPayment,
   installmentAmount,
-  firstPaymentDate,
   deviceSerial,
   isEaas,
   eaasPricePerDay,
@@ -1371,7 +1369,6 @@ function ConfirmStep({
   rateType: RateType;
   downPayment: number;
   installmentAmount: number;
-  firstPaymentDate: Date;
   deviceSerial: string;
   isEaas: boolean;
   eaasPricePerDay: number;
@@ -1494,28 +1491,21 @@ function ConfirmStep({
               ) : null}
             </>
           ) : tenure > 1 ? (
-            <>
-              <DataRow
-                label={t(
-                  rateType === 'weekly'
-                    ? 'saleNew.confirm.weeklyPayments'
-                    : 'saleNew.confirm.monthlyPayments',
-                  { count: tenure },
-                )}
-                value={t(
-                  rateType === 'weekly'
-                    ? 'saleNew.confirm.weeklyAmount'
-                    : 'saleNew.confirm.monthlyAmount',
-                  { amount: formatCurrency(installmentAmount) },
-                )}
-                mono
-              />
-              <DataRow
-                label={t('saleNew.confirm.firstPayment')}
-                value={toIsoDate(firstPaymentDate)}
-                mono
-              />
-            </>
+            <DataRow
+              label={t(
+                rateType === 'weekly'
+                  ? 'saleNew.confirm.weeklyPayments'
+                  : 'saleNew.confirm.monthlyPayments',
+                { count: tenure },
+              )}
+              value={t(
+                rateType === 'weekly'
+                  ? 'saleNew.confirm.weeklyAmount'
+                  : 'saleNew.confirm.monthlyAmount',
+                { amount: formatCurrency(installmentAmount) },
+              )}
+              mono
+            />
           ) : null}
           {deviceSerial.trim() ? (
             <DataRow

@@ -525,7 +525,6 @@
       "weeklyPayments_one": "{{count}} weekly payment",
       "weeklyPayments_other": "{{count}} weekly payments",
       "weeklyAmount": "{{amount}} / week",
-      "firstPayment": "First payment",
       "deviceSerial": "Device serial",
       "warningEas": "Activating starts the energy service contract. This action is final.",
       "warningCash": "Confirm only after you've received the cash. This action is final.",
