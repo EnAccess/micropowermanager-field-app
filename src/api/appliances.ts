@@ -109,6 +109,8 @@ export type SalePerson = {
   addresses?: { phone: string | null; is_primary?: number }[];
 };
 
+export type RateType = 'monthly' | 'weekly';
+
 export type SoldAppliance = {
   id: number;
   person_id: number;
@@ -116,6 +118,7 @@ export type SoldAppliance = {
   payment_type?: AppliancePaymentType | null;
   down_payment?: number | null;
   tenure?: number | null;
+  rate_type?: RateType | null;
   first_payment_date?: string | null;
   total_cost?: number | null;
   minimum_payable_amount?: number | null;
@@ -210,7 +213,7 @@ export type SellAppliancePayload = ProviderPaymentFields & {
   person_id: number;
   agent_assigned_appliance_id: number;
   payment_type: AppliancePaymentType;
-  rate_type?: 'monthly' | 'weekly';
+  rate_type?: RateType;
   down_payment?: number;
   tenure?: number;
   first_payment_date?: string;

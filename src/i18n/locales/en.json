@@ -202,6 +202,7 @@
     "left": "Left",
     "energyService": "Energy service",
     "monthlyPlan": "{{count}}-month plan",
+    "weeklyPlan": "{{count}}-week plan",
     "installmentPlan": "Installment plan"
   },
   "paymentsList": {

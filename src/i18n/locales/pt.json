@@ -202,6 +202,7 @@
     "left": "Resta",
     "energyService": "Serviço de energia",
     "monthlyPlan": "Plano de {{count}} meses",
+    "weeklyPlan": "Plano de {{count}} semanas",
     "installmentPlan": "Plano a prestações"
   },
   "paymentsList": {

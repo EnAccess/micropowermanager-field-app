@@ -202,6 +202,7 @@
     "left": "Reste",
     "energyService": "Service énergétique",
     "monthlyPlan": "Plan {{count}} mois",
+    "weeklyPlan": "Plan {{count}} semaines",
     "installmentPlan": "Plan à tempérament"
   },
   "paymentsList": {

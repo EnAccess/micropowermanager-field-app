@@ -202,6 +202,7 @@
     "left": "ကျန်",
     "energyService": "စွမ်းအင် ဝန်ဆောင်မှု",
     "monthlyPlan": "{{count}} လ အစီအစဉ်",
+    "weeklyPlan": "{{count}} ပတ် အစီအစဉ်",
     "installmentPlan": "အရစ်ကျ အစီအစဉ်"
   },
   "paymentsList": {

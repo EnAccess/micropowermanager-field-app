@@ -202,6 +202,7 @@
     "left": "متبقي",
     "energyService": "خدمة الطاقة",
     "monthlyPlan": "خطة {{count}} شهر",
+    "weeklyPlan": "خطة {{count}} أسبوع",
     "installmentPlan": "خطة أقساط"
   },
   "paymentsList": {

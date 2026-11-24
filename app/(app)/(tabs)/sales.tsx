@@ -242,7 +242,12 @@ function describePlan(sale: SoldAppliance, t: TFunction): string {
     return t('salesList.energyService');
   if (sale.payment_type === 'installment') {
     return sale.tenure
-      ? t('salesList.monthlyPlan', { count: sale.tenure })
+      ? t(
+          sale.rate_type === 'weekly'
+            ? 'salesList.weeklyPlan'
+            : 'salesList.monthlyPlan',
+          { count: sale.tenure },
+        )
       : t('salesList.installmentPlan');
   }
   return t('salesList.plan');

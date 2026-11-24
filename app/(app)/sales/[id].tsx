@@ -95,7 +95,7 @@ export default function SaleDetailScreen() {
   const isEnergyService = sale.payment_type === 'energy_service';
   const tenure = sale.tenure ?? 0;
   const downPayment = sale.down_payment ?? 0;
-  const weekly = isWeeklySchedule(sale);
+  const weekly = sale.rate_type === 'weekly';
   const installmentEstimate =
     !isEnergyService && tenure > 1
       ? Math.round(Math.max(0, cost - downPayment) / tenure)
@@ -617,16 +617,6 @@ function useSortedRates(
     }
     return sorted;
   }, [rates, downPayment]);
-}
-
-function isWeeklySchedule(sale: SoldAppliance): boolean {
-  const dates = (sale.rates ?? [])
-    .map((r) => new Date(r.due_date).getTime())
-    .filter((t) => !Number.isNaN(t))
-    .sort((a, b) => a - b);
-  if (dates.length < 2) return false;
-  const gapDays = (dates[1] - dates[0]) / (1000 * 60 * 60 * 24);
-  return gapDays <= 10;
 }
 
 function describePlan(

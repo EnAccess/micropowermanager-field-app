@@ -28,6 +28,7 @@ import {
   fetchAgentAssignedAppliances,
   fetchUnassignedDevices,
   isPaygoAppliance,
+  RateType,
   sellAppliance,
 } from '@/api/appliances';
 import {
@@ -89,8 +90,6 @@ type Step =
   | 'failed';
 
 type PlanId = 'cash' | 'twelve' | 'custom' | 'energy';
-
-type RateType = 'monthly' | 'weekly';
 
 type Plan = {
   id: PlanId;
